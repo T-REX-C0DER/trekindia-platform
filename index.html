@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrekIndia — India's Premium Trekking Discovery Platform</title>
+  <meta name="description" content="Discover over 5000+ trekking routes across India. Compare trekking companies, find hidden gems, connect with fellow trekkers and plan unforgettable Himalayan adventures with AI-powered recommendations." />
+  <meta name="keywords" content="trekking India, Himalayan treks, trekking companies, trek discovery, AI trek planner, Uttarakhand treks, Himachal treks" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== FLOATING NAVBAR ===== -->
+  <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+    <div class="navbar-inner">
+      <a href="#" class="nav-logo" aria-label="TrekIndia home">
+        <span class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 20L9 8l4 6 3-4 5 10"/>
+          </svg>
+        </span>
+        TrekIndia
+      </a>
+      <ul class="nav-links" role="list">
+        <li><a href="#treks" class="nav-link">Explore</a></li>
+        <li><a href="#states" class="nav-link">States</a></li>
+        <li><a href="#companies" class="nav-link">Companies</a></li>
+        <li><a href="#community" class="nav-link">Community</a></li>
+        <li><a href="#journal" class="nav-link">Journal</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="nav-icon-btn" aria-label="Search treks" id="searchBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <button class="nav-icon-btn" aria-label="User profile" id="profileBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <a href="#ai-planner" class="btn-primary nav-cta" id="startPlanningBtn">Start Planning</a>
+      </div>
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+      <a href="#treks" class="mobile-nav-link">Explore</a>
+      <a href="#states" class="mobile-nav-link">States</a>
+      <a href="#companies" class="mobile-nav-link">Companies</a>
+      <a href="#community" class="mobile-nav-link">Community</a>
+      <a href="#journal" class="mobile-nav-link">Journal</a>
+      <a href="#about" class="mobile-nav-link">About</a>
+      <a href="#ai-planner" class="btn-primary mobile-cta">Start Planning</a>
+    </div>
+  </nav>
+
+  <!-- ===== HERO SECTION ===== -->
+  <section class="hero" id="home" aria-label="Hero section">
+    <div class="hero-bg">
+      <img src="hero_himalayas_1784286730612.png" alt="Cinematic aerial view of the Himalayas" class="hero-img" id="heroImg" />
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge fade-up" style="--delay: 0.1s">
+        <span class="badge-dot"></span>
+        India's #1 Trekking Platform
+      </div>
+      <h1 class="hero-title fade-up" style="--delay: 0.25s">
+        Discover India's<br /><em>Hidden Trails</em>
+      </h1>
+      <p class="hero-subtitle fade-up" style="--delay: 0.4s">
+        Explore over 5000+ trekking routes across India. Compare trekking companies,<br class="break-desktop" /> discover hidden gems, connect with fellow trekkers and plan unforgettable adventures.
+      </p>
+      <div class="hero-ctas fade-up" style="--delay: 0.55s">
+        <a href="#treks" class="btn-primary btn-lg" id="exploreTreksBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
+          Explore Treks
+        </a>
+        <a href="#ai-planner" class="btn-ghost btn-lg" id="aiPlannerBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><circle cx="18" cy="6" r="4"/></svg>
+          AI Trek Planner
+        </a>
+      </div>
+      <div class="hero-stats fade-up" style="--delay: 0.75s" role="region" aria-label="Platform statistics">
+        <div class="stat-item">
+          <span class="stat-number" data-target="5000" data-suffix="+">0</span>
+          <span class="stat-label">Treks</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number" data-target="28">0</span>
+          <span class="stat-label">States</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number" data-target="100" data-suffix="+">0</span>
+          <span class="stat-label">Companies</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number" data-target="25" data-suffix="K+">0</span>
+          <span class="stat-label">Community</span>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-indicator" aria-hidden="true">
+      <span class="scroll-line"></span>
+      <span class="scroll-text">Scroll</span>
+    </div>
+  </section>
+
+  <!-- ===== TRENDING TREKS ===== -->
+  <section class="section trending-section" id="treks" aria-label="Trending expeditions">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Seasonal Selection</div>
+        <div class="section-title-row">
+          <h2 class="section-title">Trending Expeditions</h2>
+          <a href="#" class="view-all-link" id="viewAllPathsLink">View All Paths <span>&#8594;</span></a>
+        </div>
+      </div>
+      <div class="trek-cards-grid">
+
+        <article class="trek-card" id="trekCard1" tabindex="0" aria-label="Roopkund Sanctuary trek">
+          <div class="trek-card-img-wrap">
+            <img src="trek_roopkund_1784286741949.png" alt="Roopkund alpine lake" class="trek-img" loading="lazy" />
+            <div class="trek-card-overlay"></div>
+            <span class="difficulty-badge moderate">Moderate</span>
+            <button class="bookmark-btn" aria-label="Bookmark Roopkund Sanctuary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            </button>
+          </div>
+          <div class="trek-card-body">
+            <div class="trek-meta-top">
+              <span class="trek-state">Uttarakhand</span>
+              <div class="trek-rating">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.9
+              </div>
+            </div>
+            <div class="trek-meta-pills">
+              <span class="trek-pill">&#128336; 8 Days</span>
+              <span class="trek-pill">&#128204; 54 km</span>
+              <span class="trek-pill">5029m</span>
+            </div>
+            <h3 class="trek-name">Roopkund Sanctuary</h3>
+            <div class="trek-footer">
+              <span class="trek-season">Best: May – Jun</span>
+              <button class="btn-explore-sm" aria-label="Explore Roopkund Sanctuary">Explore</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="trek-card" id="trekCard2" tabindex="0" aria-label="Valley of Stillness trek">
+          <div class="trek-card-img-wrap">
+            <img src="trek_valley_flowers_1784286752079.png" alt="Valley of flowers" class="trek-img" loading="lazy" />
+            <div class="trek-card-overlay"></div>
+            <span class="difficulty-badge easy">Easy</span>
+            <button class="bookmark-btn" aria-label="Bookmark Valley of Stillness">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            </button>
+          </div>
+          <div class="trek-card-body">
+            <div class="trek-meta-top">
+              <span class="trek-state">Uttarakhand</span>
+              <div class="trek-rating">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.8
+              </div>
+            </div>
+            <div class="trek-meta-pills">
+              <span class="trek-pill">&#128336; 6 Days</span>
+              <span class="trek-pill">&#128204; 38 km</span>
+              <span class="trek-pill">3658m</span>
+            </div>
+            <h3 class="trek-name">Valley of Stillness</h3>
+            <div class="trek-footer">
+              <span class="trek-season">Best: Jul – Aug</span>
+              <button class="btn-explore-sm" aria-label="Explore Valley of Stillness">Explore</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="trek-card" id="trekCard3" tabindex="0" aria-label="Pin Parvati Passage trek">
+          <div class="trek-card-img-wrap">
+            <img src="trek_pin_parvati_1784286774167.png" alt="Pin Parvati mountain pass" class="trek-img" loading="lazy" />
+            <div class="trek-card-overlay"></div>
+            <span class="difficulty-badge difficult">Difficult</span>
+            <button class="bookmark-btn" aria-label="Bookmark Pin Parvati Passage">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            </button>
+          </div>
+          <div class="trek-card-body">
+            <div class="trek-meta-top">
+              <span class="trek-state">Himachal Pradesh</span>
+              <div class="trek-rating">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                5.0
+              </div>
+            </div>
+            <div class="trek-meta-pills">
+              <span class="trek-pill">&#128336; 12 Days</span>
+              <span class="trek-pill">&#128204; 92 km</span>
+              <span class="trek-pill">5319m</span>
+            </div>
+            <h3 class="trek-name">Pin Parvati Passage</h3>
+            <div class="trek-footer">
+              <span class="trek-season">Best: Aug – Sep</span>
+              <button class="btn-explore-sm" aria-label="Explore Pin Parvati">Explore</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="trek-card" id="trekCard4" tabindex="0" aria-label="Markha Valley trek">
+          <div class="trek-card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80" alt="Ladakh landscape" class="trek-img" loading="lazy" />
+            <div class="trek-card-overlay"></div>
+            <span class="difficulty-badge moderate">Moderate</span>
+            <button class="bookmark-btn" aria-label="Bookmark Markha Valley">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            </button>
+          </div>
+          <div class="trek-card-body">
+            <div class="trek-meta-top">
+              <span class="trek-state">Ladakh</span>
+              <div class="trek-rating">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.7
+              </div>
+            </div>
+            <div class="trek-meta-pills">
+              <span class="trek-pill">&#128336; 9 Days</span>
+              <span class="trek-pill">&#128204; 65 km</span>
+              <span class="trek-pill">5080m</span>
+            </div>
+            <h3 class="trek-name">Markha Valley</h3>
+            <div class="trek-footer">
+              <span class="trek-season">Best: Jun – Sep</span>
+              <button class="btn-explore-sm" aria-label="Explore Markha Valley">Explore</button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== EXPLORE BY STATE ===== -->
+  <section class="section states-section" id="states" aria-label="Explore India by state">
+    <div class="container">
+      <div class="section-tag center">Discover by Region</div>
+      <h2 class="section-title center">Explore India by State</h2>
+      <p class="section-subtitle center">Every mountain, every valley, every trail — organized by the land that holds them.</p>
+      <div class="states-layout">
+        <div class="map-container" role="img" aria-label="Interactive India map">
+          <svg viewBox="0 0 550 620" class="india-map" id="indiaMap">
+            <defs>
+              <filter id="mapGlow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <path class="state-path" data-state="Ladakh" data-treks="89" data-popular="Markha Valley" data-season="Jun–Sep"
+              d="M 160 30 L 220 20 L 290 35 L 320 70 L 300 110 L 260 120 L 220 130 L 180 120 L 155 90 Z" />
+            <path class="state-path" data-state="Himachal Pradesh" data-treks="312" data-popular="Hampta Pass" data-season="Apr–Oct"
+              d="M 220 130 L 260 120 L 300 110 L 310 150 L 280 170 L 240 165 L 215 155 Z" />
+            <path class="state-path" data-state="Uttarakhand" data-treks="428" data-popular="Kedarkantha" data-season="May–Jun"
+              d="M 240 165 L 280 170 L 310 150 L 330 175 L 320 210 L 290 220 L 255 215 L 235 195 Z" />
+            <path class="state-path" data-state="Punjab" data-treks="24" data-popular="Chail Trek" data-season="Oct–Mar"
+              d="M 160 150 L 215 155 L 240 165 L 235 195 L 210 200 L 175 185 L 155 170 Z" />
+            <path class="state-path" data-state="Rajasthan" data-treks="76" data-popular="Aravalli Hills" data-season="Oct–Feb"
+              d="M 120 200 L 175 185 L 210 200 L 220 240 L 200 280 L 165 300 L 125 290 L 100 260 L 105 230 Z" />
+            <path class="state-path" data-state="Uttar Pradesh" data-treks="45" data-popular="Agra Environs" data-season="Oct–Mar"
+              d="M 210 200 L 255 215 L 290 220 L 320 240 L 310 270 L 275 280 L 240 275 L 220 260 L 200 240 Z" />
+            <path class="state-path" data-state="Jharkhand" data-treks="38" data-popular="Parasnath Hill" data-season="Oct–Feb"
+              d="M 310 270 L 355 260 L 375 280 L 365 310 L 335 320 L 310 305 L 295 285 Z" />
+            <path class="state-path state-active" data-state="Sikkim" data-treks="186" data-popular="Goecha La" data-season="Apr–May"
+              d="M 355 200 L 395 195 L 410 220 L 400 255 L 375 260 L 355 245 L 345 225 Z" />
+            <path class="state-path" data-state="Arunachal Pradesh" data-treks="142" data-popular="Mechuka Trek" data-season="Oct–Mar"
+              d="M 410 150 L 470 140 L 510 160 L 510 210 L 470 225 L 430 220 L 410 200 L 405 175 Z" />
+            <path class="state-path" data-state="Assam" data-treks="67" data-popular="Kaziranga Hills" data-season="Oct–Mar"
+              d="M 395 225 L 430 220 L 470 225 L 465 255 L 430 260 L 400 255 Z" />
+            <path class="state-path" data-state="Odisha" data-treks="54" data-popular="Deomali Peak" data-season="Oct–Feb"
+              d="M 335 320 L 375 310 L 390 340 L 380 370 L 350 380 L 325 365 L 315 340 Z" />
+            <path class="state-path" data-state="Madhya Pradesh" data-treks="93" data-popular="Pachmarhi Hills" data-season="Oct–Mar"
+              d="M 165 300 L 220 285 L 275 280 L 310 305 L 310 340 L 280 355 L 245 360 L 205 350 L 170 335 L 155 315 Z" />
+            <path class="state-path" data-state="Maharashtra" data-treks="287" data-popular="Harishchandragad" data-season="Sep–Feb"
+              d="M 155 340 L 205 350 L 245 360 L 270 385 L 260 420 L 225 435 L 185 430 L 155 410 L 140 375 Z" />
+            <path class="state-path" data-state="Andhra Pradesh" data-treks="98" data-popular="Bheemuni Peak" data-season="Oct–Mar"
+              d="M 270 385 L 315 365 L 350 380 L 355 415 L 335 445 L 300 455 L 265 445 L 255 420 Z" />
+            <path class="state-path" data-state="Karnataka" data-treks="165" data-popular="Kumara Parvatha" data-season="Oct–Feb"
+              d="M 185 430 L 225 435 L 260 420 L 265 450 L 250 480 L 215 495 L 185 490 L 165 465 L 168 445 Z" />
+            <path class="state-path" data-state="Kerala" data-treks="134" data-popular="Anamudi Summit" data-season="Sep–Feb"
+              d="M 185 490 L 215 495 L 235 520 L 220 550 L 195 565 L 172 550 L 165 520 Z" />
+            <path class="state-path" data-state="Goa" data-treks="28" data-popular="Tambdi Surla Trek" data-season="Oct–Mar"
+              d="M 155 435 L 175 440 L 170 465 L 150 465 L 145 448 Z" />
+            <path class="state-path state-popular" data-state="Jammu &amp; Kashmir" data-treks="234" data-popular="Kashmir Great Lakes" data-season="Jul–Sep"
+              d="M 120 70 L 160 60 L 160 30 L 155 90 L 130 110 L 110 100 Z" />
+          </svg>
+          <div class="map-tooltip" id="mapTooltip" aria-live="polite">
+            <div class="tooltip-state">Uttarakhand</div>
+            <div class="tooltip-treks">428 Treks</div>
+            <div class="tooltip-info">
+              <span>&#127956; Kedarkantha</span>
+              <span>Best: May–Jun</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="states-sidebar">
+          <h3 class="sidebar-title">Popular States</h3>
+          <div class="states-list">
+            <a href="#" class="state-item active" id="stateLink1">
+              <div class="state-item-info">
+                <span class="state-item-name">Uttarakhand</span>
+                <span class="state-item-treks">428 treks</span>
+              </div>
+              <div class="state-item-tag">Himalayas</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+            <a href="#" class="state-item" id="stateLink2">
+              <div class="state-item-info">
+                <span class="state-item-name">Himachal Pradesh</span>
+                <span class="state-item-treks">312 treks</span>
+              </div>
+              <div class="state-item-tag">Alpine</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+            <a href="#" class="state-item" id="stateLink3">
+              <div class="state-item-info">
+                <span class="state-item-name">Kashmir</span>
+                <span class="state-item-treks">234 treks</span>
+              </div>
+              <div class="state-item-tag">Lakes</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+            <a href="#" class="state-item" id="stateLink4">
+              <div class="state-item-info">
+                <span class="state-item-name">Maharashtra</span>
+                <span class="state-item-treks">287 treks</span>
+              </div>
+              <div class="state-item-tag">Sahyadri</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+            <a href="#" class="state-item" id="stateLink5">
+              <div class="state-item-info">
+                <span class="state-item-name">Sikkim</span>
+                <span class="state-item-treks">186 treks</span>
+              </div>
+              <div class="state-item-tag">Glaciers</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+            <a href="#" class="state-item" id="stateLink6">
+              <div class="state-item-info">
+                <span class="state-item-name">Arunachal Pradesh</span>
+                <span class="state-item-treks">142 treks</span>
+              </div>
+              <div class="state-item-tag">Northeast</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+          </div>
+          <a href="#" class="btn-outline-green" id="viewAllStatesBtn">View All 28 States</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== WHY TREKINDIA ===== -->
+  <section class="section why-section" id="about" aria-label="Why TrekIndia">
+    <div class="container">
+      <div class="why-layout">
+        <div class="why-images">
+          <div class="why-img-main">
+            <img src="trek_roopkund_1784286741949.png" alt="Alpine lake in the Himalayas" class="why-img" loading="lazy" />
+          </div>
+          <div class="why-img-overlay">
+            <img src="trek_valley_flowers_1784286752079.png" alt="Valley of flowers trekkers" class="why-img-sm" loading="lazy" />
+            <div class="why-img-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
+              <div>
+                <span class="badge-num">5000+</span>
+                <span class="badge-lbl">Verified Treks</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="why-content">
+          <div class="section-tag">The TrekIndia Series</div>
+          <h2 class="why-title">Experience<br /><em>Mindful Trekking</em></h2>
+          <p class="why-body">We believe trekking is a form of meditation. TrekIndia's curated routes feature remote, low-impact paths through eco-sanctuaries that prioritize stillness and connection over speed and peaks.</p>
+
+          <div class="features-list">
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div>
+                <strong>Verified Trek Information</strong>
+                <p>Every route is verified by expert trekkers and local guides.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 19-9-9 19-2-8-8-2z"/></svg>
+              </div>
+              <div>
+                <strong>Compare Trekking Companies</strong>
+                <p>100+ vetted operators with transparent pricing and reviews.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              </div>
+              <div>
+                <strong>Offline GPX Maps</strong>
+                <p>Download detailed trail maps for offline navigation.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              </div>
+              <div>
+                <strong>Live Weather Forecasts</strong>
+                <p>Real-time mountain weather for any trek in India.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 1 0 10 10"/></svg>
+              </div>
+              <div>
+                <strong>AI Recommendations</strong>
+                <p>Personalized trek suggestions based on your fitness and goals.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+              </div>
+              <div>
+                <strong>Community Reviews</strong>
+                <p>25K+ trekkers sharing real trail conditions and experiences.</p>
+              </div>
+            </div>
+          </div>
+
+          <a href="#" class="btn-primary btn-lg mt-lg" id="exploreSanctuariesBtn">Explore Sanctuaries</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== AI TREK PLANNER ===== -->
+  <section class="section ai-section" id="ai-planner" aria-label="AI Trek Planner">
+    <div class="container">
+      <div class="ai-layout">
+        <div class="ai-form-card">
+          <div class="ai-form-header">
+            <h2 class="ai-form-title">Find Your Perfect Trek</h2>
+            <p class="ai-form-sub">Tell us your intention, and our AI will map out a journey that aligns with your spirit and fitness.</p>
+          </div>
+          <div class="ai-inputs">
+            <div class="input-group">
+              <label class="input-label" for="aiExperience">EXPERIENCE LEVEL</label>
+              <select class="ai-select" id="aiExperience" name="experience">
+                <option>First Timer</option>
+                <option>Beginner</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+                <option>Expert</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="aiDifficulty">DIFFICULTY</label>
+              <select class="ai-select" id="aiDifficulty" name="difficulty">
+                <option>Easy</option>
+                <option>Moderate</option>
+                <option>Difficult</option>
+                <option>Very Difficult</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="aiDuration">DURATION</label>
+              <select class="ai-select" id="aiDuration" name="duration">
+                <option>1–2 Days</option>
+                <option>3–5 Days</option>
+                <option>6–9 Days</option>
+                <option>10+ Days</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="aiState">STATE / REGION</label>
+              <select class="ai-select" id="aiState" name="state">
+                <option>Any Region</option>
+                <option>Uttarakhand</option>
+                <option>Himachal Pradesh</option>
+                <option>Kashmir</option>
+                <option>Ladakh</option>
+                <option>Sikkim</option>
+                <option>Maharashtra</option>
+                <option>Kerala</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="aiSeason">BEST SEASON</label>
+              <select class="ai-select" id="aiSeason" name="season">
+                <option>Any Season</option>
+                <option>Summer (Apr–Jun)</option>
+                <option>Monsoon (Jul–Aug)</option>
+                <option>Autumn (Sep–Nov)</option>
+                <option>Winter (Dec–Mar)</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="aiBudget">BUDGET</label>
+              <select class="ai-select" id="aiBudget" name="budget">
+                <option>Budget (&lt; Rs.5k)</option>
+                <option>Mid (Rs.5k–15k)</option>
+                <option>Premium (Rs.15k–30k)</option>
+                <option>Luxury (Rs.30k+)</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-ai-generate" id="generateTrekBtn" aria-label="Generate my trek recommendation">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 1 0 10 10"/></svg>
+            Generate My Trek
+          </button>
+        </div>
+
+        <div class="ai-result-card" id="aiResultCard">
+          <div class="ai-result-header">
+            <div class="ai-avatar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 1 0 10 10"/></svg>
+            </div>
+            <div>
+              <div class="ai-name">AI Companion</div>
+              <div class="ai-status" id="aiStatus">Ready to assist</div>
+            </div>
+          </div>
+          <div class="ai-result-body" id="aiResultBody">
+            <p class="ai-result-text">
+              "Based on your preferences, I suggest the <strong>Valley of Flowers National Park</strong> — a UNESCO World Heritage site bursting with 300+ species of wildflowers at 3,600m. Gentle slopes, magical monsoon light, and zero crowds on the inner trail."
+            </p>
+            <div class="ai-tags">
+              <span class="ai-tag">Uttarakhand</span>
+              <span class="ai-tag">6 Days</span>
+              <span class="ai-tag">Easy–Moderate</span>
+            </div>
+          </div>
+          <div class="ai-loading-bar">
+            <div class="ai-loading-progress" id="aiLoadingBar"></div>
+          </div>
+          <button class="btn-ai-view" id="viewTrekBtn" aria-label="View AI recommended trek">View This Trek &#8594;</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TREK CATEGORIES ===== -->
+  <section class="section categories-section" id="categories" aria-label="Trek categories">
+    <div class="container">
+      <div class="section-tag center">Curated Collections</div>
+      <h2 class="section-title center">Trek by Experience</h2>
+      <div class="categories-grid">
+        <a href="#" class="category-card" id="catWeekend" aria-label="Weekend Treks">
+          <div class="cat-img-wrap">
+            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" alt="Weekend mountain trek" class="cat-img" loading="lazy" />
+            <div class="cat-overlay"></div>
+          </div>
+          <div class="cat-content">
+            <span class="cat-count">245 treks</span>
+            <h3 class="cat-name">Weekend Treks</h3>
+          </div>
+        </a>
+        <a href="#" class="category-card cat-tall" id="catSnow" aria-label="Snow Treks">
+          <div class="cat-img-wrap">
+            <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80" alt="Snow mountains" class="cat-img" loading="lazy" />
+            <div class="cat-overlay"></div>
+          </div>
+          <div class="cat-content">
+            <span class="cat-count">132 treks</span>
+            <h3 class="cat-name">Snow Treks</h3>
+          </div>
+        </a>
+        <a href="#" class="category-card" id="catMonsoon" aria-label="Monsoon Treks">
+          <div class="cat-img-wrap">
+            <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80" alt="Monsoon green valley" class="cat-img" loading="lazy" />
+            <div class="cat-overlay"></div>
+          </div>
+          <div class="cat-content">
+            <span class="cat-count">198 treks</span>
+            <h3 class="cat-name">Monsoon Treks</h3>
+          </div>
+        </a>
+        <a href="#" class="category-card cat-wide" id="catHighAlt" aria-label="High Altitude Treks">
+          <div class="cat-img-wrap">
+            <img src="https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=600&q=80" alt="High altitude Himalayan peak" class="cat-img" loading="lazy" />
+            <div class="cat-overlay"></div>
+          </div>
+          <div class="cat-content">
+            <span class="cat-count">89 treks</span>
+            <h3 class="cat-name">High Altitude</h3>
+          </div>
+        </a>
+        <a href="#" class="category-card" id="catForest" aria-label="Forest Treks">
+          <div class="cat-img-wrap">
+            <img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=80" alt="Dense forest trail" class="cat-img" loading="lazy" />
+            <div class="cat-overlay"></div>
+          </div>
+          <div class="cat-content">
+            <span class="cat-count">167 treks</span>
+            <h3 class="cat-name">Forest Treks</h3>
+          </div>
+        </a>
+        <a href="#" class="category-card" id="catHidden" aria-label="Hidden Gems">
+          <div class="cat-img-wrap">
+            <img src="https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=400&q=80" alt="Hidden mountain trail" class="cat-img" loading="lazy" />
+            <div class="cat-overlay"></div>
+          </div>
+          <div class="cat-content">
+            <span class="cat-count">78 treks</span>
+            <h3 class="cat-name">Hidden Gems</h3>
+          </div>
+        </a>
+        <a href="#" class="category-card cat-wide" id="catBeginner" aria-label="Beginner Friendly">
+          <div class="cat-img-wrap">
+            <img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=80" alt="Beginner trekking trail" class="cat-img" loading="lazy" />
+            <div class="cat-overlay"></div>
+          </div>
+          <div class="cat-content">
+            <span class="cat-count">312 treks</span>
+            <h3 class="cat-name">Beginner Friendly</h3>
+          </div>
+        </a>
+        <a href="#" class="category-card" id="catDesert" aria-label="Desert Treks">
+          <div class="cat-img-wrap">
+            <img src="https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400&q=80" alt="Ladakh desert" class="cat-img" loading="lazy" />
+            <div class="cat-overlay"></div>
+          </div>
+          <div class="cat-content">
+            <span class="cat-count">43 treks</span>
+            <h3 class="cat-name">Desert Treks</h3>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== COMMUNITY / GALLERY ===== -->
+  <section class="section community-section" id="community" aria-label="Community gallery">
+    <div class="container">
+      <div class="section-tag center">Gallery of Stillness</div>
+      <h2 class="section-title center">Captured Moments</h2>
+      <p class="section-subtitle center">Stories from 25,000+ trekkers who found themselves on India's trails.</p>
+
+      <div class="masonry-grid">
+        <div class="masonry-col">
+          <div class="gallery-card">
+            <img src="trek_valley_flowers_1784286752079.png" alt="Ridge at Dusk" class="gallery-img" loading="lazy" />
+            <div class="gallery-caption">
+              <span class="gallery-tag">Above the Clouds</span>
+              <span class="gallery-title">The Ridge at Dusk</span>
+            </div>
+          </div>
+          <div class="gallery-card">
+            <img src="trek_roopkund_1784286741949.png" alt="Himalayan High-Altitude Trek" class="gallery-img" loading="lazy" />
+            <div class="gallery-caption">
+              <span class="gallery-tag">Himalayan</span>
+              <span class="gallery-title">High-Altitude Trek</span>
+            </div>
+          </div>
+        </div>
+        <div class="masonry-col">
+          <div class="quote-card">
+            <div class="quote-num">99</div>
+            <blockquote class="quote-text">"The mountains are not meant to be conquered, but to be listened to."</blockquote>
+            <div class="quote-author">— Aum Sharma, Guide</div>
+          </div>
+          <div class="gallery-card">
+            <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80" alt="Morning mist" class="gallery-img" loading="lazy" />
+            <div class="gallery-caption">
+              <span class="gallery-tag">Dawn Light</span>
+              <span class="gallery-title">Morning Mist</span>
+            </div>
+          </div>
+        </div>
+        <div class="masonry-col">
+          <div class="gallery-card gallery-card-tall">
+            <img src="trek_pin_parvati_1784286774167.png" alt="Himalayan ridgeline at sunset" class="gallery-img" loading="lazy" />
+            <div class="gallery-caption">
+              <span class="gallery-tag">Golden Hour</span>
+              <span class="gallery-title">Ridgeline at Sunset</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonials-row">
+        <div class="testimonial-card" id="testimonial1">
+          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p class="testimonial-text">"TrekIndia changed how I plan treks. The AI planner suggested Roopkund when I had no idea where to start. Life-changing trip."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar" style="background: linear-gradient(135deg, #556B2F, #9CAF88);">P</div>
+            <div>
+              <strong>Priya Mehta</strong>
+              <span>Mumbai &middot; 12 treks completed</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card" id="testimonial2">
+          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p class="testimonial-text">"The company comparison feature saved me Rs.8000 and found me a better guide. The offline maps worked flawlessly in Ladakh without signal."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar" style="background: linear-gradient(135deg, #708238, #556B2F);">R</div>
+            <div>
+              <strong>Rahul Sharma</strong>
+              <span>Delhi &middot; 8 treks completed</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card" id="testimonial3">
+          <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p class="testimonial-text">"The community here is incredible. Met my trekking group through TrekIndia. We've now done 5 treks together across Himachal."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar" style="background: linear-gradient(135deg, #9CAF88, #708238);">A</div>
+            <div>
+              <strong>Ananya Krishnan</strong>
+              <span>Bangalore &middot; 19 treks completed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TRUSTED COMPANIES ===== -->
+  <section class="section companies-section" id="companies" aria-label="Trusted trekking companies">
+    <div class="container">
+      <div class="section-tag center">Verified Partners</div>
+      <h2 class="section-title center">Trusted Trek Companies</h2>
+      <p class="section-subtitle center">Every company on TrekIndia is verified for safety, sustainability, and trekker experience.</p>
+      <div class="companies-grid">
+        <div class="company-card" id="companyCard1">
+          <div class="company-logo-wrap">
+            <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(85,107,47,0.12), rgba(156,175,136,0.12));">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#556B2F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
+            </div>
+          </div>
+          <h4 class="company-name">Trek The Himalayas</h4>
+          <div class="company-rating">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.9 &middot; 284 treks
+          </div>
+          <button class="btn-company-explore" aria-label="Explore Trek The Himalayas">Explore &#8594;</button>
+        </div>
+        <div class="company-card" id="companyCard2">
+          <div class="company-logo-wrap">
+            <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(112,130,56,0.12), rgba(85,107,47,0.12));">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#708238" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20"/></svg>
+            </div>
+          </div>
+          <h4 class="company-name">Indiahikes</h4>
+          <div class="company-rating">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.8 &middot; 512 treks
+          </div>
+          <button class="btn-company-explore" aria-label="Explore Indiahikes">Explore &#8594;</button>
+        </div>
+        <div class="company-card" id="companyCard3">
+          <div class="company-logo-wrap">
+            <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(156,175,136,0.12), rgba(85,107,47,0.12));">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9CAF88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+          </div>
+          <h4 class="company-name">Bikat Adventures</h4>
+          <div class="company-rating">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.7 &middot; 178 treks
+          </div>
+          <button class="btn-company-explore" aria-label="Explore Bikat Adventures">Explore &#8594;</button>
+        </div>
+        <div class="company-card" id="companyCard4">
+          <div class="company-logo-wrap">
+            <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(85,107,47,0.12), rgba(112,130,56,0.12));">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#556B2F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </div>
+          </div>
+          <h4 class="company-name">Thrillophilia</h4>
+          <div class="company-rating">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.6 &middot; 390 treks
+          </div>
+          <button class="btn-company-explore" aria-label="Explore Thrillophilia">Explore &#8594;</button>
+        </div>
+        <div class="company-card" id="companyCard5">
+          <div class="company-logo-wrap">
+            <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(112,130,56,0.12), rgba(156,175,136,0.12));">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#708238" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+            </div>
+          </div>
+          <h4 class="company-name">Wanderlust India</h4>
+          <div class="company-rating">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.8 &middot; 221 treks
+          </div>
+          <button class="btn-company-explore" aria-label="Explore Wanderlust India">Explore &#8594;</button>
+        </div>
+        <div class="company-card" id="companyCard6">
+          <div class="company-logo-wrap">
+            <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(156,175,136,0.12), rgba(112,130,56,0.12));">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9CAF88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+          </div>
+          <h4 class="company-name">Snow Leopard Adventures</h4>
+          <div class="company-rating">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            4.9 &middot; 145 treks
+          </div>
+          <button class="btn-company-explore" aria-label="Explore Snow Leopard Adventures">Explore &#8594;</button>
+        </div>
+      </div>
+      <div class="center-btn">
+        <a href="#" class="btn-outline-green" id="viewAllCompaniesBtn">View All 100+ Companies</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== JOURNAL ===== -->
+  <section class="section journal-section" id="journal" aria-label="Trek journal">
+    <div class="container">
+      <div class="section-tag center">Trail Dispatches</div>
+      <h2 class="section-title center">Latest Trek Journal</h2>
+      <p class="section-subtitle center">Expert insights, trail reports, and stories from the edge of civilization.</p>
+      <div class="journal-grid">
+        <article class="journal-card journal-card-featured" id="journalCard1">
+          <div class="journal-img-wrap">
+            <img src="community_gallery_1_1784286796919.png" alt="Trekkers at base camp at dusk" class="journal-img" loading="lazy" />
+            <div class="journal-img-overlay"></div>
+            <span class="journal-category">Expedition Report</span>
+          </div>
+          <div class="journal-body">
+            <div class="journal-meta">
+              <span class="journal-read-time">8 min read</span>
+              <span class="journal-dot">&middot;</span>
+              <span class="journal-date">Jun 28, 2025</span>
+            </div>
+            <h3 class="journal-title">What Nobody Tells You About Trekking Above 5000m</h3>
+            <p class="journal-excerpt">Acclimatization, mental resilience, and the quiet joy of being completely offline — a candid report from the Pin Parvati crossing.</p>
+            <div class="journal-author">
+              <div class="author-avatar sm" style="background: linear-gradient(135deg, #556B2F, #9CAF88);">A</div>
+              <span>Arjun Nair &middot; Expert Guide</span>
+            </div>
+          </div>
+        </article>
+        <article class="journal-card" id="journalCard2">
+          <div class="journal-img-wrap">
+            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&q=80" alt="Snowy mountain at dawn" class="journal-img" loading="lazy" />
+            <div class="journal-img-overlay"></div>
+            <span class="journal-category">Gear Guide</span>
+          </div>
+          <div class="journal-body">
+            <div class="journal-meta">
+              <span class="journal-read-time">5 min read</span>
+              <span class="journal-dot">&middot;</span>
+              <span class="journal-date">Jun 15, 2025</span>
+            </div>
+            <h3 class="journal-title">The Only Packing List You Need for Himalayan Treks</h3>
+            <p class="journal-excerpt">Light enough to move fast, complete enough to stay safe.</p>
+            <div class="journal-author">
+              <div class="author-avatar sm" style="background: linear-gradient(135deg, #708238, #556B2F);">S</div>
+              <span>Sana Kapoor</span>
+            </div>
+          </div>
+        </article>
+        <article class="journal-card" id="journalCard3">
+          <div class="journal-img-wrap">
+            <img src="https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=500&q=80" alt="Forest light" class="journal-img" loading="lazy" />
+            <div class="journal-img-overlay"></div>
+            <span class="journal-category">Hidden Gems</span>
+          </div>
+          <div class="journal-body">
+            <div class="journal-meta">
+              <span class="journal-read-time">6 min read</span>
+              <span class="journal-dot">&middot;</span>
+              <span class="journal-date">May 30, 2025</span>
+            </div>
+            <h3 class="journal-title">5 Uttarakhand Treks That Still Feel Like Secrets</h3>
+            <p class="journal-excerpt">Far from the crowd. Deep in the wild. These trails are worth every extra kilometer.</p>
+            <div class="journal-author">
+              <div class="author-avatar sm" style="background: linear-gradient(135deg, #9CAF88, #708238);">V</div>
+              <span>Vikram Tiwari</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== NEWSLETTER ===== -->
+  <section class="section newsletter-section" id="newsletter" aria-label="Newsletter signup">
+    <div class="container">
+      <div class="newsletter-card">
+        <div class="newsletter-glow"></div>
+        <div class="newsletter-content">
+          <div class="newsletter-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
+          </div>
+          <h2 class="newsletter-title">Never Miss Trek Season</h2>
+          <p class="newsletter-sub">Join 25,000+ trekkers getting curated trail updates, permit windows, and AI-powered recommendations every week.</p>
+          <form class="newsletter-form" id="newsletterForm" novalidate aria-label="Newsletter signup form">
+            <div class="newsletter-input-wrap">
+              <input type="email" class="newsletter-input" id="newsletterEmail" placeholder="your@email.com" aria-label="Email address" required />
+              <button type="submit" class="btn-newsletter" id="newsletterSubmitBtn" aria-label="Join community">Join Community</button>
+            </div>
+          </form>
+          <p class="newsletter-note">No spam, ever. Unsubscribe anytime.</p>
+          <div class="newsletter-stats">
+            <span>&#127956; 5000+ Treks</span>
+            <span>&middot;</span>
+            <span>&#128205; 28 States</span>
+            <span>&middot;</span>
+            <span>&#128101; 25K+ Trekkers</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" id="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="#" class="footer-logo" aria-label="TrekIndia home">
+            <span class="logo-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
+            </span>
+            TrekIndia
+          </a>
+          <p class="footer-brand-desc">India's premium trekking discovery platform. Explore, compare, and plan adventures across 28 states.</p>
+          <div class="footer-socials">
+            <a href="#" class="social-btn" aria-label="TrekIndia on Instagram" id="instagramLink">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            </a>
+            <a href="#" class="social-btn" aria-label="TrekIndia on Twitter" id="twitterLink">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+            </a>
+            <a href="#" class="social-btn" aria-label="TrekIndia on YouTube" id="youtubeLink">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-nav-cols">
+          <div class="footer-col">
+            <h4 class="footer-col-title">Discover</h4>
+            <ul class="footer-links">
+              <li><a href="#" class="footer-link">All Treks</a></li>
+              <li><a href="#" class="footer-link">By State</a></li>
+              <li><a href="#" class="footer-link">By Difficulty</a></li>
+              <li><a href="#" class="footer-link">By Season</a></li>
+              <li><a href="#" class="footer-link">Hidden Gems</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4 class="footer-col-title">Platform</h4>
+            <ul class="footer-links">
+              <li><a href="#" class="footer-link">AI Planner</a></li>
+              <li><a href="#" class="footer-link">Companies</a></li>
+              <li><a href="#" class="footer-link">Community</a></li>
+              <li><a href="#" class="footer-link">GPX Maps</a></li>
+              <li><a href="#" class="footer-link">Weather</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4 class="footer-col-title">Journal</h4>
+            <ul class="footer-links">
+              <li><a href="#" class="footer-link">Trail Guides</a></li>
+              <li><a href="#" class="footer-link">Gear Reviews</a></li>
+              <li><a href="#" class="footer-link">Safety Tips</a></li>
+              <li><a href="#" class="footer-link">Permit Info</a></li>
+              <li><a href="#" class="footer-link">Stories</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4 class="footer-col-title">Company</h4>
+            <ul class="footer-links">
+              <li><a href="#" class="footer-link">About Us</a></li>
+              <li><a href="#" class="footer-link">Careers</a></li>
+              <li><a href="#" class="footer-link">Press</a></li>
+              <li><a href="#" class="footer-link">Contact</a></li>
+              <li><a href="#" class="footer-link">List Treks</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copy">&copy; 2025 TrekIndia. Made with &#9829; for India's trails.</p>
+        <div class="footer-legal">
+          <a href="#" class="footer-legal-link">Privacy Policy</a>
+          <a href="#" class="footer-legal-link">Terms of Service</a>
+          <a href="#" class="footer-legal-link">Cookie Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="searchModal" role="dialog" aria-modal="true" aria-label="Search" aria-hidden="true">
+    <div class="search-modal-inner">
+      <div class="search-input-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" class="search-modal-input" id="searchInput" placeholder="Search treks, states, companies..." aria-label="Search" />
+        <button class="search-close-btn" id="searchCloseBtn" aria-label="Close search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="search-suggestions">
+        <div class="search-suggestion-group">
+          <span class="search-sugg-label">Popular Searches</span>
+          <div class="search-chips">
+            <button class="search-chip">Kedarkantha</button>
+            <button class="search-chip">Hampta Pass</button>
+            <button class="search-chip">Valley of Flowers</button>
+            <button class="search-chip">Roopkund</button>
+            <button class="search-chip">Kashmir Great Lakes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+
+  <script src="main.js"></script>
+</body>
+</html>
