@@ -9,6 +9,7 @@
 const navbar = document.getElementById('navbar');
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const mobileMenu = document.getElementById('mobileMenu');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
 
 window.addEventListener('scroll', () => {
   if (window.scrollY > 20) {
@@ -17,6 +18,17 @@ window.addEventListener('scroll', () => {
     navbar.classList.remove('scrolled');
   }
 }, { passive: true });
+
+const savedTheme = localStorage.getItem('trekindia-theme');
+if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  document.body.classList.add('dark');
+}
+
+themeToggleBtn?.addEventListener('click', () => {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  localStorage.setItem('trekindia-theme', isDark ? 'dark' : 'light');
+});
 
 mobileMenuBtn.addEventListener('click', () => {
   const isOpen = mobileMenu.classList.toggle('open');
@@ -208,6 +220,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const aiResultBody = document.getElementById('aiResultBody');
   const aiLoadingBar = document.getElementById('aiLoadingBar');
   const aiResultCard = document.getElementById('aiResultCard');
+  const stepCards = Array.from(document.querySelectorAll('.ai-step-card'));
+  const stepPills = Array.from(document.querySelectorAll('.ai-step-pill'));
+  const aiProgressFill = document.getElementById('aiProgressFill');
+  const aiBackBtn = document.getElementById('aiBackBtn');
+  const aiNextBtn = document.getElementById('aiNextBtn');
+  let currentStep = 0;
+
+  function updateStepper() {
+    stepCards.forEach((card, index) => card.classList.toggle('active', index === currentStep));
+    stepPills.forEach((pill, index) => pill.classList.toggle('active', index === currentStep));
+    const progress = ((currentStep + 1) / stepCards.length) * 100;
+    aiProgressFill.style.width = `${progress}%`;
+    aiBackBtn.disabled = currentStep === 0;
+    aiBackBtn.style.opacity = currentStep === 0 ? '0.5' : '1';
+    aiNextBtn.textContent = currentStep === stepCards.length - 1 ? 'Generate' : 'Next';
+  }
+
+  updateStepper();
+
+  aiBackBtn?.addEventListener('click', () => {
+    if (currentStep > 0) {
+      currentStep -= 1;
+      updateStepper();
+    }
+  });
+
+  aiNextBtn?.addEventListener('click', () => {
+    if (currentStep < stepCards.length - 1) {
+      currentStep += 1;
+      updateStepper();
+    } else {
+      generateBtn.click();
+    }
+  });
 
   const trekRecommendations = {
     'First Timer': {
@@ -252,29 +298,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const difficulty = document.getElementById('aiDifficulty').value;
       const state = document.getElementById('aiState').value;
       const duration = document.getElementById('aiDuration').value;
+      const fitness = document.getElementById('aiFitness')?.value || 'Moderate';
 
       // Loading state
       generateBtn.disabled = true;
       generateBtn.textContent = 'Generating...';
-      aiStatus.textContent = 'Analyzing preferences…';
+      aiStatus.textContent = 'Searching...';
       aiResultCard.classList.add('loading');
       aiLoadingBar.style.animation = 'generating 1.5s ease-in-out infinite';
       aiLoadingBar.style.width = '';
 
       await delay(600);
-      aiStatus.textContent = 'Matching trails…';
+      aiStatus.textContent = 'Analyzing Weather...';
       await delay(600);
-      aiStatus.textContent = 'Personalizing route…';
+      aiStatus.textContent = 'Finding Best Match...';
       await delay(700);
 
       // Recommendation
       const recommendation = getRecommendation(experience, difficulty, state);
-      const tags = [state === 'Any Region' ? 'Uttarakhand' : state, duration, difficulty];
+      const tags = [state === 'Any Region' ? 'Uttarakhand' : state, duration, `${difficulty} • ${fitness}`];
 
       aiResultBody.innerHTML = `
         <p class="ai-result-text">${recommendation}</p>
         <div class="ai-tags">
           ${tags.map(t => `<span class="ai-tag">${t}</span>`).join('')}
+        </div>
+        <div class="ai-action-row">
+          <button class="ai-action-btn" type="button">Save</button>
+          <button class="ai-action-btn" type="button">Share</button>
+          <button class="ai-action-btn" type="button">Compare</button>
         </div>
       `;
 

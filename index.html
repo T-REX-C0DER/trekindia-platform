@@ -24,22 +24,39 @@
         </span>
         TrekIndia
       </a>
-      <ul class="nav-links" role="list">
-        <li><a href="#treks" class="nav-link">Explore</a></li>
-        <li><a href="#states" class="nav-link">States</a></li>
-        <li><a href="#companies" class="nav-link">Companies</a></li>
-        <li><a href="#community" class="nav-link">Community</a></li>
-        <li><a href="#journal" class="nav-link">Journal</a></li>
-        <li><a href="#about" class="nav-link">About</a></li>
-      </ul>
+      <div class="nav-center">
+        <ul class="nav-links" role="list">
+          <li class="nav-item">
+            <a href="#treks" class="nav-link active">Explore</a>
+            <div class="nav-mega-menu" aria-label="Explore menu">
+              <div class="nav-mega-card"><strong>Seasonal Picks</strong><span>Valley of Flowers • Hampta Pass</span></div>
+              <div class="nav-mega-card"><strong>Weekend Escapes</strong><span>3–5 day treks near major cities</span></div>
+              <div class="nav-mega-card"><strong>Hidden Gems</strong><span>Low-traffic routes with big views</span></div>
+              <div class="nav-mega-card"><strong>Live Weather</strong><span>Realtime forecasts for every route</span></div>
+            </div>
+          </li>
+          <li class="nav-item"><a href="#states" class="nav-link">States</a></li>
+          <li class="nav-item"><a href="#companies" class="nav-link">Companies</a></li>
+          <li class="nav-item"><a href="#community" class="nav-link">Community</a></li>
+          <li class="nav-item"><a href="#journal" class="nav-link">Journal</a></li>
+          <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
+        </ul>
+      </div>
       <div class="nav-actions">
         <button class="nav-icon-btn" aria-label="Search treks" id="searchBtn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </button>
+        <button class="nav-icon-btn" aria-label="Toggle dark mode" id="themeToggleBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
+        <button class="nav-icon-btn" aria-label="Notifications" id="notificationBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-1"/><path d="M15 17v1a3 3 0 0 1-6 0v-1"/></svg>
+          <span class="notification-dot"></span>
+        </button>
         <button class="nav-icon-btn" aria-label="User profile" id="profileBtn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </button>
-        <a href="#ai-planner" class="btn-primary nav-cta" id="startPlanningBtn">Start Planning</a>
+        <a href="#ai-planner" class="btn-primary nav-cta" id="startPlanningBtn">Become a Guide</a>
       </div>
       <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">
         <span></span><span></span><span></span>
@@ -71,21 +88,33 @@
         Discover India's<br /><em>Hidden Trails</em>
       </h1>
       <p class="hero-subtitle fade-up" style="--delay: 0.4s">
-        Explore over 5000+ trekking routes across India. Compare trekking companies,<br class="break-desktop" /> discover hidden gems, connect with fellow trekkers and plan unforgettable adventures.
+        Explore over 5,238 trekking routes across India. Compare trekking companies,<br class="break-desktop" /> discover hidden gems, connect with fellow trekkers and plan unforgettable adventures.
       </p>
-      <div class="hero-ctas fade-up" style="--delay: 0.55s">
+      <div class="hero-search fade-up" style="--delay: 0.55s">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search treks, destinations, states..." aria-label="Search treks" />
+        <button class="hero-search-btn">Search</button>
+      </div>
+      <div class="hero-suggestions fade-up" style="--delay: 0.62s">
+        <span class="hero-pill">Kedarkantha</span>
+        <span class="hero-pill">Hampta Pass</span>
+        <span class="hero-pill">Weekend Treks</span>
+        <span class="hero-pill">Maharashtra</span>
+        <span class="hero-pill">Valley of Flowers</span>
+      </div>
+      <div class="hero-ctas fade-up" style="--delay: 0.7s">
         <a href="#treks" class="btn-primary btn-lg" id="exploreTreksBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
-          Explore Treks
+          Explore 5,000+ Treks
         </a>
         <a href="#ai-planner" class="btn-ghost btn-lg" id="aiPlannerBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><circle cx="18" cy="6" r="4"/></svg>
-          AI Trek Planner
+          Plan My Trek with AI
         </a>
       </div>
-      <div class="hero-stats fade-up" style="--delay: 0.75s" role="region" aria-label="Platform statistics">
+      <div class="hero-stats fade-up" style="--delay: 0.82s" role="region" aria-label="Platform statistics">
         <div class="stat-item">
-          <span class="stat-number" data-target="5000" data-suffix="+">0</span>
+          <span class="stat-number" data-target="5238">0</span>
           <span class="stat-label">Treks</span>
         </div>
         <div class="stat-divider"></div>
@@ -95,13 +124,13 @@
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number" data-target="100" data-suffix="+">0</span>
+          <span class="stat-number" data-target="124">0</span>
           <span class="stat-label">Companies</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number" data-target="25" data-suffix="K+">0</span>
-          <span class="stat-label">Community</span>
+          <span class="stat-number" data-target="25000" data-suffix="+">0</span>
+          <span class="stat-label">Trekkers</span>
         </div>
       </div>
     </div>
@@ -464,66 +493,111 @@
             <h2 class="ai-form-title">Find Your Perfect Trek</h2>
             <p class="ai-form-sub">Tell us your intention, and our AI will map out a journey that aligns with your spirit and fitness.</p>
           </div>
-          <div class="ai-inputs">
-            <div class="input-group">
-              <label class="input-label" for="aiExperience">EXPERIENCE LEVEL</label>
-              <select class="ai-select" id="aiExperience" name="experience">
-                <option>First Timer</option>
-                <option>Beginner</option>
-                <option>Intermediate</option>
-                <option>Advanced</option>
-                <option>Expert</option>
-              </select>
+          <div class="ai-stepper">
+            <div class="ai-step-progress"><div class="ai-step-progress-fill" id="aiProgressFill"></div></div>
+            <div class="ai-step-track" id="aiStepTrack">
+              <span class="ai-step-pill active">1. Experience</span>
+              <span class="ai-step-pill">2. Fitness</span>
+              <span class="ai-step-pill">3. Budget</span>
+              <span class="ai-step-pill">4. Season</span>
+              <span class="ai-step-pill">5. Region</span>
             </div>
-            <div class="input-group">
-              <label class="input-label" for="aiDifficulty">DIFFICULTY</label>
-              <select class="ai-select" id="aiDifficulty" name="difficulty">
-                <option>Easy</option>
-                <option>Moderate</option>
-                <option>Difficult</option>
-                <option>Very Difficult</option>
-              </select>
+            <div class="ai-step-card active" data-step="1">
+              <div class="ai-step-title">Choose the rhythm that feels right for you</div>
+              <div class="ai-inputs">
+                <div class="input-group">
+                  <label class="input-label" for="aiExperience">EXPERIENCE LEVEL</label>
+                  <select class="ai-select" id="aiExperience" name="experience">
+                    <option>First Timer</option>
+                    <option>Beginner</option>
+                    <option>Intermediate</option>
+                    <option>Advanced</option>
+                    <option>Expert</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label class="input-label" for="aiDifficulty">DIFFICULTY</label>
+                  <select class="ai-select" id="aiDifficulty" name="difficulty">
+                    <option>Easy</option>
+                    <option>Moderate</option>
+                    <option>Difficult</option>
+                    <option>Very Difficult</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div class="input-group">
-              <label class="input-label" for="aiDuration">DURATION</label>
-              <select class="ai-select" id="aiDuration" name="duration">
-                <option>1–2 Days</option>
-                <option>3–5 Days</option>
-                <option>6–9 Days</option>
-                <option>10+ Days</option>
-              </select>
+            <div class="ai-step-card" data-step="2">
+              <div class="ai-step-title">How much comfort and effort feels sustainable?</div>
+              <div class="ai-inputs">
+                <div class="input-group">
+                  <label class="input-label" for="aiDuration">DURATION</label>
+                  <select class="ai-select" id="aiDuration" name="duration">
+                    <option>1–2 Days</option>
+                    <option>3–5 Days</option>
+                    <option>6–9 Days</option>
+                    <option>10+ Days</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label class="input-label" for="aiFitness">FITNESS</label>
+                  <select class="ai-select" id="aiFitness" name="fitness">
+                    <option>Light</option>
+                    <option>Moderate</option>
+                    <option>Strong</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div class="input-group">
-              <label class="input-label" for="aiState">STATE / REGION</label>
-              <select class="ai-select" id="aiState" name="state">
-                <option>Any Region</option>
-                <option>Uttarakhand</option>
-                <option>Himachal Pradesh</option>
-                <option>Kashmir</option>
-                <option>Ladakh</option>
-                <option>Sikkim</option>
-                <option>Maharashtra</option>
-                <option>Kerala</option>
-              </select>
+            <div class="ai-step-card" data-step="3">
+              <div class="ai-step-title">Keep the trip aligned with your budget</div>
+              <div class="ai-inputs">
+                <div class="input-group">
+                  <label class="input-label" for="aiBudget">BUDGET</label>
+                  <select class="ai-select" id="aiBudget" name="budget">
+                    <option>Budget (&lt; Rs.5k)</option>
+                    <option>Mid (Rs.5k–15k)</option>
+                    <option>Premium (Rs.15k–30k)</option>
+                    <option>Luxury (Rs.30k+)</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div class="input-group">
-              <label class="input-label" for="aiSeason">BEST SEASON</label>
-              <select class="ai-select" id="aiSeason" name="season">
-                <option>Any Season</option>
-                <option>Summer (Apr–Jun)</option>
-                <option>Monsoon (Jul–Aug)</option>
-                <option>Autumn (Sep–Nov)</option>
-                <option>Winter (Dec–Mar)</option>
-              </select>
+            <div class="ai-step-card" data-step="4">
+              <div class="ai-step-title">Choose the season that matches your window</div>
+              <div class="ai-inputs">
+                <div class="input-group">
+                  <label class="input-label" for="aiSeason">BEST SEASON</label>
+                  <select class="ai-select" id="aiSeason" name="season">
+                    <option>Any Season</option>
+                    <option>Summer (Apr–Jun)</option>
+                    <option>Monsoon (Jul–Aug)</option>
+                    <option>Autumn (Sep–Nov)</option>
+                    <option>Winter (Dec–Mar)</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div class="input-group">
-              <label class="input-label" for="aiBudget">BUDGET</label>
-              <select class="ai-select" id="aiBudget" name="budget">
-                <option>Budget (&lt; Rs.5k)</option>
-                <option>Mid (Rs.5k–15k)</option>
-                <option>Premium (Rs.15k–30k)</option>
-                <option>Luxury (Rs.30k+)</option>
-              </select>
+            <div class="ai-step-card" data-step="5">
+              <div class="ai-step-title">Pick the region that speaks to you</div>
+              <div class="ai-inputs">
+                <div class="input-group">
+                  <label class="input-label" for="aiState">STATE / REGION</label>
+                  <select class="ai-select" id="aiState" name="state">
+                    <option>Any Region</option>
+                    <option>Uttarakhand</option>
+                    <option>Himachal Pradesh</option>
+                    <option>Kashmir</option>
+                    <option>Ladakh</option>
+                    <option>Sikkim</option>
+                    <option>Maharashtra</option>
+                    <option>Kerala</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="ai-step-actions">
+              <button type="button" class="btn-ai-secondary" id="aiBackBtn">Back</button>
+              <button type="button" class="btn-ai-next" id="aiNextBtn">Next</button>
             </div>
           </div>
           <button class="btn-ai-generate" id="generateTrekBtn" aria-label="Generate my trek recommendation">
@@ -551,11 +625,46 @@
               <span class="ai-tag">6 Days</span>
               <span class="ai-tag">Easy–Moderate</span>
             </div>
+            <div class="ai-action-row">
+              <button class="ai-action-btn" type="button">Save</button>
+              <button class="ai-action-btn" type="button">Share</button>
+              <button class="ai-action-btn" type="button">Compare</button>
+            </div>
           </div>
           <div class="ai-loading-bar">
             <div class="ai-loading-progress" id="aiLoadingBar"></div>
           </div>
           <button class="btn-ai-view" id="viewTrekBtn" aria-label="View AI recommended trek">View This Trek &#8594;</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PREMIUM FEATURES ===== -->
+  <section class="section features-showcase-section" aria-label="Premium trek features">
+    <div class="container">
+      <div class="section-tag center">Premium Tools</div>
+      <h2 class="section-title center">Everything you need before the first step</h2>
+      <div class="feature-showcase-grid">
+        <div class="feature-showcase-card">
+          <div class="feature-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><path d="M12 3v18"/></svg></div>
+          <h3>Live Weather</h3>
+          <p>Track changing mountain conditions and trail safety in real time.</p>
+        </div>
+        <div class="feature-showcase-card">
+          <div class="feature-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></div>
+          <h3>Season Calendar</h3>
+          <p>Know when each region is at its best, from snowline to monsoon.</p>
+        </div>
+        <div class="feature-showcase-card">
+          <div class="feature-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/><path d="M5 5l7 7 7-7"/></svg></div>
+          <h3>Trek Comparison</h3>
+          <p>Compare altitude, distance, difficulty, and cost side by side.</p>
+        </div>
+        <div class="feature-showcase-card">
+          <div class="feature-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 20V8"/><path d="M12 20V4"/><path d="M17 20v-6"/></svg></div>
+          <h3>Fitness Score</h3>
+          <p>See whether a route fits your current stamina and recovery window.</p>
         </div>
       </div>
     </div>
@@ -746,43 +855,79 @@
       <p class="section-subtitle center">Every company on TrekIndia is verified for safety, sustainability, and trekker experience.</p>
       <div class="companies-grid">
         <div class="company-card" id="companyCard1">
-          <div class="company-logo-wrap">
-            <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(85,107,47,0.12), rgba(156,175,136,0.12));">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#556B2F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
+          <div class="company-card-top">
+            <div class="company-logo-wrap">
+              <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(85,107,47,0.12), rgba(156,175,136,0.12));">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#556B2F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
+              </div>
             </div>
+            <span class="verified-pill">Verified</span>
           </div>
           <h4 class="company-name">Trek The Himalayas</h4>
           <div class="company-rating">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             4.9 &middot; 284 treks
           </div>
-          <button class="btn-company-explore" aria-label="Explore Trek The Himalayas">Explore &#8594;</button>
+          <div class="company-metrics">
+            <div><span>Safety</span><strong>9.4/10</strong></div>
+            <div><span>Response</span><strong>15 min</strong></div>
+            <div><span>Experience</span><strong>12 yrs</strong></div>
+            <div><span>Starting</span><strong>₹7,800</strong></div>
+          </div>
+          <div class="company-actions">
+            <button class="btn-company-explore" aria-label="Compare Trek The Himalayas">Compare</button>
+            <button class="btn-company-explore" aria-label="Explore Trek The Himalayas">Explore</button>
+          </div>
         </div>
         <div class="company-card" id="companyCard2">
-          <div class="company-logo-wrap">
-            <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(112,130,56,0.12), rgba(85,107,47,0.12));">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#708238" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20"/></svg>
+          <div class="company-card-top">
+            <div class="company-logo-wrap">
+              <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(112,130,56,0.12), rgba(85,107,47,0.12));">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#708238" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20"/></svg>
+              </div>
             </div>
+            <span class="verified-pill">Verified</span>
           </div>
           <h4 class="company-name">Indiahikes</h4>
           <div class="company-rating">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             4.8 &middot; 512 treks
           </div>
-          <button class="btn-company-explore" aria-label="Explore Indiahikes">Explore &#8594;</button>
+          <div class="company-metrics">
+            <div><span>Safety</span><strong>9.7/10</strong></div>
+            <div><span>Response</span><strong>12 min</strong></div>
+            <div><span>Experience</span><strong>18 yrs</strong></div>
+            <div><span>Starting</span><strong>₹9,200</strong></div>
+          </div>
+          <div class="company-actions">
+            <button class="btn-company-explore" aria-label="Compare Indiahikes">Compare</button>
+            <button class="btn-company-explore" aria-label="Explore Indiahikes">Explore</button>
+          </div>
         </div>
         <div class="company-card" id="companyCard3">
-          <div class="company-logo-wrap">
-            <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(156,175,136,0.12), rgba(85,107,47,0.12));">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9CAF88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div class="company-card-top">
+            <div class="company-logo-wrap">
+              <div class="company-logo-placeholder" style="background: linear-gradient(135deg, rgba(156,175,136,0.12), rgba(85,107,47,0.12));">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9CAF88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
             </div>
+            <span class="verified-pill">Verified</span>
           </div>
           <h4 class="company-name">Bikat Adventures</h4>
           <div class="company-rating">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             4.7 &middot; 178 treks
           </div>
-          <button class="btn-company-explore" aria-label="Explore Bikat Adventures">Explore &#8594;</button>
+          <div class="company-metrics">
+            <div><span>Safety</span><strong>9.2/10</strong></div>
+            <div><span>Response</span><strong>18 min</strong></div>
+            <div><span>Experience</span><strong>10 yrs</strong></div>
+            <div><span>Starting</span><strong>₹6,400</strong></div>
+          </div>
+          <div class="company-actions">
+            <button class="btn-company-explore" aria-label="Compare Bikat Adventures">Compare</button>
+            <button class="btn-company-explore" aria-label="Explore Bikat Adventures">Explore</button>
+          </div>
         </div>
         <div class="company-card" id="companyCard4">
           <div class="company-logo-wrap">
