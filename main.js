@@ -12,11 +12,10 @@ const mobileMenu = document.getElementById('mobileMenu');
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 
 window.addEventListener('scroll', () => {
-  if (window.scrollY > 20) {
-    navbar.classList.add('scrolled');
-  } else {
-    navbar.classList.remove('scrolled');
-  }
+  const scrolled = window.scrollY;
+  const shouldShrink = scrolled > 90;
+  navbar.classList.toggle('scrolled', shouldShrink);
+  navbar.style.transform = shouldShrink ? 'translateY(0)' : 'translateY(0)';
 }, { passive: true });
 
 const savedTheme = localStorage.getItem('trekindia-theme');
