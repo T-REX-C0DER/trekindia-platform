@@ -53,9 +53,9 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-1"/><path d="M15 17v1a3 3 0 0 1-6 0v-1"/></svg>
           <span class="notification-dot"></span>
         </button>
-        <button class="nav-icon-btn" aria-label="User profile" id="profileBtn">
+        <a href="auth.html" class="nav-icon-btn" aria-label="User profile" id="profileBtn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </button>
+        </a>
         <a href="#ai-planner" class="btn-primary nav-cta" id="startPlanningBtn">Become a Guide</a>
       </div>
       <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">
@@ -279,110 +279,127 @@
       <h2 class="section-title center">Explore India by State</h2>
       <p class="section-subtitle center">Every mountain, every valley, every trail — organized by the land that holds them.</p>
       <div class="states-layout">
-        <div class="map-container" role="img" aria-label="Interactive India map">
-          <svg viewBox="0 0 550 620" class="india-map" id="indiaMap">
-            <defs>
-              <filter id="mapGlow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-            <path class="state-path" data-state="Ladakh" data-treks="89" data-popular="Markha Valley" data-season="Jun–Sep"
-              d="M 160 30 L 220 20 L 290 35 L 320 70 L 300 110 L 260 120 L 220 130 L 180 120 L 155 90 Z" />
-            <path class="state-path" data-state="Himachal Pradesh" data-treks="312" data-popular="Hampta Pass" data-season="Apr–Oct"
-              d="M 220 130 L 260 120 L 300 110 L 310 150 L 280 170 L 240 165 L 215 155 Z" />
-            <path class="state-path" data-state="Uttarakhand" data-treks="428" data-popular="Kedarkantha" data-season="May–Jun"
-              d="M 240 165 L 280 170 L 310 150 L 330 175 L 320 210 L 290 220 L 255 215 L 235 195 Z" />
-            <path class="state-path" data-state="Punjab" data-treks="24" data-popular="Chail Trek" data-season="Oct–Mar"
-              d="M 160 150 L 215 155 L 240 165 L 235 195 L 210 200 L 175 185 L 155 170 Z" />
-            <path class="state-path" data-state="Rajasthan" data-treks="76" data-popular="Aravalli Hills" data-season="Oct–Feb"
-              d="M 120 200 L 175 185 L 210 200 L 220 240 L 200 280 L 165 300 L 125 290 L 100 260 L 105 230 Z" />
-            <path class="state-path" data-state="Uttar Pradesh" data-treks="45" data-popular="Agra Environs" data-season="Oct–Mar"
-              d="M 210 200 L 255 215 L 290 220 L 320 240 L 310 270 L 275 280 L 240 275 L 220 260 L 200 240 Z" />
-            <path class="state-path" data-state="Jharkhand" data-treks="38" data-popular="Parasnath Hill" data-season="Oct–Feb"
-              d="M 310 270 L 355 260 L 375 280 L 365 310 L 335 320 L 310 305 L 295 285 Z" />
-            <path class="state-path state-active" data-state="Sikkim" data-treks="186" data-popular="Goecha La" data-season="Apr–May"
-              d="M 355 200 L 395 195 L 410 220 L 400 255 L 375 260 L 355 245 L 345 225 Z" />
-            <path class="state-path" data-state="Arunachal Pradesh" data-treks="142" data-popular="Mechuka Trek" data-season="Oct–Mar"
-              d="M 410 150 L 470 140 L 510 160 L 510 210 L 470 225 L 430 220 L 410 200 L 405 175 Z" />
-            <path class="state-path" data-state="Assam" data-treks="67" data-popular="Kaziranga Hills" data-season="Oct–Mar"
-              d="M 395 225 L 430 220 L 470 225 L 465 255 L 430 260 L 400 255 Z" />
-            <path class="state-path" data-state="Odisha" data-treks="54" data-popular="Deomali Peak" data-season="Oct–Feb"
-              d="M 335 320 L 375 310 L 390 340 L 380 370 L 350 380 L 325 365 L 315 340 Z" />
-            <path class="state-path" data-state="Madhya Pradesh" data-treks="93" data-popular="Pachmarhi Hills" data-season="Oct–Mar"
-              d="M 165 300 L 220 285 L 275 280 L 310 305 L 310 340 L 280 355 L 245 360 L 205 350 L 170 335 L 155 315 Z" />
-            <path class="state-path" data-state="Maharashtra" data-treks="287" data-popular="Harishchandragad" data-season="Sep–Feb"
-              d="M 155 340 L 205 350 L 245 360 L 270 385 L 260 420 L 225 435 L 185 430 L 155 410 L 140 375 Z" />
-            <path class="state-path" data-state="Andhra Pradesh" data-treks="98" data-popular="Bheemuni Peak" data-season="Oct–Mar"
-              d="M 270 385 L 315 365 L 350 380 L 355 415 L 335 445 L 300 455 L 265 445 L 255 420 Z" />
-            <path class="state-path" data-state="Karnataka" data-treks="165" data-popular="Kumara Parvatha" data-season="Oct–Feb"
-              d="M 185 430 L 225 435 L 260 420 L 265 450 L 250 480 L 215 495 L 185 490 L 165 465 L 168 445 Z" />
-            <path class="state-path" data-state="Kerala" data-treks="134" data-popular="Anamudi Summit" data-season="Sep–Feb"
-              d="M 185 490 L 215 495 L 235 520 L 220 550 L 195 565 L 172 550 L 165 520 Z" />
-            <path class="state-path" data-state="Goa" data-treks="28" data-popular="Tambdi Surla Trek" data-season="Oct–Mar"
-              d="M 155 435 L 175 440 L 170 465 L 150 465 L 145 448 Z" />
-            <path class="state-path state-popular" data-state="Jammu &amp; Kashmir" data-treks="234" data-popular="Kashmir Great Lakes" data-season="Jul–Sep"
-              d="M 120 70 L 160 60 L 160 30 L 155 90 L 130 110 L 110 100 Z" />
+        <div class="map-container" role="img" aria-label="Interactive map of India">
+          <svg viewBox="0 0 800 900" class="india-map" id="indiaMap">
+            <g id="india-states-group">
+              <!-- North -->
+              <path class="state-path" id="map-ladakh" data-state="Ladakh" data-treks="89" data-region="Himalayan" d="M342 12L450 2l100 48l-30 65L420 122l-100 25l-50-20l-20-55l42-65z" />
+              <path class="state-path" id="map-jammu-kashmir" data-state="Jammu & Kashmir" data-treks="234" data-region="Himalayan" d="M290 90l52-78l60 65l-50 45l-40 15l-38-12z" />
+              <path class="state-path" id="map-himachal-pradesh" data-state="Himachal Pradesh" data-treks="312" data-region="Himalayan" d="M320 147l100-25l25 40l-45 33l-40 5l-50-15z" />
+              <path class="state-path" id="map-punjab" data-state="Punjab" data-treks="24" data-region="Plains" d="M282 130l38 17l-12 58l-40 10l-26-40z" />
+              <path class="state-path" id="map-uttarakhand" data-state="Uttarakhand" data-treks="428" data-region="Himalayan" d="M370 195l45-33l50 20l-15 48l-60 10l-35-15z" />
+              <path class="state-path" id="map-haryana" data-state="Haryana" data-treks="18" data-region="Plains" d="M290 215l50 10l10 40l-60 5l-15-35z" />
+              <path class="state-path" id="map-delhi" data-state="Delhi" data-treks="5" data-region="Plains" d="M340 215 a6,6 0 1,1 -12,0 a6,6 0 1,1 12,0" />
+              <path class="state-path" id="map-chandigarh" data-state="Chandigarh" data-treks="2" data-region="Plains" d="M325 190 a4,4 0 1,1 -8,0 a4,4 0 1,1 8,0" />
+
+              <!-- West -->
+              <path class="state-path" id="map-rajasthan" data-state="Rajasthan" data-treks="76" data-region="Aravalli" d="M140 190l150-60l40 85l-40 115l-100 30l-65-40l-35-90l50-40z" />
+              <path class="state-path" id="map-gujarat" data-state="Gujarat" data-treks="62" data-region="Coastal" d="M90 270l115 90l-25 70l-50 5l-40-25l-55-55l-10-60l65-25z" />
+              <path class="state-path" id="map-maharashtra" data-state="Maharashtra" data-treks="287" data-region="Sahyadri" d="M205 360l100 25l80 45l-5 70l-100 20l-100-10l-65-70l90-80z" />
+              <path class="state-path" id="map-goa" data-state="Goa" data-treks="28" data-region="Konkan" d="M230 520l25 5l-5 25l-25-5z" />
+              <path class="state-path" id="map-dadra-nagar-haveli-daman-diu" data-state="Dadra & Nagar Haveli and Daman & Diu" data-treks="8" data-region="Coastal" d="M185 430 a5,5 0 1,1 -10,0 a5,5 0 1,1 10,0" />
+
+              <!-- Central -->
+              <path class="state-path" id="map-madhya-pradesh" data-state="Madhya Pradesh" data-treks="93" data-region="Satpura" d="M250 270l150 10l60 65l-40 60l-140 5l-100-45l-20-70l140-25z" />
+              <path class="state-path" id="map-chhattisgarh" data-state="Chhattisgarh" data-treks="41" data-region="Eastern Ghats" d="M420 345l70 10l-15 100l-80 20l-35-65l60-65z" />
+
+              <!-- East -->
+              <path class="state-path" id="map-uttar-pradesh" data-state="Uttar Pradesh" data-treks="45" data-region="Plains" d="M350 260l130-30l40 50l-45 55l-125-5l-45-45l45-25z" />
+              <path class="state-path" id="map-bihar" data-state="Bihar" data-treks="33" data-region="Plains" d="M480 220l100 10l-5 60l-110 10l15-80z" />
+              <path class="state-path" id="map-jharkhand" data-state="Jharkhand" data-treks="38" data-region="Chota Nagpur" d="M465 300l100 10l-15 70l-100-5l15-75z" />
+              <path class="state-path" id="map-west-bengal" data-state="West Bengal" data-treks="78" data-region="Himalayan" d="M575 200l15-20l10 80l-20 120l-25-20l10-70l-20-60l30-30z" />
+              <path class="state-path" id="map-odisha" data-state="Odisha" data-treks="54" data-region="Eastern Ghats" d="M475 375l80 10l-5 90l-90 20l-45-50l60-70z" />
+
+              <!-- South -->
+              <path class="state-path" id="map-telangana" data-state="Telangana" data-treks="58" data-region="Deccan" d="M300 450l85 20l-10 60l-80 5l-20-55z" />
+              <path class="state-path" id="map-andhra-pradesh" data-state="Andhra Pradesh" data-treks="98" data-region="Eastern Ghats" d="M325 510l50 25l20 70l-80 10l-30-45l40-60z" />
+              <path class="state-path" id="map-karnataka" data-state="Karnataka" data-treks="165" data-region="Western Ghats" d="M250 525l50-30l25 65l-40 70l-70-5l-35-60l70-40z" />
+              <path class="state-path" id="map-kerala" data-state="Kerala" data-treks="134" data-region="Western Ghats" d="M255 660l20 80l-25 20l-20-80l25-20z" />
+              <path class="state-path" id="map-tamil-nadu" data-state="Tamil Nadu" data-treks="112" data-region="Western Ghats" d="M275 660l80 20l-10 80l-90 5l-20-60l40-45z" />
+              <path class="state-path" id="map-puducherry" data-state="Puducherry" data-treks="3" data-region="Coastal" d="M340 725 a5,5 0 1,1 -10,0 a5,5 0 1,1 10,0" />
+
+              <!-- Northeast -->
+              <path class="state-path" id="map-sikkim" data-state="Sikkim" data-treks="186" data-region="Himalayan" d="M585 180l10-25l15 35l-15 20l-10-30z" />
+              <path class="state-path" id="map-arunachal-pradesh" data-state="Arunachal Pradesh" data-treks="142" data-region="Himalayan" d="M610 155l120-40l50 60l-40 55l-100 10l-30-85z" />
+              <path class="state-path" id="map-assam" data-state="Assam" data-treks="67" data-region="Brahmaputra" d="M600 240l130 15l-30 45l-120-10l20-50z" />
+              <path class="state-path" id="map-nagaland" data-state="Nagaland" data-treks="48" data-region="Purvanchal" d="M700 240l40 20l-15 45l-35-15l10-50z" />
+              <path class="state-path" id="map-manipur" data-state="Manipur" data-treks="39" data-region="Purvanchal" d="M685 285l30 15l-5 50l-30-5l5-60z" />
+              <path class="state-path" id="map-meghalaya" data-state="Meghalaya" data-treks="55" data-region="Shillong" d="M605 280l70 10l-15 30l-65-5l10-35z" />
+              <path class="state-path" id="map-tripura" data-state="Tripura" data-treks="21" data-region="Purvanchal" d="M640 320l25 5l-5 40l-25-5l5-40z" />
+              <path class="state-path" id="map-mizoram" data-state="Mizoram" data-treks="29" data-region="Purvanchal" d="M665 325l20 10l-10 50l-20-10l10-50z" />
+
+              <!-- Islands -->
+              <g id="map-andaman-nicobar" data-state="Andaman & Nicobar Islands" data-treks="15" data-region="Islands">
+                <path class="state-path island" d="M680 550 l5 20 l-5 20 l-5-20z" />
+                <path class="state-path island" d="M675 600 l5 15 l-5 15 l-5-15z" />
+                <path class="state-path island" d="M670 640 l5 10 l-5 10 l-5-10z" />
+              </g>
+              <g id="map-lakshadweep" data-state="Lakshadweep" data-treks="7" data-region="Islands">
+                <path class="state-path island" d="M150 600 a4,4 0 1,1 -8,0 a4,4 0 1,1 8,0" />
+                <path class="state-path island" d="M145 620 a4,4 0 1,1 -8,0 a4,4 0 1,1 8,0" />
+                <path class="state-path island" d="M140 640 a4,4 0 1,1 -8,0 a4,4 0 1,1 8,0" />
+              </g>
+            </g>
           </svg>
           <div class="map-tooltip" id="mapTooltip" aria-live="polite">
             <div class="tooltip-state">Uttarakhand</div>
             <div class="tooltip-treks">428 Treks</div>
             <div class="tooltip-info">
-              <span>&#127956; Kedarkantha</span>
-              <span>Best: May–Jun</span>
+              <span>🏔 Kedarkantha</span>
+              <span>Best: May-Jun</span>
             </div>
           </div>
         </div>
 
         <div class="states-sidebar">
           <h3 class="sidebar-title">Popular States</h3>
-          <div class="states-list">
-            <a href="#" class="state-item active" id="stateLink1">
+          <div class="states-list" id="statesList">
+            <a href="/states/uttarakhand" class="state-item active" data-state="Uttarakhand">
               <div class="state-item-info">
                 <span class="state-item-name">Uttarakhand</span>
-                <span class="state-item-treks">428 treks</span>
+                <span class="state-item-treks">428 Treks</span>
               </div>
-              <div class="state-item-tag">Himalayas</div>
+              <div class="state-item-tag">HIMALAYAN</div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="#" class="state-item" id="stateLink2">
+            <a href="/states/himachal-pradesh" class="state-item" data-state="Himachal Pradesh">
               <div class="state-item-info">
                 <span class="state-item-name">Himachal Pradesh</span>
-                <span class="state-item-treks">312 treks</span>
+                <span class="state-item-treks">312 Treks</span>
               </div>
-              <div class="state-item-tag">Alpine</div>
+              <div class="state-item-tag">HIMALAYAN</div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="#" class="state-item" id="stateLink3">
+            <a href="/states/jammu-kashmir" class="state-item" data-state="Jammu & Kashmir">
               <div class="state-item-info">
-                <span class="state-item-name">Kashmir</span>
-                <span class="state-item-treks">234 treks</span>
+                <span class="state-item-name">Jammu & Kashmir</span>
+                <span class="state-item-treks">234 Treks</span>
               </div>
-              <div class="state-item-tag">Lakes</div>
+              <div class="state-item-tag">HIMALAYAN</div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="#" class="state-item" id="stateLink4">
+            <a href="/states/maharashtra" class="state-item" data-state="Maharashtra">
               <div class="state-item-info">
                 <span class="state-item-name">Maharashtra</span>
-                <span class="state-item-treks">287 treks</span>
+                <span class="state-item-treks">287 Treks</span>
               </div>
-              <div class="state-item-tag">Sahyadri</div>
+              <div class="state-item-tag">SAHYADRI</div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="#" class="state-item" id="stateLink5">
+            <a href="/states/sikkim" class="state-item" data-state="Sikkim">
               <div class="state-item-info">
                 <span class="state-item-name">Sikkim</span>
-                <span class="state-item-treks">186 treks</span>
+                <span class="state-item-treks">186 Treks</span>
               </div>
-              <div class="state-item-tag">Glaciers</div>
+              <div class="state-item-tag">HIMALAYAN</div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="#" class="state-item" id="stateLink6">
+            <a href="/states/karnataka" class="state-item" data-state="Karnataka">
               <div class="state-item-info">
-                <span class="state-item-name">Arunachal Pradesh</span>
-                <span class="state-item-treks">142 treks</span>
+                <span class="state-item-name">Karnataka</span>
+                <span class="state-item-treks">165 Treks</span>
               </div>
-              <div class="state-item-tag">Northeast</div>
+              <div class="state-item-tag">WESTERN GHATS</div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </a>
           </div>

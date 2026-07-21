@@ -172,45 +172,62 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ─── 6. MAP TOOLTIP ───────────────────────────
-  const mapPaths = document.querySelectorAll('.state-path');
+  const mapPaths = document.querySelectorAll('.state-path, g[data-state]');
   const mapTooltip = document.getElementById('mapTooltip');
+  const statesList = document.getElementById('statesList');
+  const stateItems = statesList?.querySelectorAll('.state-item');
   let tooltipTimeout;
 
+  function highlightState(stateName, isActive) {
+    const mapPath = document.getElementById(`map-${stateName.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`);
+    const listItem = statesList?.querySelector(`.state-item[data-state="${stateName}"]`);
+    mapPath?.classList.toggle('state-active', isActive);
+    listItem?.classList.toggle('active', isActive);
+  }
+
   mapPaths.forEach(path => {
-    path.addEventListener('mouseenter', (e) => {
+    const stateName = path.dataset.state;
+    if (!stateName) return;
+
+    path.addEventListener('mouseenter', e => {
       clearTimeout(tooltipTimeout);
-      const state = path.dataset.state || 'India';
+      highlightState(stateName, true);
+
       const treks = path.dataset.treks || '0';
-      const popular = path.dataset.popular || '';
-      const season = path.dataset.season || '';
-      mapTooltip.querySelector('.tooltip-state').textContent = state;
-      mapTooltip.querySelector('.tooltip-treks').textContent = treks + ' Treks';
-      mapTooltip.querySelector('.tooltip-info').innerHTML =
-        `<span>🏔 ${popular}</span><span>Best: ${season}</span>`;
-      mapTooltip.style.top = (e.offsetY - 10) + 'px';
-      mapTooltip.style.left = Math.min(e.offsetX + 16, 340) + 'px';
+      const region = path.dataset.region || 'N/A';
+
+      mapTooltip.querySelector('.tooltip-state').textContent = stateName;
+      mapTooltip.querySelector('.tooltip-treks').textContent = `${treks} Treks`;
+      mapTooltip.querySelector('.tooltip-info').innerHTML = `<span>🏔 ${region}</span>`;
+
       mapTooltip.classList.add('visible');
     });
 
-    path.addEventListener('mousemove', (e) => {
+    path.addEventListener('mousemove', e => {
       const mapRect = document.querySelector('.map-container').getBoundingClientRect();
       const x = e.clientX - mapRect.left + 16;
       const y = e.clientY - mapRect.top - 10;
-      mapTooltip.style.left = Math.min(x, mapRect.width - 200) + 'px';
+      mapTooltip.style.left = Math.min(x, mapRect.width - mapTooltip.offsetWidth - 10) + 'px';
       mapTooltip.style.top = y + 'px';
     });
 
     path.addEventListener('mouseleave', () => {
+      highlightState(stateName, false);
       tooltipTimeout = setTimeout(() => {
         mapTooltip.classList.remove('visible');
       }, 200);
     });
 
-    path.addEventListener('click', () => {
-      // Animate active state
-      mapPaths.forEach(p => p.classList.remove('state-active'));
-      path.classList.add('state-active');
+    path.addEventListener('click', e => {
+      e.preventDefault();
+      window.location.href = `/states/${stateName.toLowerCase().replace(/ /g, '-')}`;
     });
+  });
+
+  stateItems?.forEach(item => {
+    const stateName = item.dataset.state;
+    item.addEventListener('mouseenter', () => highlightState(stateName, true));
+    item.addEventListener('mouseleave', () => highlightState(stateName, false));
   });
 
   // ─── 7. AI TREK PLANNER ───────────────────────
