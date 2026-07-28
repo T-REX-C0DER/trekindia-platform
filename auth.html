@@ -1,166 +1,529 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login — TrekIndia</title>
-  <meta name="description" content="Log in to your TrekIndia account to resume your journey through the peaks." />
-  
-  <!-- Fonts -->
+  <title>TrekIndia — Premium Authentication Experience</title>
+  <meta name="description" content="Sign in or register for TrekIndia — India's premier outdoor exploration and trekking platform." />
+
+  <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="auth.css" />
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide-icons@0.309.0"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Luxury Auth Stylesheet -->
+  <link rel="stylesheet" href="auth.css" />
 </head>
 <body>
 
-  <main class="auth-container">
+  <!-- ===== TOP CONTROL BAR (THEME SWITCHER & DEMO ROUTE SELECTOR) ===== -->
+  <div class="top-controls-bar">
+    <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode" title="Toggle Theme">
+      <i id="theme-icon" data-lucide="moon"></i>
+    </button>
 
-    <!-- ===== LEFT HERO SECTION ===== -->
-    <section class="auth-hero">
-      <div class="hero-background"></div>
-      <div class="hero-gradient"></div>
+    <select id="screen-switcher" class="screen-switcher-select" aria-label="Quick Switch Auth Screens">
+      <option value="login">1. Login View</option>
+      <option value="signup">2. Signup View</option>
+      <option value="forgot-password">3. Forgot Password</option>
+      <option value="email-sent">4. Email Sent</option>
+      <option value="reset-password">5. Reset Password</option>
+      <option value="verify-email">6. Verify Email OTP</option>
+      <option value="success">7. Success State</option>
+    </select>
+  </div>
+
+  <!-- ===== MAIN ROOT SPLIT CONTAINER (60% / 40%) ===== -->
+  <main class="auth-root-container">
+
+    <!-- ==================== LEFT HERO PANEL (60%) ==================== -->
+    <section class="auth-hero-panel">
+      <!-- Background Himalayan Image -->
+      <img src="hero_himalayas_1784286730612.png" alt="Himalayan Mountain Range" class="hero-bg-image" />
       
-      <div class="hero-content">
-        <a href="index.html" class="hero-logo">
-          <span class="logo-icon-bg">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Multi-layer Gradient Overlays for Sunrise Lighting & Mist -->
+      <div class="hero-overlay-gradient"></div>
+      
+      <!-- Animated Canvas for Floating Particle Dust -->
+      <canvas id="particles-canvas"></canvas>
+      
+      <!-- CSS Floating Fog Layer -->
+      <div class="fog-layer"></div>
+
+      <!-- Ambient Glow Blobs -->
+      <div class="gradient-blob blob-1"></div>
+      <div class="gradient-blob blob-2"></div>
+
+      <!-- Hero Header Navigation -->
+      <div class="hero-header-nav">
+        <a href="index.html" class="brand-logo-link">
+          <div class="brand-logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 20L9 8l4 6 3-4 5 10"/>
             </svg>
-          </span>
+          </div>
           <span>TrekIndia</span>
         </a>
+      </div>
 
-        <div class="hero-text">
-          <h1>Welcome Back, Explorer.</h1>
-          <p>Your journey starts at the summit. Continue your adventure into the heart of the Indian Himalayas.</p>
+      <!-- Hero Dynamic Central Body Text -->
+      <div class="hero-body-content">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          <span class="hero-badge-text">EXPLORE THE HIMALAYAS</span>
+        </div>
+        <h1 class="hero-headline">Welcome Back, Explorer.</h1>
+        <p class="hero-subheading">
+          Continue discovering India's most breathtaking trekking experiences, high-altitude passes, and pristine alpine wilderness.
+        </p>
+      </div>
+
+      <!-- Hero Stat Cards Grid (Glassmorphism) -->
+      <div class="hero-stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-icon">🏔</div>
+          <div class="stat-card-value">10,000+</div>
+          <div class="stat-card-label">Verified Treks</div>
         </div>
 
-        <div class="hero-stats">
-          <div class="stat-card">
-            <i data-lucide="map-pin"></i>
-            <div class="stat-text">
-              <span class="stat-number">500+</span>
-              <span class="stat-label">Expert Guides</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <i data-lucide="trending-up"></i>
-            <div class="stat-text">
-              <span class="stat-number">28</span>
-              <span class="stat-label">States Covered</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <i data-lucide="users"></i>
-            <div class="stat-text">
-              <span class="stat-number">10K+</span>
-              <span class="stat-label">Monthly Treks</span>
-            </div>
-          </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🧭</div>
+          <div class="stat-card-value">28</div>
+          <div class="stat-card-label">Indian States</div>
         </div>
 
-        <footer class="hero-footer">EST. 2024 &middot; Premium Outdoor Collective</footer>
+        <div class="stat-card">
+          <div class="stat-card-icon">⭐</div>
+          <div class="stat-card-value">100K+</div>
+          <div class="stat-card-label">Happy Explorers</div>
+        </div>
+      </div>
+
+      <!-- Hero Footer Credit -->
+      <div class="hero-footer-credit">
+        <span>EST. 2024</span>
+        <span>PREMIUM OUTDOOR COLLECTIVE</span>
+        <span>WCAG AA COMPLIANT</span>
       </div>
     </section>
 
-    <!-- ===== RIGHT AUTHENTICATION PANEL ===== -->
-    <section class="auth-panel">
-      <div class="auth-card">
-        <div class="auth-card-header">
-          <h2>Welcome Back</h2>
-          <p>Continue your adventure.</p>
-        </div>
+    <!-- ==================== RIGHT AUTHENTICATION PANEL (40%) ==================== -->
+    <section class="auth-form-panel">
+      <div class="auth-card-container">
 
-        <form class="auth-form">
-          <div class="input-group">
-            <label for="email">Email</label>
-            <div class="input-wrapper">
-              <i data-lucide="mail" class="input-icon"></i>
-              <input type="email" id="email" name="email" placeholder="e.g. explorer@trek.in" required>
-            </div>
+        <!-- ──────────────── 1. LOGIN VIEW ──────────────── -->
+        <div id="view-login" class="auth-view active">
+          <div class="auth-card-header">
+            <h2 class="auth-card-title">Welcome Back</h2>
+            <p class="auth-card-subtitle">Sign in to continue your next adventure.</p>
           </div>
 
-          <div class="input-group">
-            <label for="password">Password</label>
-            <div class="input-wrapper">
-              <i data-lucide="lock" class="input-icon"></i>
-              <input type="password" id="password" name="password" placeholder="Enter your password" required>
-              <button type="button" class="password-toggle" aria-label="Toggle password visibility">
-                <i data-lucide="eye"></i>
-              </button>
+          <form id="form-login" class="auth-form-grid" novalidate>
+            <div class="input-field-group">
+              <div class="input-floating-wrapper">
+                <span class="input-leading-icon"><i data-lucide="mail"></i></span>
+                <input type="email" id="login-email" class="floating-input" placeholder=" " required />
+                <label for="login-email" class="floating-label">Email Address</label>
+              </div>
+              <span class="input-error-msg">Please enter a valid email address.</span>
             </div>
+
+            <div class="input-field-group">
+              <div class="input-floating-wrapper">
+                <span class="input-leading-icon"><i data-lucide="lock"></i></span>
+                <input type="password" id="login-password" class="floating-input" placeholder=" " required />
+                <label for="login-password" class="floating-label">Password</label>
+                <button type="button" class="password-toggle-btn" aria-label="Toggle password visibility">
+                  <i data-lucide="eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-options-row">
+              <label class="custom-checkbox-label">
+                <input type="checkbox" id="remember-me" class="custom-checkbox-input" />
+                <span>Remember Me</span>
+              </label>
+              <a href="#forgot-password" data-navigate="forgot-password" class="forgot-link">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="btn-cta-primary">
+              <span class="btn-text">Continue Journey</span>
+              <svg class="btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <div class="spinner-icon"></div>
+            </button>
+          </form>
+
+          <div class="social-divider">
+            <span>OR CONTINUE WITH</span>
           </div>
 
-          <div class="form-options">
-            <div class="checkbox-group">
-              <input type="checkbox" id="remember-me" name="remember-me">
-              <label for="remember-me">Remember Me</label>
-            </div>
-            <a href="#" class="forgot-password-link">Forgot Password?</a>
+          <div class="social-buttons-grid">
+            <button type="button" class="btn-social">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" />
+              <span>Google</span>
+            </button>
+            <button type="button" class="btn-social">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.54c.64-.78 1.08-1.85.96-2.94-.93.04-2.07.62-2.74 1.4-.6.69-1.12 1.8-0.98 2.86 1.05.08 2.12-.54 2.76-1.32z"/></svg>
+              <span>Apple</span>
+            </button>
+            <button type="button" class="btn-social">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+              <span>GitHub</span>
+            </button>
           </div>
 
-          <button type="submit" class="btn btn-submit">
-            <span>Sign Into Account</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </button>
-        </form>
-
-        <div class="form-divider">
-          <span>OR CONTINUE WITH</span>
+          <div class="auth-card-footer">
+            Don't have an account? <a href="#signup" data-navigate="signup">Create Explorer Account →</a>
+          </div>
         </div>
 
-        <div class="social-logins">
-          <button class="btn-social">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google"/>
-            <span>Google</span>
-          </button>
-          <button class="btn-social">
-            <img src="https://www.vectorlogo.zone/logos/apple/apple-icon.svg" alt="Apple"/>
-            <span>Apple</span>
-          </button>
-          <button class="btn-social">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg" alt="GitHub"/>
-            <span>GitHub</span>
-          </button>
+        <!-- ──────────────── 2. SIGNUP VIEW ──────────────── -->
+        <div id="view-signup" class="auth-view">
+          <div class="auth-card-header">
+            <h2 class="auth-card-title">Create Account</h2>
+            <p class="auth-card-subtitle">Join 100,000+ explorers discovering Indian wilderness.</p>
+          </div>
+
+          <form id="form-signup" class="auth-form-grid" novalidate>
+            <!-- 2 Col First & Last Name -->
+            <div class="form-row-two-col">
+              <div class="input-field-group">
+                <div class="input-floating-wrapper">
+                  <input type="text" id="signup-firstname" class="floating-input no-icon" placeholder=" " required />
+                  <label for="signup-firstname" class="floating-label">First Name</label>
+                </div>
+              </div>
+              <div class="input-field-group">
+                <div class="input-floating-wrapper">
+                  <input type="text" id="signup-lastname" class="floating-input no-icon" placeholder=" " required />
+                  <label for="signup-lastname" class="floating-label">Last Name</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Username & Email -->
+            <div class="input-field-group">
+              <div class="input-floating-wrapper">
+                <span class="input-leading-icon"><i data-lucide="user"></i></span>
+                <input type="text" id="signup-username" class="floating-input" placeholder=" " required />
+                <label for="signup-username" class="floating-label">Username</label>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <div class="input-floating-wrapper">
+                <span class="input-leading-icon"><i data-lucide="mail"></i></span>
+                <input type="email" id="signup-email" class="floating-input" placeholder=" " required />
+                <label for="signup-email" class="floating-label">Email Address</label>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <div class="input-floating-wrapper">
+                <span class="input-leading-icon"><i data-lucide="phone"></i></span>
+                <input type="tel" id="signup-phone" class="floating-input" placeholder=" " />
+                <label for="signup-phone" class="floating-label">Phone Number (Optional)</label>
+              </div>
+            </div>
+
+            <!-- Password & Live Strength Checklist -->
+            <div class="input-field-group">
+              <div class="input-floating-wrapper">
+                <span class="input-leading-icon"><i data-lucide="lock"></i></span>
+                <input type="password" id="signup-password" class="floating-input" placeholder=" " required />
+                <label for="signup-password" class="floating-label">Password</label>
+                <button type="button" class="password-toggle-btn" aria-label="Toggle password visibility">
+                  <i data-lucide="eye"></i>
+                </button>
+              </div>
+
+              <!-- Strength Progress Meter -->
+              <div class="password-strength-box">
+                <div class="strength-header-row">
+                  <span>Password Strength</span>
+                  <span id="signup-strength-text" class="strength-badge">Weak</span>
+                </div>
+                <div class="strength-bar-track">
+                  <div id="signup-strength-bar" class="strength-bar-fill"></div>
+                </div>
+
+                <!-- 5-Rule Checklist -->
+                <div id="signup-checklist" class="password-requirements-grid">
+                  <div class="requirement-item" data-rule="length">
+                    <span class="requirement-icon"></span>
+                    <span>8+ Characters</span>
+                  </div>
+                  <div class="requirement-item" data-rule="uppercase">
+                    <span class="requirement-icon"></span>
+                    <span>Uppercase</span>
+                  </div>
+                  <div class="requirement-item" data-rule="lowercase">
+                    <span class="requirement-icon"></span>
+                    <span>Lowercase</span>
+                  </div>
+                  <div class="requirement-item" data-rule="number">
+                    <span class="requirement-icon"></span>
+                    <span>Number</span>
+                  </div>
+                  <div class="requirement-item" data-rule="special">
+                    <span class="requirement-icon"></span>
+                    <span>Special Symbol</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Country & State -->
+            <div class="form-row-two-col">
+              <div class="input-field-group">
+                <div class="input-floating-wrapper">
+                  <input type="text" id="signup-country" class="floating-input no-icon" value="India" placeholder=" " required />
+                  <label for="signup-country" class="floating-label">Country</label>
+                </div>
+              </div>
+              <div class="input-field-group">
+                <div class="input-floating-wrapper">
+                  <input type="text" id="signup-state" class="floating-input no-icon" placeholder=" " required />
+                  <label for="signup-state" class="floating-label">State</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Terms & Newsletter -->
+            <label class="custom-checkbox-label">
+              <input type="checkbox" class="custom-checkbox-input" required checked />
+              <span>I agree to TrekIndia <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a></span>
+            </label>
+
+            <label class="custom-checkbox-label">
+              <input type="checkbox" class="custom-checkbox-input" checked />
+              <span>Receive weekly Himalayan trail updates & expedition guides</span>
+            </label>
+
+            <button type="submit" class="btn-cta-primary">
+              <span class="btn-text">Start Exploring</span>
+              <svg class="btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <div class="spinner-icon"></div>
+            </button>
+          </form>
+
+          <div class="auth-card-footer">
+            Already have an account? <a href="#login" data-navigate="login">Log In →</a>
+          </div>
         </div>
 
-        <div class="trust-badge">
-          <i data-lucide="shield-check"></i>
-          <span>Trusted by 100,000+ trekkers</span>
+        <!-- ──────────────── 3. FORGOT PASSWORD VIEW ──────────────── -->
+        <div id="view-forgot-password" class="auth-view">
+          <div class="auth-illustration-box">
+            <i data-lucide="key-round"></i>
+          </div>
+
+          <div class="auth-card-header">
+            <h2 class="auth-card-title">Forgot your password?</h2>
+            <p class="auth-card-subtitle">No worries. Enter your registered email address and we'll send you a secure reset link.</p>
+          </div>
+
+          <form id="form-forgot" class="auth-form-grid">
+            <div class="input-field-group">
+              <div class="input-floating-wrapper">
+                <span class="input-leading-icon"><i data-lucide="mail"></i></span>
+                <input type="email" id="forgot-email" class="floating-input" placeholder=" " required />
+                <label for="forgot-email" class="floating-label">Email Address</label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-cta-primary">
+              <span class="btn-text">Send Reset Link</span>
+              <svg class="btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <div class="spinner-icon"></div>
+            </button>
+          </form>
+
+          <div class="auth-card-footer">
+            <a href="#login" data-navigate="login">← Back to Login</a>
+          </div>
         </div>
 
-        <footer class="auth-card-footer">
-          New to TrekIndia? <a href="#">Create an Explorer Account</a>
-        </footer>
+        <!-- ──────────────── 4. EMAIL SENT VIEW ──────────────── -->
+        <div id="view-email-sent" class="auth-view">
+          <div class="auth-illustration-box">
+            <i data-lucide="send"></i>
+          </div>
+
+          <div class="auth-card-header">
+            <h2 class="auth-card-title">Check Your Inbox</h2>
+            <p class="auth-card-subtitle">We've dispatched a password reset link to <strong>explorer@trekindia.in</strong>. Please check your inbox and spam folder.</p>
+          </div>
+
+          <div class="auth-form-grid">
+            <a href="https://mail.google.com" target="_blank" class="btn-cta-primary" style="text-decoration: none;">
+              <span>Open Email App</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+
+            <button type="button" class="btn-outlined" id="btn-resend-link">
+              <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i>
+              <span>Resend Email</span>
+            </button>
+          </div>
+
+          <div class="auth-card-footer">
+            <a href="#login" data-navigate="login">← Back to Login</a>
+          </div>
+        </div>
+
+        <!-- ──────────────── 5. RESET PASSWORD VIEW ──────────────── -->
+        <div id="view-reset-password" class="auth-view">
+          <div class="auth-illustration-box">
+            <i data-lucide="shield-check"></i>
+          </div>
+
+          <div class="auth-card-header">
+            <h2 class="auth-card-title">Set New Password</h2>
+            <p class="auth-card-subtitle">Choose a strong, secure password for your TrekIndia account.</p>
+          </div>
+
+          <form id="form-reset" class="auth-form-grid">
+            <div class="input-field-group">
+              <div class="input-floating-wrapper">
+                <span class="input-leading-icon"><i data-lucide="lock"></i></span>
+                <input type="password" id="reset-password-input" class="floating-input" placeholder=" " required />
+                <label for="reset-password-input" class="floating-label">New Password</label>
+                <button type="button" class="password-toggle-btn" aria-label="Toggle password visibility">
+                  <i data-lucide="eye"></i>
+                </button>
+              </div>
+
+              <!-- Password Strength Meter -->
+              <div class="password-strength-box">
+                <div class="strength-header-row">
+                  <span>Password Strength</span>
+                  <span id="reset-strength-text" class="strength-badge">Weak</span>
+                </div>
+                <div class="strength-bar-track">
+                  <div id="reset-strength-bar" class="strength-bar-fill"></div>
+                </div>
+
+                <div id="reset-checklist" class="password-requirements-grid">
+                  <div class="requirement-item" data-rule="length">
+                    <span class="requirement-icon"></span>
+                    <span>8+ Characters</span>
+                  </div>
+                  <div class="requirement-item" data-rule="uppercase">
+                    <span class="requirement-icon"></span>
+                    <span>Uppercase</span>
+                  </div>
+                  <div class="requirement-item" data-rule="lowercase">
+                    <span class="requirement-icon"></span>
+                    <span>Lowercase</span>
+                  </div>
+                  <div class="requirement-item" data-rule="number">
+                    <span class="requirement-icon"></span>
+                    <span>Number</span>
+                  </div>
+                  <div class="requirement-item" data-rule="special">
+                    <span class="requirement-icon"></span>
+                    <span>Special Symbol</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <div class="input-floating-wrapper">
+                <span class="input-leading-icon"><i data-lucide="lock"></i></span>
+                <input type="password" id="reset-password-confirm" class="floating-input" placeholder=" " required />
+                <label for="reset-password-confirm" class="floating-label">Confirm New Password</label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-cta-primary">
+              <span class="btn-text">Reset Password</span>
+              <svg class="btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <div class="spinner-icon"></div>
+            </button>
+          </form>
+        </div>
+
+        <!-- ──────────────── 6. VERIFY EMAIL OTP VIEW ──────────────── -->
+        <div id="view-verify-email" class="auth-view">
+          <div class="auth-illustration-box">
+            <i data-lucide="shield-alert"></i>
+          </div>
+
+          <div class="auth-card-header">
+            <h2 class="auth-card-title">Verify Your Email</h2>
+            <p class="auth-card-subtitle">Enter the 6-digit verification code sent to <strong>explorer@trekindia.in</strong>.</p>
+          </div>
+
+          <div class="otp-container">
+            <input type="text" maxlength="1" class="otp-box" autofocus />
+            <input type="text" maxlength="1" class="otp-box" />
+            <input type="text" maxlength="1" class="otp-box" />
+            <input type="text" maxlength="1" class="otp-box" />
+            <input type="text" maxlength="1" class="otp-box" />
+            <input type="text" maxlength="1" class="otp-box" />
+          </div>
+
+          <div class="resend-timer-box">
+            <span>Didn't receive code? </span>
+            <button type="button" id="btn-resend-otp" disabled>Resend Code</button>
+            <span id="resend-timer-display">0:59</span>
+          </div>
+
+          <div class="auth-form-grid" style="margin-top: 24px;">
+            <button type="button" id="btn-verify-otp" class="btn-cta-primary" disabled>
+              <span class="btn-text">Verify & Continue</span>
+              <svg class="btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <div class="spinner-icon"></div>
+            </button>
+          </div>
+
+          <div class="auth-card-footer">
+            <a href="#login" data-navigate="login">← Back to Login</a>
+          </div>
+        </div>
+
+        <!-- ──────────────── 7. SUCCESS VIEW ──────────────── -->
+        <div id="view-success" class="auth-view">
+          <div class="success-check-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+
+          <div class="auth-card-header" style="text-align: center;">
+            <h2 class="auth-card-title">Password Updated!</h2>
+            <p class="auth-card-subtitle">You're all set. Your credentials have been successfully updated. Continue your adventure with TrekIndia.</p>
+          </div>
+
+          <div class="auth-form-grid">
+            <a href="#login" data-navigate="login" class="btn-cta-primary" style="text-decoration: none;">
+              <span>Go to Login</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+
+          <div class="trust-badge-row" style="margin: 24px auto 0 auto; display: flex; justify-content: center;">
+            <i data-lucide="shield-check"></i>
+            <span>Verified 256-bit SSL Security</span>
+          </div>
+        </div>
+
       </div>
     </section>
 
   </main>
 
+  <!-- Application Engine Script -->
+  <script src="auth.js"></script>
   <script>
     // Initialize Lucide Icons
     lucide.createIcons();
-
-    // Password visibility toggle
-    const toggle = document.querySelector('.password-toggle');
-    toggle.addEventListener('click', () => {
-      const passwordInput = document.getElementById('password');
-      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      const icon = toggle.querySelector('i');
-      passwordInput.setAttribute('type', type);
-      
-      // Change icon
-      icon.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
-      lucide.createIcons();
-    });
   </script>
-
 </body>
 </html>
