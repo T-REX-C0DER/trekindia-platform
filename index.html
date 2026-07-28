@@ -32,6 +32,74 @@
           </li>
           <li class="nav-item"><a href="#states" class="nav-link">Destinations</a></li>
           <li class="nav-item"><a href="#companies" class="nav-link">Companies</a></li>
+          <li class="nav-item">
+            <a href="#fitness" class="nav-link nav-link-dropdown">
+              Preparation
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </a>
+            <div class="nav-mega-menu nav-mega-menu--prep" aria-label="Preparation menu">
+              <a href="#fitness" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">💪</span>
+                <div><strong>Fitness</strong><span>Physical readiness dashboard</span></div>
+              </a>
+              <a href="#alpine-safety" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">🏥</span>
+                <div><strong>Health</strong><span>Alpine safety & medicines</span></div>
+              </a>
+              <a href="#packing" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">✅</span>
+                <div><strong>Packing Checklist</strong><span>Smart interactive checklist</span></div>
+              </a>
+              <a href="#trek-timeline" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">📅</span>
+                <div><strong>Trek Timeline</strong><span>Pre-trek preparation stages</span></div>
+              </a>
+              <a href="#nutrition" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">🍽️</span>
+                <div><strong>Nutrition</strong><span>Fuel your adventure</span></div>
+              </a>
+              <a href="#water-planner" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">💧</span>
+                <div><strong>Water Planner</strong><span>Hydration calculator</span></div>
+              </a>
+              <a href="#clothing" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">🧥</span>
+                <div><strong>Clothing Guide</strong><span>Seasonal layering system</span></div>
+              </a>
+            </div>
+          </li>
+          <li class="nav-item">
+            <a href="#gear-shop" class="nav-link nav-link-dropdown">
+              Gear
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </a>
+            <div class="nav-mega-menu nav-mega-menu--gear" aria-label="Gear menu">
+              <a href="#gear-shop" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">👟</span>
+                <div><strong>Trek Shoes</strong><span>Gore-Tex & trail boots</span></div>
+              </a>
+              <a href="#gear-shop" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">🎒</span>
+                <div><strong>Backpacks</strong><span>Day packs to expedition bags</span></div>
+              </a>
+              <a href="#gear-shop" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">🧥</span>
+                <div><strong>Jackets</strong><span>Down & hardshell layers</span></div>
+              </a>
+              <a href="#gear-shop" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">🪵</span>
+                <div><strong>Trekking Poles</strong><span>Carbon & aluminium poles</span></div>
+              </a>
+              <a href="#gear-shop" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">⛺</span>
+                <div><strong>Camping</strong><strong></strong><span>Tents, sleeping bags & mats</span></div>
+              </a>
+              <a href="#gear-shop" class="nav-mega-card nav-mega-link">
+                <span class="nav-mega-icon">🔦</span>
+                <div><strong>Accessories</strong><span>Headlamps, hydration & more</span></div>
+              </a>
+            </div>
+          </li>
           <li class="nav-item"><a href="#community" class="nav-link">Community</a></li>
           <li class="nav-item"><a href="#journal" class="nav-link">Stories</a></li>
           <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
@@ -61,6 +129,35 @@
       <a href="#treks" class="mobile-nav-link">Explore</a>
       <a href="#states" class="mobile-nav-link">Destinations</a>
       <a href="#companies" class="mobile-nav-link">Companies</a>
+      <div class="mobile-nav-group">
+        <button class="mobile-nav-link mobile-nav-toggle" id="mobilePrep" aria-expanded="false">
+          Preparation
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="mobile-nav-sub" id="mobilePrepSub">
+          <a href="#fitness" class="mobile-nav-sub-link">💪 Fitness Dashboard</a>
+          <a href="#alpine-safety" class="mobile-nav-sub-link">🏥 Health & Safety</a>
+          <a href="#packing" class="mobile-nav-sub-link">✅ Packing Checklist</a>
+          <a href="#trek-timeline" class="mobile-nav-sub-link">📅 Trek Timeline</a>
+          <a href="#nutrition" class="mobile-nav-sub-link">🍽️ Nutrition Guide</a>
+          <a href="#water-planner" class="mobile-nav-sub-link">💧 Water Planner</a>
+          <a href="#clothing" class="mobile-nav-sub-link">🧥 Clothing Guide</a>
+        </div>
+      </div>
+      <div class="mobile-nav-group">
+        <button class="mobile-nav-link mobile-nav-toggle" id="mobileGear" aria-expanded="false">
+          Gear
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="mobile-nav-sub" id="mobileGearSub">
+          <a href="#gear-shop" class="mobile-nav-sub-link">👟 Trek Shoes</a>
+          <a href="#gear-shop" class="mobile-nav-sub-link">🎒 Backpacks</a>
+          <a href="#gear-shop" class="mobile-nav-sub-link">🧥 Jackets</a>
+          <a href="#gear-shop" class="mobile-nav-sub-link">🪵 Trekking Poles</a>
+          <a href="#gear-shop" class="mobile-nav-sub-link">⛺ Camping</a>
+          <a href="#gear-shop" class="mobile-nav-sub-link">🔦 Accessories</a>
+        </div>
+      </div>
       <a href="#community" class="mobile-nav-link">Community</a>
       <a href="#journal" class="mobile-nav-link">Stories</a>
       <a href="#about" class="mobile-nav-link">About</a>
@@ -307,6 +404,268 @@
     </div>
   </section>
 
+  <!-- ===== ESSENTIAL TREK GEAR MARKETPLACE ===== -->
+  <section class="section gear-section" id="gear-shop" aria-label="Essential trek gear marketplace">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Essentials Shop</div>
+        <div class="section-title-row">
+          <h2 class="section-title">Essential Trek Gear</h2>
+          <a href="#" class="view-all-link" id="viewAllGearLink">View All Gear <span>&#8594;</span></a>
+        </div>
+        <p class="section-subtitle" style="margin-top:12px;">Verified professional gear curated for Indian trekking conditions. Compare prices across top stores.</p>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="gear-category-tabs" role="tablist" aria-label="Gear categories">
+        <button class="gear-tab active" role="tab" aria-selected="true" data-gear-filter="all">All</button>
+        <button class="gear-tab" role="tab" aria-selected="false" data-gear-filter="shoes">Trek Shoes</button>
+        <button class="gear-tab" role="tab" aria-selected="false" data-gear-filter="backpacks">Backpacks</button>
+        <button class="gear-tab" role="tab" aria-selected="false" data-gear-filter="jackets">Jackets</button>
+        <button class="gear-tab" role="tab" aria-selected="false" data-gear-filter="poles">Trekking Poles</button>
+        <button class="gear-tab" role="tab" aria-selected="false" data-gear-filter="camping">Camping</button>
+        <button class="gear-tab" role="tab" aria-selected="false" data-gear-filter="accessories">Accessories</button>
+      </div>
+
+      <!-- Scroll Container -->
+      <div class="gear-scroll-wrapper">
+        <button class="gear-scroll-btn gear-scroll-btn--left" id="gearScrollLeft" aria-label="Scroll left">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="gear-cards-track" id="gearTrack" role="list">
+
+          <!-- Product: Trek Shoes -->
+          <div class="gear-card reveal" data-category="shoes" id="gearCard1" role="listitem">
+            <div class="gear-card-img-wrap">
+              <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80" alt="Salomon Quest 4D GTX trekking boots" class="gear-img" loading="lazy" />
+              <button class="gear-wishlist-btn" aria-label="Add to wishlist" data-wishlisted="false">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+            <div class="gear-card-body">
+              <div class="gear-card-category">Trek Shoes</div>
+              <h3 class="gear-card-name">Salomon Quest 4D GTX</h3>
+              <p class="gear-card-sub">Gore-Tex Trekking Boots</p>
+              <div class="gear-pricing">
+                <div class="gear-store-row">
+                  <span class="gear-store-name">AMAZON</span>
+                  <span class="gear-store-price">₹18,500</span>
+                </div>
+                <div class="gear-store-row">
+                  <span class="gear-store-name">FLIPKART</span>
+                  <span class="gear-store-price">₹19,200</span>
+                </div>
+              </div>
+              <div class="gear-card-actions">
+                <a href="#" class="btn-primary gear-buy-btn" aria-label="Buy Salomon Quest 4D GTX" data-product="salomon-quest-4d">Buy Now</a>
+                <button class="gear-compare-btn" aria-label="Compare Salomon Quest 4D GTX" data-compare="salomon-quest-4d">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+                  Compare
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product: Backpack -->
+          <div class="gear-card reveal reveal-delay-1" data-category="backpacks" id="gearCard2" role="listitem">
+            <div class="gear-card-img-wrap">
+              <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&q=80" alt="Osprey Aether 65 multi-day backpack" class="gear-img" loading="lazy" />
+              <button class="gear-wishlist-btn" aria-label="Add to wishlist" data-wishlisted="false">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+            <div class="gear-card-body">
+              <div class="gear-card-category">Backpacks</div>
+              <h3 class="gear-card-name">Osprey Aether 65</h3>
+              <p class="gear-card-sub">Multi-Day Backpack</p>
+              <div class="gear-pricing">
+                <div class="gear-store-row">
+                  <span class="gear-store-name">AMAZON</span>
+                  <span class="gear-store-price">₹22,900</span>
+                </div>
+                <div class="gear-store-row">
+                  <span class="gear-store-name">DECATHLON</span>
+                  <span class="gear-store-price">₹21,500</span>
+                </div>
+              </div>
+              <div class="gear-card-actions">
+                <a href="#" class="btn-primary gear-buy-btn" aria-label="Buy Osprey Aether 65" data-product="osprey-aether-65">Buy Now</a>
+                <button class="gear-compare-btn" aria-label="Compare Osprey Aether 65" data-compare="osprey-aether-65">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+                  Compare
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product: Trekking Poles -->
+          <div class="gear-card reveal reveal-delay-2" data-category="poles" id="gearCard3" role="listitem">
+            <div class="gear-card-img-wrap">
+              <img src="https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&q=80" alt="Black Diamond Alpine Carbon trekking poles" class="gear-img" loading="lazy" />
+              <button class="gear-wishlist-btn" aria-label="Add to wishlist" data-wishlisted="false">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+            <div class="gear-card-body">
+              <div class="gear-card-category">Trekking Poles</div>
+              <h3 class="gear-card-name">Black Diamond Alpine Carbon</h3>
+              <p class="gear-card-sub">Carbon Trekking Poles</p>
+              <div class="gear-pricing">
+                <div class="gear-store-row">
+                  <span class="gear-store-name">AMAZON</span>
+                  <span class="gear-store-price">₹7,800</span>
+                </div>
+                <div class="gear-store-row">
+                  <span class="gear-store-name">TREK_SHOP</span>
+                  <span class="gear-store-price">₹7,500</span>
+                </div>
+              </div>
+              <div class="gear-card-actions">
+                <a href="#" class="btn-primary gear-buy-btn" aria-label="Buy Black Diamond Alpine Carbon" data-product="bd-alpine-carbon">Buy Now</a>
+                <button class="gear-compare-btn" aria-label="Compare Black Diamond Alpine Carbon" data-compare="bd-alpine-carbon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+                  Compare
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product: Jacket -->
+          <div class="gear-card reveal reveal-delay-3" data-category="jackets" id="gearCard4" role="listitem">
+            <div class="gear-card-img-wrap">
+              <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&q=80" alt="Rab Microlight Alpine down jacket" class="gear-img" loading="lazy" />
+              <button class="gear-wishlist-btn" aria-label="Add to wishlist" data-wishlisted="false">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+            <div class="gear-card-body">
+              <div class="gear-card-category">Jackets</div>
+              <h3 class="gear-card-name">Rab Microlight Alpine</h3>
+              <p class="gear-card-sub">750-Fill Down Jacket</p>
+              <div class="gear-pricing">
+                <div class="gear-store-row">
+                  <span class="gear-store-name">AMAZON</span>
+                  <span class="gear-store-price">₹14,900</span>
+                </div>
+                <div class="gear-store-row">
+                  <span class="gear-store-name">MOUNTAIN_EQUIP</span>
+                  <span class="gear-store-price">₹15,400</span>
+                </div>
+              </div>
+              <div class="gear-card-actions">
+                <a href="#" class="btn-primary gear-buy-btn" aria-label="Buy Rab Microlight Alpine" data-product="rab-microlight">Buy Now</a>
+                <button class="gear-compare-btn" aria-label="Compare Rab Microlight Alpine" data-compare="rab-microlight">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+                  Compare
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product: Sleeping Bag -->
+          <div class="gear-card reveal reveal-delay-4" data-category="camping" id="gearCard5" role="listitem">
+            <div class="gear-card-img-wrap">
+              <img src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&q=80" alt="Marmot Trestles Elite sleeping bag" class="gear-img" loading="lazy" />
+              <button class="gear-wishlist-btn" aria-label="Add to wishlist" data-wishlisted="false">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+            <div class="gear-card-body">
+              <div class="gear-card-category">Camping</div>
+              <h3 class="gear-card-name">Marmot Trestles Elite</h3>
+              <p class="gear-card-sub">3-Season Sleeping Bag</p>
+              <div class="gear-pricing">
+                <div class="gear-store-row">
+                  <span class="gear-store-name">AMAZON</span>
+                  <span class="gear-store-price">₹9,200</span>
+                </div>
+                <div class="gear-store-row">
+                  <span class="gear-store-name">DECATHLON</span>
+                  <span class="gear-store-price">₹8,800</span>
+                </div>
+              </div>
+              <div class="gear-card-actions">
+                <a href="#" class="btn-primary gear-buy-btn" aria-label="Buy Marmot Trestles Elite" data-product="marmot-trestles">Buy Now</a>
+                <button class="gear-compare-btn" aria-label="Compare Marmot Trestles Elite" data-compare="marmot-trestles">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+                  Compare
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product: Headlamp -->
+          <div class="gear-card reveal" data-category="accessories" id="gearCard6" role="listitem">
+            <div class="gear-card-img-wrap">
+              <img src="https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=400&q=80" alt="Petzl Actik Core headlamp" class="gear-img" loading="lazy" />
+              <button class="gear-wishlist-btn" aria-label="Add to wishlist" data-wishlisted="false">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+            <div class="gear-card-body">
+              <div class="gear-card-category">Accessories</div>
+              <h3 class="gear-card-name">Petzl Actik Core</h3>
+              <p class="gear-card-sub">Rechargeable Headlamp 600lm</p>
+              <div class="gear-pricing">
+                <div class="gear-store-row">
+                  <span class="gear-store-name">AMAZON</span>
+                  <span class="gear-store-price">₹4,200</span>
+                </div>
+                <div class="gear-store-row">
+                  <span class="gear-store-name">FLIPKART</span>
+                  <span class="gear-store-price">₹3,950</span>
+                </div>
+              </div>
+              <div class="gear-card-actions">
+                <a href="#" class="btn-primary gear-buy-btn" aria-label="Buy Petzl Actik Core" data-product="petzl-actik">Buy Now</a>
+                <button class="gear-compare-btn" aria-label="Compare Petzl Actik Core" data-compare="petzl-actik">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+                  Compare
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product: Hydration Pack -->
+          <div class="gear-card reveal reveal-delay-1" data-category="accessories" id="gearCard7" role="listitem">
+            <div class="gear-card-img-wrap">
+              <img src="https://images.unsplash.com/photo-1607435097405-37b8685f8f2c?w=400&q=80" alt="Camelbak M.U.L.E. hydration pack" class="gear-img" loading="lazy" />
+              <button class="gear-wishlist-btn" aria-label="Add to wishlist" data-wishlisted="false">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </div>
+            <div class="gear-card-body">
+              <div class="gear-card-category">Accessories</div>
+              <h3 class="gear-card-name">CamelBak M.U.L.E.</h3>
+              <p class="gear-card-sub">3L Hydration Pack</p>
+              <div class="gear-pricing">
+                <div class="gear-store-row">
+                  <span class="gear-store-name">AMAZON</span>
+                  <span class="gear-store-price">₹5,800</span>
+                </div>
+                <div class="gear-store-row">
+                  <span class="gear-store-name">DECATHLON</span>
+                  <span class="gear-store-price">₹5,400</span>
+                </div>
+              </div>
+              <div class="gear-card-actions">
+                <a href="#" class="btn-primary gear-buy-btn" aria-label="Buy CamelBak M.U.L.E." data-product="camelbak-mule">Buy Now</a>
+                <button class="gear-compare-btn" aria-label="Compare CamelBak M.U.L.E." data-compare="camelbak-mule">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+                  Compare
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <button class="gear-scroll-btn gear-scroll-btn--right" id="gearScrollRight" aria-label="Scroll right">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== EXPLORE BY STATE ===== -->
   <section class="section states-section" id="states" aria-label="Explore India by state">
     <div class="container">
@@ -315,6 +674,13 @@
       <p class="section-subtitle center">Every mountain, every valley, every trail — organized by the land that holds them.</p>
       <div class="states-layout">
         <div class="map-container" role="img" aria-label="Interactive map of India">
+          <div class="map-tooltip" id="mapTooltip" aria-live="polite">
+            <div class="tooltip-header">
+              <span class="tooltip-state"></span>
+              <span class="tooltip-treks"></span>
+            </div>
+            <div class="tooltip-info"></div>
+          </div>
           <svg viewBox="0 0 800 900" class="india-map" id="indiaMap">
             <g id="india-states-group">
               <!-- North -->
@@ -528,6 +894,410 @@
 
           <a href="#" class="btn-primary btn-lg mt-lg" id="exploreSanctuariesBtn">Explore Sanctuaries</a>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PHYSICAL READINESS DASHBOARD ===== -->
+  <section class="section fitness-section" id="fitness" aria-label="Physical readiness dashboard">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Physical Readiness</div>
+        <div class="section-title-row">
+          <h2 class="section-title">Your Training Dashboard</h2>
+        </div>
+        <p class="section-subtitle">We've calculated your readiness based on your last 4 weeks of activity. You're almost ready for <em>Kedarkantha</em>.</p>
+      </div>
+      <div class="fitness-layout">
+        <!-- Left: Score + Metrics -->
+        <div class="fitness-card reveal">
+          <div class="fitness-score-row">
+            <div class="fitness-circular" role="img" aria-label="Endurance stat: 75%">
+              <svg viewBox="0 0 120 120" class="fitness-ring" aria-hidden="true">
+                <circle class="fitness-ring-bg" cx="60" cy="60" r="50" />
+                <circle class="fitness-ring-fill" cx="60" cy="60" r="50" id="enduranceRing" data-percent="75" />
+              </svg>
+              <div class="fitness-ring-label">
+                <span class="fitness-ring-pct" id="endurancePct">75%</span>
+              </div>
+            </div>
+            <div class="fitness-score-info">
+              <h3 class="fitness-score-title">Endurance Stat</h3>
+              <p class="fitness-score-desc">Target: 10km run in under 60 min. You are currently at 8.2km.</p>
+            </div>
+          </div>
+          <div class="fitness-bars">
+            <div class="fitness-bar-item">
+              <div class="fitness-bar-label">
+                <span>Leg Strength</span>
+                <span class="fitness-bar-pct" id="legPct">90%</span>
+              </div>
+              <div class="fitness-bar-track">
+                <div class="fitness-bar-fill" data-width="90" id="legBar"></div>
+              </div>
+            </div>
+            <div class="fitness-bar-item">
+              <div class="fitness-bar-label">
+                <span>VO₂ Max Capacity</span>
+                <span class="fitness-bar-pct" id="vo2Pct">62%</span>
+              </div>
+              <div class="fitness-bar-track">
+                <div class="fitness-bar-fill fitness-bar-fill--vo2" data-width="62" id="vo2Bar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Right: Weekly Training Timeline -->
+        <div class="fitness-timeline-card reveal reveal-delay-2">
+          <h3 class="fitness-timeline-title">Weekly Training Timeline</h3>
+          <div class="fitness-timeline-list">
+            <div class="fitness-timeline-item completed">
+              <div class="fitness-tl-dot"></div>
+              <div class="fitness-tl-content">
+                <div class="fitness-tl-day">MONDAY</div>
+                <div class="fitness-tl-activity">6km Steep Incline Run</div>
+                <div class="fitness-tl-meta">Completed &bull; 42 mins</div>
+              </div>
+            </div>
+            <div class="fitness-timeline-item completed">
+              <div class="fitness-tl-dot"></div>
+              <div class="fitness-tl-content">
+                <div class="fitness-tl-day">WEDNESDAY</div>
+                <div class="fitness-tl-activity">Weight Training: Legs &amp; Core</div>
+                <div class="fitness-tl-meta">Completed &bull; 60 mins</div>
+              </div>
+            </div>
+            <div class="fitness-timeline-item upcoming">
+              <div class="fitness-tl-dot"></div>
+              <div class="fitness-tl-content">
+                <div class="fitness-tl-day">FRIDAY (UPCOMING)</div>
+                <div class="fitness-tl-activity">Interval Training (HIIT)</div>
+                <div class="fitness-tl-meta">Scheduled &bull; 45 mins</div>
+              </div>
+            </div>
+            <div class="fitness-timeline-item upcoming">
+              <div class="fitness-tl-dot"></div>
+              <div class="fitness-tl-content">
+                <div class="fitness-tl-day">SUNDAY (UPCOMING)</div>
+                <div class="fitness-tl-activity">Long Walk with Loaded Pack</div>
+                <div class="fitness-tl-meta">Scheduled &bull; 120 mins</div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-outline-green fitness-plan-btn" id="generatePlanBtn" aria-label="Generate personalized training plan">
+            Generate Personalized Plan
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ALPINE SAFETY & MEDICAL ===== -->
+  <section class="section alpine-section" id="alpine-safety" aria-label="Alpine safety and medical guide">
+    <div class="container">
+      <div class="section-tag center">Alpine Safety First</div>
+      <h2 class="section-title center">Your Medical Shield</h2>
+      <p class="section-subtitle center" style="margin:16px auto 56px;">Essential health knowledge and kit checklist for high-altitude trekking.</p>
+      <div class="alpine-cards-grid">
+
+        <div class="alpine-card reveal" id="alpineCard1">
+          <div class="alpine-card-icon alpine-card-icon--medicine">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          </div>
+          <h3 class="alpine-card-title">Essential Medicines</h3>
+          <ul class="alpine-checklist" role="list" aria-label="Essential medicines checklist">
+            <li class="alpine-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Diamox (Altitude Sickness)
+            </li>
+            <li class="alpine-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Crocin/Dolo (Fever &amp; Pain)
+            </li>
+            <li class="alpine-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Digene (Digestion)
+            </li>
+          </ul>
+        </div>
+
+        <div class="alpine-card reveal reveal-delay-2" id="alpineCard2">
+          <div class="alpine-card-icon alpine-card-icon--emergency">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <h3 class="alpine-card-title">Emergency Kit</h3>
+          <ul class="alpine-checklist" role="list" aria-label="Emergency kit checklist">
+            <li class="alpine-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Crepe Bandages &amp; Gauze
+            </li>
+            <li class="alpine-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Antiseptic Liquid (Dettol)
+            </li>
+            <li class="alpine-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              ORS/Electrolyte Packets
+            </li>
+          </ul>
+        </div>
+
+        <div class="alpine-card reveal reveal-delay-4" id="alpineCard3">
+          <div class="alpine-card-icon alpine-card-icon--altitude">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
+          </div>
+          <h3 class="alpine-card-title">Altitude Intel</h3>
+          <ul class="alpine-checklist" role="list" aria-label="Altitude intelligence guide">
+            <li class="alpine-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Understanding AMS Symptoms
+            </li>
+            <li class="alpine-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Hydration vs Oxygen Levels
+            </li>
+            <li class="alpine-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Acclimatization Best Practices
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PREPARATION HUB ===== -->
+  <section class="section prep-hub-section" id="prep-hub" aria-label="Trek preparation tools">
+    <div class="container">
+      <div class="section-tag center">Preparation Hub</div>
+      <h2 class="section-title center">Everything Before the Trail Begins</h2>
+      <p class="section-subtitle center" style="margin:16px auto 72px;">Smart tools to plan, pack, and prepare for any Himalayan adventure.</p>
+
+      <!-- ── PACKING CHECKLIST ── -->
+      <div id="packing" class="prep-block" aria-labelledby="packingTitle">
+        <div class="prep-block-header">
+          <div>
+            <div class="section-tag">Pack Smart Checklist</div>
+            <h3 class="prep-block-title" id="packingTitle">Smart Packing Checklist</h3>
+          </div>
+          <div class="checklist-actions">
+            <button class="checklist-btn-save" id="saveChecklistBtn" aria-label="Save checklist">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save List
+            </button>
+            <button class="btn-primary checklist-btn-pdf" id="exportPdfBtn" aria-label="Export checklist as PDF">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              PDF
+            </button>
+          </div>
+        </div>
+        <div class="checklist-list" id="checklistContainer" role="list" aria-label="Packing checklist items">
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item1" aria-describedby="item1Desc" />
+            <span class="checklist-item-name" id="item1Desc">Waterproof Shell Jacket</span>
+            <span class="checklist-category-tag">CLOTHING</span>
+          </label>
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item2" aria-describedby="item2Desc" checked />
+            <span class="checklist-item-name" id="item2Desc">Headlamp with Spare Batteries</span>
+            <span class="checklist-category-tag">GEAR</span>
+          </label>
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item3" aria-describedby="item3Desc" />
+            <span class="checklist-item-name" id="item3Desc">Thermal Inner Layers (Top &amp; Bottom)</span>
+            <span class="checklist-category-tag">CLOTHING</span>
+          </label>
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item4" aria-describedby="item4Desc" />
+            <span class="checklist-item-name" id="item4Desc">2L Hydration Bladder / Bottles</span>
+            <span class="checklist-category-tag">UTILITY</span>
+          </label>
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item5" aria-describedby="item5Desc" />
+            <span class="checklist-item-name" id="item5Desc">Trekking Poles (Collapsible)</span>
+            <span class="checklist-category-tag">GEAR</span>
+          </label>
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item6" aria-describedby="item6Desc" />
+            <span class="checklist-item-name" id="item6Desc">First Aid Kit</span>
+            <span class="checklist-category-tag">UTILITY</span>
+          </label>
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item7" aria-describedby="item7Desc" />
+            <span class="checklist-item-name" id="item7Desc">Trail Snacks &amp; Energy Bars</span>
+            <span class="checklist-category-tag">FOOD</span>
+          </label>
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item8" aria-describedby="item8Desc" />
+            <span class="checklist-item-name" id="item8Desc">Trekking Socks (3 pairs minimum)</span>
+            <span class="checklist-category-tag">CLOTHING</span>
+          </label>
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item9" aria-describedby="item9Desc" />
+            <span class="checklist-item-name" id="item9Desc">Sunscreen SPF 50+ &amp; Lip Balm</span>
+            <span class="checklist-category-tag">ACCESSORIES</span>
+          </label>
+          <label class="checklist-item" role="listitem">
+            <input type="checkbox" class="checklist-checkbox" id="item10" aria-describedby="item10Desc" />
+            <span class="checklist-item-name" id="item10Desc">Offline GPX Map Download</span>
+            <span class="checklist-category-tag">UTILITY</span>
+          </label>
+        </div>
+        <div class="checklist-progress-row" aria-live="polite" aria-label="Packing progress">
+          <span class="checklist-progress-label" id="checklistProgressLabel">1 of 10 packed</span>
+          <div class="checklist-progress-bar-track">
+            <div class="checklist-progress-bar-fill" id="checklistProgressFill" style="width:10%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prep-divider"></div>
+
+      <!-- ── TREK TIMELINE ── -->
+      <div id="trek-timeline" class="prep-block" aria-labelledby="timelineTitle">
+        <div class="section-tag center" style="justify-content:flex-start;">Prepare Before Your Trek</div>
+        <h3 class="prep-block-title" id="timelineTitle">Trek Preparation Timeline</h3>
+        <div class="timeline-track" role="list" aria-label="Trek preparation stages">
+
+          <div class="timeline-stage reveal" id="stage1" role="listitem" tabindex="0">
+            <div class="timeline-connector"></div>
+            <div class="timeline-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="timeline-label">T-7 DAYS</div>
+            <div class="timeline-heading">Check Weather &amp; Gear</div>
+            <p class="timeline-desc">Finalize packing list and check the 7-day mountain weather forecast.</p>
+          </div>
+
+          <div class="timeline-stage reveal reveal-delay-1" id="stage2" role="listitem" tabindex="0">
+            <div class="timeline-connector"></div>
+            <div class="timeline-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+            <div class="timeline-label">T-3 DAYS</div>
+            <div class="timeline-heading">Medical Clearance</div>
+            <p class="timeline-desc">Confirm medical fitness and stock up on hydration salts and meds.</p>
+          </div>
+
+          <div class="timeline-stage reveal reveal-delay-2" id="stage3" role="listitem" tabindex="0">
+            <div class="timeline-connector"></div>
+            <div class="timeline-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div class="timeline-label">T-1 DAY</div>
+            <div class="timeline-heading">Bag Weigh-in</div>
+            <p class="timeline-desc">Keep it under 12kg. Download offline GPX maps to your device.</p>
+          </div>
+
+          <div class="timeline-stage timeline-stage--active reveal reveal-delay-3" id="stage4" role="listitem" tabindex="0">
+            <div class="timeline-connector timeline-connector--last"></div>
+            <div class="timeline-icon-wrap timeline-icon-wrap--active">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
+            </div>
+            <div class="timeline-label">TREK DAY</div>
+            <div class="timeline-heading">Early Start</div>
+            <p class="timeline-desc">Report to base camp by 8 AM. Maintain high spirits!</p>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="prep-divider"></div>
+
+      <!-- ── NUTRITION + WATER + CLOTHING (3-col layout) ── -->
+      <div class="prep-trio-grid">
+
+        <!-- Nutrition -->
+        <div id="nutrition" class="prep-block" aria-labelledby="nutritionTitle">
+          <div class="section-tag">Fuel Your Adventure</div>
+          <h3 class="prep-block-title" id="nutritionTitle">Trek Nutrition Guide</h3>
+          <div class="nutrition-cards">
+            <div class="nutrition-card reveal" id="nutriCard1">
+              <div class="nutrition-icon">☕</div>
+              <div class="nutrition-info">
+                <div class="nutrition-meal">Breakfast</div>
+                <p class="nutrition-desc">Porridge, Honey, Nuts, and Black Coffee for energy.</p>
+                <div class="nutrition-macros">
+                  <span>~480 kcal</span>
+                  <span>28g protein</span>
+                </div>
+              </div>
+            </div>
+            <div class="nutrition-card reveal reveal-delay-1" id="nutriCard2">
+              <div class="nutrition-icon">🍛</div>
+              <div class="nutrition-info">
+                <div class="nutrition-meal">Lunch</div>
+                <p class="nutrition-desc">Dal-rice or chapati with vegetable curry. Simple and sustaining.</p>
+                <div class="nutrition-macros">
+                  <span>~620 kcal</span>
+                  <span>22g protein</span>
+                </div>
+              </div>
+            </div>
+            <div class="nutrition-card reveal reveal-delay-2" id="nutriCard3">
+              <div class="nutrition-icon">🍫</div>
+              <div class="nutrition-info">
+                <div class="nutrition-meal">On-Trail Snacks</div>
+                <p class="nutrition-desc">Dates, energy bars, and chocolate for sugar peaks.</p>
+                <div class="nutrition-macros">
+                  <span>~280 kcal</span>
+                  <span>8g protein</span>
+                </div>
+              </div>
+            </div>
+            <div class="nutrition-card reveal reveal-delay-3" id="nutriCard4">
+              <div class="nutrition-icon">🍲</div>
+              <div class="nutrition-info">
+                <div class="nutrition-meal">Dinner</div>
+                <p class="nutrition-desc">Khichdi or soup with hot chocolate. Rest and recover.</p>
+                <div class="nutrition-macros">
+                  <span>~540 kcal</span>
+                  <span>18g protein</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Water Planner -->
+        <div id="water-planner" class="prep-block" aria-labelledby="waterTitle">
+          <div class="section-tag">Hydration Planner</div>
+          <h3 class="prep-block-title" id="waterTitle">Water Planner</h3>
+          <div class="water-card reveal">
+            <div class="water-field">
+              <label class="water-label" for="waterDistance">EST. DISTANCE (KM)</label>
+              <input type="range" class="water-slider" id="waterDistance" min="2" max="30" value="14" aria-label="Estimated distance in kilometers" />
+              <div class="water-slider-val" id="waterDistanceVal">14 km</div>
+            </div>
+            <div class="water-field">
+              <label class="water-label" for="waterTemp">TEMPERATURE (°C)</label>
+              <input type="range" class="water-slider" id="waterTemp" min="-5" max="40" value="18" aria-label="Temperature in Celsius" />
+              <div class="water-slider-val" id="waterTempVal">18°C</div>
+            </div>
+            <div class="water-result">
+              <div class="water-result-label">REQUIRED DAILY HYDRATION</div>
+              <div class="water-result-value" id="waterResult" aria-live="polite">3.5 Liters</div>
+            </div>
+            <p class="water-tip" id="waterTip">Tip: Sip small amounts frequently rather than drinking a lot at once.</p>
+          </div>
+        </div>
+
+        <!-- Clothing Guide -->
+        <div id="clothing" class="prep-block" aria-labelledby="clothingTitle">
+          <div class="section-tag">Seasonal Layers</div>
+          <h3 class="prep-block-title" id="clothingTitle">Clothing Guide</h3>
+          <div class="clothing-tabs" role="tablist" aria-label="Seasonal clothing guides">
+            <button class="clothing-tab active" role="tab" aria-selected="true" data-season="winter" id="tabWinter">Winter</button>
+            <button class="clothing-tab" role="tab" aria-selected="false" data-season="summer" id="tabSummer">Summer</button>
+            <button class="clothing-tab" role="tab" aria-selected="false" data-season="monsoon" id="tabMonsoon">Monsoon</button>
+            <button class="clothing-tab" role="tab" aria-selected="false" data-season="snow" id="tabSnow">Snow</button>
+          </div>
+          <div class="clothing-panel reveal" id="clothingPanel" role="tabpanel" aria-labelledby="tabWinter">
+            <!-- Content injected by JS -->
+          </div>
+        </div>
+
       </div>
     </div>
   </section>

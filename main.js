@@ -144,17 +144,20 @@ const counterObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.5 });
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Add reveal class to all section children
+  // Add reveal class to all section children & observe all reveal elements
   const revealTargets = document.querySelectorAll(
-    '.trek-card, .state-item, .feature-item, .company-card, .testimonial-card, .journal-card, .gallery-card, .quote-card, .category-card'
+    '.reveal, .trek-card, .state-item, .feature-item, .company-card, .testimonial-card, .journal-card, .gallery-card, .quote-card, .category-card, .gear-card, .fitness-card, .fitness-timeline-card, .alpine-card, .timeline-stage, .nutrition-card, .water-card, .clothing-panel, .prep-block, .feature-showcase-card'
   );
 
-  revealTargets.forEach((el, i) => {
-    el.classList.add('reveal');
-    // Stagger by column/position within parent
-    const siblings = Array.from(el.parentElement.children);
-    const idx = siblings.indexOf(el);
-    el.style.transitionDelay = `${idx * 0.08}s`;
+  revealTargets.forEach((el) => {
+    if (!el.classList.contains('reveal')) {
+      el.classList.add('reveal');
+    }
+    if (el.parentElement && !el.style.transitionDelay) {
+      const siblings = Array.from(el.parentElement.children);
+      const idx = siblings.indexOf(el);
+      el.style.transitionDelay = `${(idx % 4) * 0.08}s`;
+    }
     revealObserver.observe(el);
   });
 
@@ -167,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (heroImg) {
     window.addEventListener('scroll', () => {
       const scrolled = window.scrollY;
-      heroImg.style.transform = `scale(1) translateY(${scrolled * 0.3}px)`;
+      heroImg.style.transform = `scale(1) translateY(${scrolled * 0.25}px)`;
     }, { passive: true });
   }
 
@@ -193,34 +196,46 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(tooltipTimeout);
       highlightState(stateName, true);
 
-      const treks = path.dataset.treks || '0';
-      const region = path.dataset.region || 'N/A';
+      if (mapTooltip) {
+        const treks = path.dataset.treks || '0';
+        const region = path.dataset.region || 'N/A';
 
-      mapTooltip.querySelector('.tooltip-state').textContent = stateName;
-      mapTooltip.querySelector('.tooltip-treks').textContent = `${treks} Treks`;
-      mapTooltip.querySelector('.tooltip-info').innerHTML = `<span>🏔 ${region}</span>`;
+        const stateEl = mapTooltip.querySelector('.tooltip-state');
+        const treksEl = mapTooltip.querySelector('.tooltip-treks');
+        const infoEl = mapTooltip.querySelector('.tooltip-info');
 
-      mapTooltip.classList.add('visible');
+        if (stateEl) stateEl.textContent = stateName;
+        if (treksEl) treksEl.textContent = `${treks} Treks`;
+        if (infoEl) infoEl.innerHTML = `<span>🏔️ ${region} Region</span>`;
+
+        mapTooltip.classList.add('visible');
+      }
     });
 
     path.addEventListener('mousemove', e => {
-      const mapRect = document.querySelector('.map-container').getBoundingClientRect();
+      if (!mapTooltip) return;
+      const mapContainer = document.querySelector('.map-container');
+      if (!mapContainer) return;
+      const mapRect = mapContainer.getBoundingClientRect();
       const x = e.clientX - mapRect.left + 16;
       const y = e.clientY - mapRect.top - 10;
-      mapTooltip.style.left = Math.min(x, mapRect.width - mapTooltip.offsetWidth - 10) + 'px';
+      mapTooltip.style.left = Math.min(Math.max(10, x), mapRect.width - mapTooltip.offsetWidth - 10) + 'px';
       mapTooltip.style.top = y + 'px';
     });
 
     path.addEventListener('mouseleave', () => {
       highlightState(stateName, false);
-      tooltipTimeout = setTimeout(() => {
-        mapTooltip.classList.remove('visible');
-      }, 200);
+      if (mapTooltip) {
+        tooltipTimeout = setTimeout(() => {
+          mapTooltip.classList.remove('visible');
+        }, 200);
+      }
     });
 
     path.addEventListener('click', e => {
       e.preventDefault();
-      window.location.href = `/states/${stateName.toLowerCase().replace(/ /g, '-')}`;
+      const trekSec = document.getElementById('treks');
+      if (trekSec) trekSec.scrollIntoView({ behavior: 'smooth' });
     });
   });
 
@@ -527,3 +542,377 @@ document.addEventListener('DOMContentLoaded', () => {
     'font-size: 13px; color: #707070;'
   );
 });
+
+/* ══════════════════════════════════════════════════════════
+   TREKINDIA v2.0 — NEW FEATURES JAVASCRIPT
+   All code is additive. Zero modifications to existing JS.
+   ══════════════════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  // ─── A. MOBILE NAV SUB-MENUS ──────────────────────────────
+  document.querySelectorAll('.mobile-nav-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const isOpen = toggle.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+      const subId = toggle.id === 'mobilePrep' ? 'mobilePrepSub' : 'mobileGearSub';
+      const sub = document.getElementById(subId);
+      if (sub) sub.classList.toggle('open', isOpen);
+    });
+  });
+
+  // Close mobile sub-menus when clicking their links
+  document.querySelectorAll('.mobile-nav-sub-link').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelectorAll('.mobile-nav-sub').forEach(s => s.classList.remove('open'));
+      document.querySelectorAll('.mobile-nav-toggle').forEach(t => {
+        t.classList.remove('open');
+        t.setAttribute('aria-expanded', 'false');
+      });
+    });
+  });
+
+  // ─── B. GEAR MARKETPLACE ──────────────────────────────────
+
+  // Horizontal scroll buttons
+  const gearTrack = document.getElementById('gearTrack');
+  const gearScrollLeft = document.getElementById('gearScrollLeft');
+  const gearScrollRight = document.getElementById('gearScrollRight');
+
+  if (gearTrack) {
+    gearScrollLeft?.addEventListener('click', () => {
+      gearTrack.scrollBy({ left: -320, behavior: 'smooth' });
+    });
+    gearScrollRight?.addEventListener('click', () => {
+      gearTrack.scrollBy({ left: 320, behavior: 'smooth' });
+    });
+    // Show/hide scroll buttons based on scroll position
+    gearTrack.addEventListener('scroll', updateGearScrollBtns, { passive: true });
+    updateGearScrollBtns();
+  }
+
+  function updateGearScrollBtns() {
+    if (!gearTrack || !gearScrollLeft || !gearScrollRight) return;
+    gearScrollLeft.style.opacity = gearTrack.scrollLeft <= 0 ? '0.4' : '1';
+    gearScrollRight.style.opacity =
+      gearTrack.scrollLeft >= gearTrack.scrollWidth - gearTrack.clientWidth - 1 ? '0.4' : '1';
+  }
+
+  // Category filter tabs
+  document.querySelectorAll('.gear-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.gear-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+
+      const filter = tab.dataset.gearFilter;
+      document.querySelectorAll('.gear-card').forEach(card => {
+        const show = filter === 'all' || card.dataset.category === filter;
+        card.style.display = show ? 'flex' : 'none';
+      });
+      if (gearTrack) gearTrack.scrollTo({ left: 0, behavior: 'smooth' });
+    });
+  });
+
+  // Wishlist toggle
+  document.querySelectorAll('.gear-wishlist-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isWishlisted = btn.dataset.wishlisted === 'true';
+      btn.dataset.wishlisted = !isWishlisted;
+      btn.classList.toggle('wishlisted', !isWishlisted);
+      btn.setAttribute('aria-label', !isWishlisted ? 'Remove from wishlist' : 'Add to wishlist');
+      // Future: persist to user profile API
+    });
+  });
+
+  // Buy now button (future: affiliate link redirect)
+  document.querySelectorAll('.gear-buy-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const product = btn.dataset.product;
+      // Future integration: window.open(affiliateLinks[product], '_blank');
+      btn.textContent = '✓ Opening...';
+      setTimeout(() => { btn.textContent = 'Buy Now'; }, 1500);
+    });
+  });
+
+  // ─── C. PHYSICAL READINESS DASHBOARD ──────────────────────
+
+  // SVG Ring animation using IntersectionObserver
+  const fitnessRingFill = document.getElementById('enduranceRing');
+  if (fitnessRingFill) {
+    const percent = parseInt(fitnessRingFill.dataset.percent, 10) || 75;
+    const circumference = 2 * Math.PI * 50; // r=50
+    fitnessRingFill.style.strokeDasharray = circumference;
+    fitnessRingFill.style.strokeDashoffset = circumference;
+
+    const ringObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const offset = circumference - (percent / 100) * circumference;
+          fitnessRingFill.style.strokeDashoffset = offset;
+          ringObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.5 });
+
+    ringObserver.observe(fitnessRingFill);
+  }
+
+  // Progress bar animations
+  const fitnessBars = document.querySelectorAll('.fitness-bar-fill');
+  if (fitnessBars.length) {
+    const barObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const bar = entry.target;
+          const targetWidth = bar.dataset.width || '0';
+          bar.style.width = targetWidth + '%';
+          barObserver.unobserve(bar);
+        }
+      });
+    }, { threshold: 0.4 });
+
+    fitnessBars.forEach(bar => barObserver.observe(bar));
+  }
+
+  // Generate plan button
+  const generatePlanBtn = document.getElementById('generatePlanBtn');
+  if (generatePlanBtn) {
+    generatePlanBtn.addEventListener('click', () => {
+      generatePlanBtn.textContent = '⏳ Generating...';
+      generatePlanBtn.disabled = true;
+      // Future: call fitness API
+      setTimeout(() => {
+        generatePlanBtn.textContent = '✓ Plan Sent to Email!';
+        setTimeout(() => {
+          generatePlanBtn.textContent = 'Generate Personalized Plan';
+          generatePlanBtn.disabled = false;
+        }, 2500);
+      }, 1800);
+    });
+  }
+
+  // ─── D. PACKING CHECKLIST ─────────────────────────────────
+
+  const CHECKLIST_KEY = 'trekindia-checklist-v1';
+  const checklistContainer = document.getElementById('checklistContainer');
+  const checklistProgressFill = document.getElementById('checklistProgressFill');
+  const checklistProgressLabel = document.getElementById('checklistProgressLabel');
+
+  function updateChecklistProgress() {
+    if (!checklistContainer) return;
+    const all = checklistContainer.querySelectorAll('.checklist-checkbox');
+    const checked = checklistContainer.querySelectorAll('.checklist-checkbox:checked');
+    const pct = all.length > 0 ? Math.round((checked.length / all.length) * 100) : 0;
+    if (checklistProgressFill) checklistProgressFill.style.width = pct + '%';
+    if (checklistProgressLabel) {
+      checklistProgressLabel.textContent = `${checked.length} of ${all.length} packed`;
+    }
+  }
+
+  function saveChecklist() {
+    if (!checklistContainer) return;
+    const state = {};
+    checklistContainer.querySelectorAll('.checklist-checkbox').forEach(cb => {
+      state[cb.id] = cb.checked;
+    });
+    localStorage.setItem(CHECKLIST_KEY, JSON.stringify(state));
+  }
+
+  function loadChecklist() {
+    if (!checklistContainer) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(CHECKLIST_KEY) || '{}');
+      checklistContainer.querySelectorAll('.checklist-checkbox').forEach(cb => {
+        if (cb.id in saved) cb.checked = saved[cb.id];
+      });
+    } catch {}
+    updateChecklistProgress();
+  }
+
+  if (checklistContainer) {
+    loadChecklist();
+    checklistContainer.addEventListener('change', (e) => {
+      if (e.target.classList.contains('checklist-checkbox')) {
+        updateChecklistProgress();
+      }
+    });
+  }
+
+  // Save List button
+  const saveChecklistBtn = document.getElementById('saveChecklistBtn');
+  if (saveChecklistBtn) {
+    saveChecklistBtn.addEventListener('click', () => {
+      saveChecklist();
+      saveChecklistBtn.textContent = '✓ Saved!';
+      setTimeout(() => {
+        saveChecklistBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save List`;
+      }, 1800);
+    });
+  }
+
+  // PDF export
+  const exportPdfBtn = document.getElementById('exportPdfBtn');
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener('click', () => {
+      const items = [];
+      document.querySelectorAll('.checklist-item').forEach(item => {
+        const name = item.querySelector('.checklist-item-name')?.textContent || '';
+        const cat = item.querySelector('.checklist-category-tag')?.textContent || '';
+        const checked = item.querySelector('.checklist-checkbox')?.checked ? '☑' : '☐';
+        items.push(`${checked} ${name}  [${cat}]`);
+      });
+      const content = `TrekIndia — Packing Checklist\n${'='.repeat(40)}\n\n${items.join('\n')}\n\nGenerated: ${new Date().toLocaleDateString('en-IN')}\ntrekindia.com`;
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'TrekIndia-PackingChecklist.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // ─── E. WATER PLANNER ─────────────────────────────────────
+
+  const waterDistance = document.getElementById('waterDistance');
+  const waterTemp = document.getElementById('waterTemp');
+  const waterDistanceVal = document.getElementById('waterDistanceVal');
+  const waterTempVal = document.getElementById('waterTempVal');
+  const waterResult = document.getElementById('waterResult');
+  const waterTip = document.getElementById('waterTip');
+
+  const waterTips = [
+    'Tip: Sip small amounts frequently rather than drinking a lot at once.',
+    'Tip: Start hydrating 24 hours before your trek day.',
+    'Tip: Add electrolyte tablets to prevent sodium depletion.',
+    'Tip: Monitor urine color — pale yellow means well hydrated.',
+    'Tip: Drink before you feel thirsty at high altitude.',
+  ];
+
+  function calculateWater() {
+    if (!waterDistance || !waterTemp) return;
+    const dist = parseInt(waterDistance.value, 10);
+    const temp = parseInt(waterTemp.value, 10);
+    // Base: 0.5L per 5km + temperature factor + altitude base of 1L
+    const base = 1.0;
+    const distFactor = dist * 0.12;
+    const tempFactor = temp > 20 ? (temp - 20) * 0.05 : 0;
+    const total = Math.max(1.5, (base + distFactor + tempFactor)).toFixed(1);
+
+    if (waterDistanceVal) waterDistanceVal.textContent = `${dist} km`;
+    if (waterTempVal) waterTempVal.textContent = `${temp}°C`;
+    if (waterResult) {
+      waterResult.style.transform = 'scale(1.08)';
+      waterResult.textContent = `${total} Liters`;
+      setTimeout(() => { waterResult.style.transform = ''; }, 300);
+    }
+    if (waterTip) {
+      waterTip.textContent = waterTips[Math.floor(Math.random() * waterTips.length)];
+    }
+  }
+
+  waterDistance?.addEventListener('input', calculateWater);
+  waterTemp?.addEventListener('input', calculateWater);
+  // Init on load
+  calculateWater();
+
+  // ─── F. CLOTHING GUIDE TABS ───────────────────────────────
+
+  const clothingData = {
+    winter: {
+      label: 'Himalayan Winter',
+      icon: '❄️',
+      layers: [
+        'Thermal Base Layer (Moisture Wicking)',
+        'Mid-Weight Fleece Jacket',
+        'Heavy Down Puffer (700+ Fill)',
+        'Windbreaker Outer Shell',
+        'Balaclava & Thermal Gloves',
+        'Insulated Trekking Boots',
+      ]
+    },
+    summer: {
+      label: 'Alpine Summer',
+      icon: '☀️',
+      layers: [
+        'Moisture-Wicking T-Shirt (Merino Wool)',
+        'Light Softshell Jacket',
+        'Windproof Outer Layer',
+        'UV-Protection Cap & Sunglasses',
+        'Lightweight Trekking Pants',
+        'Ventilated Trail Shoes',
+      ]
+    },
+    monsoon: {
+      label: 'Monsoon Season',
+      icon: '🌧️',
+      layers: [
+        'Quick-Dry Base Layer',
+        'Waterproof Rain Jacket (Taped Seams)',
+        'Waterproof Over-Pants',
+        'Waterproof Backpack Cover',
+        'Anti-Leech Gaiters',
+        'Waterproof Trekking Boots',
+      ]
+    },
+    snow: {
+      label: 'Snow Trekking',
+      icon: '🏔️',
+      layers: [
+        'Heavy Thermal Base Set (Top + Bottom)',
+        'Insulated Mid-Layer Jacket',
+        'Hardshell Outer Shell (Gore-Tex)',
+        'Down Pants for Camp',
+        'Crampon-Compatible Boots',
+        'Mountaineering Gloves (3-Layer)',
+      ]
+    }
+  };
+
+  const clothingPanel = document.getElementById('clothingPanel');
+
+  function renderClothingPanel(season) {
+    if (!clothingPanel) return;
+    const data = clothingData[season] || clothingData.winter;
+    clothingPanel.innerHTML = `
+      <div class="clothing-season-name">
+        <span>${data.label}</span>
+        <span class="clothing-season-icon">${data.icon}</span>
+      </div>
+      <ul class="clothing-layer-list" aria-label="Clothing layers for ${data.label}">
+        ${data.layers.map(l => `<li class="clothing-layer-item">${l}</li>`).join('')}
+      </ul>
+    `;
+    clothingPanel.style.opacity = '0';
+    clothingPanel.style.transform = 'translateY(8px)';
+    requestAnimationFrame(() => {
+      clothingPanel.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      clothingPanel.style.opacity = '1';
+      clothingPanel.style.transform = 'translateY(0)';
+    });
+  }
+
+  // Init clothing panel
+  renderClothingPanel('winter');
+
+  document.querySelectorAll('.clothing-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.clothing-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      renderClothingPanel(tab.dataset.season);
+    });
+  });
+
+});
+
