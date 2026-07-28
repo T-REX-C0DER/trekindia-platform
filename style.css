@@ -29,7 +29,7 @@
 body.dark {
   --bg: #0f1410;
   --white: #151c15;
-  --text: #f6f1e8;
+  --text: #f0f5ec;
   --text-secondary: #a6b095;
   --border: rgba(255,255,255,0.10);
   --surface: rgba(21,28,21,0.8);
@@ -256,7 +256,7 @@ h1, h2, h3, h4 { line-height: 1.15; letter-spacing: -0.02em; }
   min-height: var(--navbar-h-scrolled);
   padding: 12px 22px;
   background: var(--surface-strong);
-  border-color: rgba(255,255,255,0.64);
+  border-color: var(--border); /* Use var(--border) for consistency */
   box-shadow: 0 14px 50px rgba(0,0,0,0.12);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
@@ -264,11 +264,8 @@ h1, h2, h3, h4 { line-height: 1.15; letter-spacing: -0.02em; }
 .nav-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.02em;
+  /* Removed gap: 8px as the logo is now a single image, but can be re-added if text is part of the logo */
+  /* font-size, font-weight, color, letter-spacing are for text, removed as logo is purely image */
   flex-shrink: 0;
   transition: transform 0.25s ease;
 }
@@ -276,18 +273,18 @@ h1, h2, h3, h4 { line-height: 1.15; letter-spacing: -0.02em; }
   transform: scale(0.96);
 }
 .nav-logo:hover { transform: scale(1.02); }
-.logo-icon {
-  width: 36px;
-  height: 36px;
-  background: var(--forest);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
+
+/* New custom logo styling */
+.trekindia-logo {
+  height: 56px; /* Adjust as needed for best appearance */
+  width: auto; /* Maintain aspect ratio */
+  display: block; /* Ensure proper rendering */
   transition: transform 0.25s ease;
 }
-.nav-logo:hover .logo-icon { transform: rotate(-4deg) scale(1.03); }
+.nav-logo:hover .trekindia-logo {
+  transform: scale(1.03); /* Subtle hover effect for the logo image */
+}
+
 .nav-center {
   flex: 1;
   display: flex;
@@ -313,7 +310,7 @@ h1, h2, h3, h4 { line-height: 1.15; letter-spacing: -0.02em; }
 .nav-link:hover,
 .nav-link.active {
   color: var(--text);
-  background: rgba(85,107,47,0.08);
+  background: rgba(85, 107, 47, 0.08);
   transform: translateY(-1px);
 }
 .nav-link.active::after {
@@ -350,7 +347,7 @@ h1, h2, h3, h4 { line-height: 1.15; letter-spacing: -0.02em; }
 }
 .nav-mega-card {
   padding: 12px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(85,107,47,0.04);
 }
 .nav-mega-card strong { display: block; font-size: 13px; margin-bottom: 4px; color: var(--text); }
@@ -1698,7 +1695,7 @@ h1, h2, h3, h4 { line-height: 1.15; letter-spacing: -0.02em; }
 .footer-links { display: flex; flex-direction: column; gap: 10px; }
 .footer-link {
   font-size: 14px;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.55);
   transition: color 0.2s;
 }
 .footer-link:hover { color: rgba(255,255,255,0.9); }
