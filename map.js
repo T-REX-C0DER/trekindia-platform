@@ -655,15 +655,50 @@
 
       if (!filterBtn || !sidebar) return;
 
+      // Prevent Leaflet map dragging/zooming when scrolling/clicking inside filter sidebar
+      if (window.L && L.DomEvent) {
+        L.DomEvent.disableClickPropagation(sidebar);
+        L.DomEvent.disableScrollPropagation(sidebar);
+      }
+
+      const openSidebar = () => {
+        sidebar.classList.add('open');
+        sidebar.setAttribute('aria-hidden', 'false');
+        filterBtn.classList.add('active');
+        filterBtn.setAttribute('aria-expanded', 'true');
+      };
+
+      const closeSidebar = () => {
+        sidebar.classList.remove('open');
+        sidebar.setAttribute('aria-hidden', 'true');
+        filterBtn.classList.remove('active');
+        filterBtn.setAttribute('aria-expanded', 'false');
+      };
+
       filterBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        sidebar.classList.toggle('open');
-        filterBtn.classList.toggle('active', sidebar.classList.contains('open'));
+        if (sidebar.classList.contains('open')) {
+          closeSidebar();
+        } else {
+          openSidebar();
+        }
       });
 
-      closeBtn && closeBtn.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        filterBtn.classList.remove('active');
+      closeBtn && closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeSidebar();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !filterBtn.contains(e.target)) {
+          closeSidebar();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+          closeSidebar();
+        }
       });
 
       document.querySelectorAll('.filter-chip[data-difficulty]').forEach(chip => {
@@ -702,8 +737,7 @@
 
       applyBtn && applyBtn.addEventListener('click', () => {
         this.markerManager.filterByAll(this.activeFilters);
-        sidebar.classList.remove('open');
-        filterBtn.classList.remove('active');
+        closeSidebar();
       });
 
       clearBtn && clearBtn.addEventListener('click', () => {

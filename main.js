@@ -23,6 +23,139 @@ if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-s
   document.body.classList.add('dark');
 }
 
+/* ─── TREKINDIA BRAND LOGO SYSTEM ─────────────────────────── */
+const BrandLogoSystem = {
+  lightAssetSrc: 'whitebg_logo_processed.jpg',
+  darkAssetSrc: 'darkbg_logo_processed.jpg',
+  processedLightDataUrl: null,
+  processedDarkDataUrl: null,
+
+  init() {
+    this.preloadAndProcessAssets();
+  },
+
+  preloadAndProcessAssets() {
+    this.removeWhiteBackground(this.lightAssetSrc, (dataUrl) => {
+      this.processedLightDataUrl = dataUrl;
+      this.applyProcessedImages();
+    });
+
+    this.removeWhiteBackground(this.darkAssetSrc, (dataUrl) => {
+      this.processedDarkDataUrl = dataUrl;
+      this.applyProcessedImages();
+    });
+  },
+
+  removeWhiteBackground(src, callback) {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        const queue = [];
+        const visited = new Uint8Array(w * h);
+
+        const isWhite = (idx) => {
+          return data[idx] > 230 && data[idx + 1] > 230 && data[idx + 2] > 230;
+        };
+
+        for (let x = 0; x < w; x++) {
+          let idxTop = (0 * w + x) * 4;
+          let idxBot = ((h - 1) * w + x) * 4;
+          if (isWhite(idxTop) && !visited[0 * w + x]) {
+            queue.push(x, 0);
+            visited[0 * w + x] = 1;
+          }
+          if (isWhite(idxBot) && !visited[(h - 1) * w + x]) {
+            queue.push(x, h - 1);
+            visited[(h - 1) * w + x] = 1;
+          }
+        }
+
+        for (let y = 0; y < h; y++) {
+          let idxLeft = (y * w + 0) * 4;
+          let idxRight = (y * w + (w - 1)) * 4;
+          if (isWhite(idxLeft) && !visited[y * w + 0]) {
+            queue.push(0, y);
+            visited[y * w + 0] = 1;
+          }
+          if (isWhite(idxRight) && !visited[y * w + (w - 1)]) {
+            queue.push(w - 1, y);
+            visited[y * w + (w - 1)] = 1;
+          }
+        }
+
+        let head = 0;
+        while (head < queue.length) {
+          const cx = queue[head++];
+          const cy = queue[head++];
+          const pIdx = (cy * w + cx) * 4;
+          data[pIdx + 3] = 0;
+
+          const neighbors = [
+            [cx + 1, cy],
+            [cx - 1, cy],
+            [cx, cy + 1],
+            [cx, cy - 1]
+          ];
+          for (let i = 0; i < neighbors.length; i++) {
+            const nx = neighbors[i][0];
+            const ny = neighbors[i][1];
+            if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+              const vIdx = ny * w + nx;
+              if (!visited[vIdx]) {
+                const nIdx = (ny * w + nx) * 4;
+                if (isWhite(nIdx)) {
+                  visited[vIdx] = 1;
+                  queue.push(nx, ny);
+                }
+              }
+            }
+          }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        callback(canvas.toDataURL('image/png'));
+      } catch (err) {
+        callback(src);
+      }
+    };
+    img.onerror = () => callback(src);
+    img.src = src;
+  },
+
+  applyProcessedImages() {
+    if (this.processedLightDataUrl) {
+      document.querySelectorAll('.brand-icon-img.light-icon').forEach(img => {
+        img.src = this.processedLightDataUrl;
+        img.classList.add('transparent-loaded');
+      });
+    }
+    if (this.processedDarkDataUrl) {
+      document.querySelectorAll('.brand-icon-img.dark-icon').forEach(img => {
+        img.src = this.processedDarkDataUrl;
+        img.classList.add('transparent-loaded');
+      });
+    }
+  }
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => BrandLogoSystem.init());
+} else {
+  BrandLogoSystem.init();
+}
+
 themeToggleBtn?.addEventListener('click', () => {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');

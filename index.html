@@ -15,6 +15,8 @@
   <!-- MarkerCluster -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <link rel="preload" as="image" href="whitebg_logo_processed.jpg" />
+  <link rel="preload" as="image" href="darkbg_logo_processed.jpg" />
   <!-- TrekIndia Map Styles -->
   <link rel="stylesheet" href="map.css" />
 </head>
@@ -23,8 +25,14 @@
   <!-- ===== FLOATING NAVBAR ===== -->
   <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
     <div class="navbar-inner">
-      <a href="#" class="nav-logo" aria-label="TrekIndia home">
-        <img src="logo.png" alt="TrekIndia Logo" class="trekindia-logo">
+      <a href="#" class="trekindia-brand" aria-label="TrekIndia home">
+        <div class="brand-icon-wrap">
+          <img src="whitebg_logo_processed.jpg" alt="TrekIndia Logo" class="brand-icon-img light-icon" />
+          <img src="darkbg_logo_processed.jpg" alt="TrekIndia Logo" class="brand-icon-img dark-icon" />
+        </div>
+        <div class="brand-wordmark">
+          <span class="brand-trek">Trek</span><span class="brand-india">India</span>
+        </div>
       </a>
       <div class="nav-center">
         <ul class="nav-links" role="list">
@@ -133,6 +141,17 @@
       </button>
     </div>
     <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+      <div class="mobile-menu-header" style="padding: 16px; border-bottom: 1px solid var(--border); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+        <a href="#" class="trekindia-brand show-mobile-text" aria-label="TrekIndia home">
+          <div class="brand-icon-wrap">
+            <img src="whitebg_logo_processed.jpg" alt="TrekIndia Logo" class="brand-icon-img light-icon" />
+            <img src="darkbg_logo_processed.jpg" alt="TrekIndia Logo" class="brand-icon-img dark-icon" />
+          </div>
+          <div class="brand-wordmark">
+            <span class="brand-trek">Trek</span><span class="brand-india">India</span>
+          </div>
+        </a>
+      </div>
       <a href="#treks" class="mobile-nav-link">Explore</a>
       <a href="#states" class="mobile-nav-link">Destinations</a>
       <a href="#companies" class="mobile-nav-link">Companies</a>
@@ -1982,11 +2001,14 @@
     <div class="container">
       <div class="footer-top">
         <div class="footer-brand">
-          <a href="#" class="footer-logo" aria-label="TrekIndia home">
-            <span class="logo-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20L9 8l4 6 3-4 5 10"/></svg>
-            </span>
-            TrekIndia
+          <a href="#" class="trekindia-brand show-mobile-text" aria-label="TrekIndia home" style="margin-bottom: 16px;">
+            <div class="brand-icon-wrap">
+              <img src="whitebg_logo_processed.jpg" alt="TrekIndia Logo" class="brand-icon-img light-icon" />
+              <img src="darkbg_logo_processed.jpg" alt="TrekIndia Logo" class="brand-icon-img dark-icon" />
+            </div>
+            <div class="brand-wordmark">
+              <span class="brand-trek">Trek</span><span class="brand-india">India</span>
+            </div>
           </a>
           <p class="footer-brand-desc">India's premium trekking discovery platform. Explore, compare, and plan adventures across 28 states.</p>
           <div class="footer-socials">
