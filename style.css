@@ -15,6 +15,8 @@
   --border: #E8E8E8;
   --surface: rgba(255,255,255,0.74);
   --surface-strong: rgba(255,255,255,0.9);
+  --footer-bg: #1A1A1A;
+  --footer-border: rgba(255,255,255,0.08);
   --card-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
   --card-shadow-hover: 0 16px 48px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
   --radius: 24px;
@@ -34,6 +36,8 @@ body.dark {
   --border: rgba(255,255,255,0.10);
   --surface: rgba(21,28,21,0.8);
   --surface-strong: rgba(21,28,21,0.92);
+  --footer-bg: #080c09;
+  --footer-border: rgba(255,255,255,0.10);
   --card-shadow: 0 18px 48px rgba(0,0,0,0.32);
   --card-shadow-hover: 0 24px 60px rgba(0,0,0,0.42);
 }
@@ -1707,13 +1711,13 @@ body.dark .tooltip-info { color: #a6b095; }
 }
 
 /* ─── 20. FOOTER ─────────────────────────────── */
-.footer { background: var(--text); padding: 80px 0 40px; }
+.footer { background: var(--footer-bg); padding: 80px 0 40px; transition: background 0.3s ease; }
 .footer-top {
   display: grid;
   grid-template-columns: 320px 1fr;
   gap: 80px;
   padding-bottom: 60px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid var(--footer-border);
   margin-bottom: 40px;
 }
 .footer-logo {
@@ -1722,14 +1726,14 @@ body.dark .tooltip-info { color: #a6b095; }
   gap: 10px;
   font-size: 20px;
   font-weight: 800;
-  color: #fff;
+  color: #ffffff;
   letter-spacing: -0.02em;
   margin-bottom: 16px;
 }
 .footer-logo .logo-icon { background: var(--forest); }
 .footer-brand-desc {
   font-size: 14px;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.65);
   line-height: 1.7;
   margin-bottom: 24px;
 }
@@ -1739,14 +1743,14 @@ body.dark .tooltip-info { color: #a6b095; }
   height: 40px;
   border-radius: 12px;
   background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--footer-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255,255,255,0.5);
-  transition: color 0.2s, background 0.2s;
+  color: rgba(255,255,255,0.7);
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
 }
-.social-btn:hover { color: #fff; background: rgba(255,255,255,0.12); }
+.social-btn:hover { color: #ffffff; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
 .footer-nav-cols {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1757,16 +1761,16 @@ body.dark .tooltip-info { color: #a6b095; }
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.65);
   margin-bottom: 16px;
 }
 .footer-links { display: flex; flex-direction: column; gap: 10px; }
 .footer-link {
   font-size: 14px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.75);
   transition: color 0.2s;
 }
-.footer-link:hover { color: rgba(255,255,255,0.9); }
+.footer-link:hover { color: #ffffff; }
 .footer-bottom {
   display: flex;
   align-items: center;
@@ -1774,14 +1778,14 @@ body.dark .tooltip-info { color: #a6b095; }
   flex-wrap: wrap;
   gap: 16px;
 }
-.footer-copy { font-size: 14px; color: rgba(255,255,255,0.3); }
+.footer-copy { font-size: 14px; color: rgba(255,255,255,0.5); }
 .footer-legal { display: flex; gap: 24px; }
 .footer-legal-link {
   font-size: 13px;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.5);
   transition: color 0.2s;
 }
-.footer-legal-link:hover { color: rgba(255,255,255,0.7); }
+.footer-legal-link:hover { color: #ffffff; }
 
 /* ─── 21. SEARCH MODAL ───────────────────────── */
 .search-modal {
