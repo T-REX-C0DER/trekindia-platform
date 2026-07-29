@@ -10,6 +10,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- Leaflet.js Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- MarkerCluster -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <!-- TrekIndia Map Styles -->
+  <link rel="stylesheet" href="map.css" />
 </head>
 <body>
 
@@ -666,147 +673,223 @@
     </div>
   </section>
 
-  <!-- ===== EXPLORE BY STATE ===== -->
-  <section class="section states-section" id="states" aria-label="Explore India by state">
+  <!-- ===== EXPLORE BY STATE — INTERACTIVE MAP ===== -->
+  <section class="section trek-map-section" id="states" aria-label="Explore India by state">
     <div class="container">
       <div class="section-tag center">Discover by Region</div>
       <h2 class="section-title center">Explore India by State</h2>
-      <p class="section-subtitle center">Every mountain, every valley, every trail — organized by the land that holds them.</p>
+      <p class="section-subtitle center">Every mountain, every valley, every trail — click the map to begin your journey.</p>
+
       <div class="states-layout">
-        <div class="map-container" role="img" aria-label="Interactive map of India">
-          <div class="map-tooltip" id="mapTooltip" aria-live="polite">
-            <div class="tooltip-header">
-              <span class="tooltip-state"></span>
-              <span class="tooltip-treks"></span>
-            </div>
-            <div class="tooltip-info"></div>
+
+        <!-- ===== LEFT: Interactive Leaflet Map ===== -->
+        <div class="map-outer" role="region" aria-label="Interactive trek map of India">
+
+          <!-- Floating Search Bar -->
+          <div class="map-search-bar" role="search" aria-label="Search treks">
+            <span class="map-search-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </span>
+            <input
+              type="text"
+              id="mapSearchInput"
+              class="map-search-input"
+              placeholder="Search Treks, States, Regions..."
+              aria-label="Search treks, states, regions"
+              autocomplete="off"
+              spellcheck="false"/>
+            <button class="map-search-clear" id="mapSearchClear" aria-label="Clear search" tabindex="0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <!-- Live Suggestions -->
+            <div class="map-search-suggestions" id="mapSearchSuggestions" role="listbox" aria-label="Search suggestions"></div>
           </div>
-          <svg viewBox="0 0 800 900" class="india-map" id="indiaMap">
-            <g id="india-states-group">
-              <!-- North -->
-              <path class="state-path" id="map-ladakh" data-state="Ladakh" data-treks="89" data-region="Himalayan" d="M342 12L450 2l100 48l-30 65L420 122l-100 25l-50-20l-20-55l42-65z" />
-              <path class="state-path" id="map-jammu-kashmir" data-state="Jammu & Kashmir" data-treks="234" data-region="Himalayan" d="M290 90l52-78l60 65l-50 45l-40 15l-38-12z" />
-              <path class="state-path" id="map-himachal-pradesh" data-state="Himachal Pradesh" data-treks="312" data-region="Himalayan" d="M320 147l100-25l25 40l-45 33l-40 5l-50-15z" />
-              <path class="state-path" id="map-punjab" data-state="Punjab" data-treks="24" data-region="Plains" d="M282 130l38 17l-12 58l-40 10l-26-40z" />
-              <path class="state-path" id="map-uttarakhand" data-state="Uttarakhand" data-treks="428" data-region="Himalayan" d="M370 195l45-33l50 20l-15 48l-60 10l-35-15z" />
-              <path class="state-path" id="map-haryana" data-state="Haryana" data-treks="18" data-region="Plains" d="M290 215l50 10l10 40l-60 5l-15-35z" />
-              <path class="state-path" id="map-delhi" data-state="Delhi" data-treks="5" data-region="Plains" d="M340 215 a6,6 0 1,1 -12,0 a6,6 0 1,1 12,0" />
-              <path class="state-path" id="map-chandigarh" data-state="Chandigarh" data-treks="2" data-region="Plains" d="M325 190 a4,4 0 1,1 -8,0 a4,4 0 1,1 8,0" />
 
-              <!-- West -->
-              <path class="state-path" id="map-rajasthan" data-state="Rajasthan" data-treks="76" data-region="Aravalli" d="M140 190l150-60l40 85l-40 115l-100 30l-65-40l-35-90l50-40z" />
-              <path class="state-path" id="map-gujarat" data-state="Gujarat" data-treks="62" data-region="Coastal" d="M90 270l115 90l-25 70l-50 5l-40-25l-55-55l-10-60l65-25z" />
-              <path class="state-path" id="map-maharashtra" data-state="Maharashtra" data-treks="287" data-region="Sahyadri" d="M205 360l100 25l80 45l-5 70l-100 20l-100-10l-65-70l90-80z" />
-              <path class="state-path" id="map-goa" data-state="Goa" data-treks="28" data-region="Konkan" d="M230 520l25 5l-5 25l-25-5z" />
-              <path class="state-path" id="map-dadra-nagar-haveli-daman-diu" data-state="Dadra & Nagar Haveli and Daman & Diu" data-treks="8" data-region="Coastal" d="M185 430 a5,5 0 1,1 -10,0 a5,5 0 1,1 10,0" />
+          <!-- Floating Filter Button -->
+          <button class="map-filter-btn" id="mapFilterBtn" aria-label="Open filters" aria-expanded="false" aria-controls="mapFilterSidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="18" x2="12" y2="18" stroke-width="3" stroke-linecap="round"/></svg>
+            <span class="filter-badge" id="filterBadge" aria-hidden="true">0</span>
+          </button>
 
-              <!-- Central -->
-              <path class="state-path" id="map-madhya-pradesh" data-state="Madhya Pradesh" data-treks="93" data-region="Satpura" d="M250 270l150 10l60 65l-40 60l-140 5l-100-45l-20-70l140-25z" />
-              <path class="state-path" id="map-chhattisgarh" data-state="Chhattisgarh" data-treks="41" data-region="Eastern Ghats" d="M420 345l70 10l-15 100l-80 20l-35-65l60-65z" />
+          <!-- Filter Sidebar -->
+          <aside class="map-filter-sidebar" id="mapFilterSidebar" aria-label="Trek filters" aria-hidden="true">
+            <div class="filter-sidebar-header">
+              <span class="filter-sidebar-title">Filter Treks</span>
+              <button class="filter-sidebar-close" id="filterSidebarClose" aria-label="Close filters">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="filter-sidebar-body">
 
-              <!-- East -->
-              <path class="state-path" id="map-uttar-pradesh" data-state="Uttar Pradesh" data-treks="45" data-region="Plains" d="M350 260l130-30l40 50l-45 55l-125-5l-45-45l45-25z" />
-              <path class="state-path" id="map-bihar" data-state="Bihar" data-treks="33" data-region="Plains" d="M480 220l100 10l-5 60l-110 10l15-80z" />
-              <path class="state-path" id="map-jharkhand" data-state="Jharkhand" data-treks="38" data-region="Chota Nagpur" d="M465 300l100 10l-15 70l-100-5l15-75z" />
-              <path class="state-path" id="map-west-bengal" data-state="West Bengal" data-treks="78" data-region="Himalayan" d="M575 200l15-20l10 80l-20 120l-25-20l10-70l-20-60l30-30z" />
-              <path class="state-path" id="map-odisha" data-state="Odisha" data-treks="54" data-region="Eastern Ghats" d="M475 375l80 10l-5 90l-90 20l-45-50l60-70z" />
+              <!-- Difficulty -->
+              <div class="filter-group">
+                <div class="filter-group-label">Difficulty</div>
+                <div class="filter-chips">
+                  <button class="filter-chip" data-difficulty="Easy">Easy</button>
+                  <button class="filter-chip" data-difficulty="Moderate">Moderate</button>
+                  <button class="filter-chip" data-difficulty="Difficult">Difficult</button>
+                  <button class="filter-chip" data-difficulty="Very Difficult">Very Difficult</button>
+                </div>
+              </div>
 
-              <!-- South -->
-              <path class="state-path" id="map-telangana" data-state="Telangana" data-treks="58" data-region="Deccan" d="M300 450l85 20l-10 60l-80 5l-20-55z" />
-              <path class="state-path" id="map-andhra-pradesh" data-state="Andhra Pradesh" data-treks="98" data-region="Eastern Ghats" d="M325 510l50 25l20 70l-80 10l-30-45l40-60z" />
-              <path class="state-path" id="map-karnataka" data-state="Karnataka" data-treks="165" data-region="Western Ghats" d="M250 525l50-30l25 65l-40 70l-70-5l-35-60l70-40z" />
-              <path class="state-path" id="map-kerala" data-state="Kerala" data-treks="134" data-region="Western Ghats" d="M255 660l20 80l-25 20l-20-80l25-20z" />
-              <path class="state-path" id="map-tamil-nadu" data-state="Tamil Nadu" data-treks="112" data-region="Western Ghats" d="M275 660l80 20l-10 80l-90 5l-20-60l40-45z" />
-              <path class="state-path" id="map-puducherry" data-state="Puducherry" data-treks="3" data-region="Coastal" d="M340 725 a5,5 0 1,1 -10,0 a5,5 0 1,1 10,0" />
+              <!-- Max Altitude -->
+              <div class="filter-group">
+                <div class="filter-group-label">Max Altitude</div>
+                <div class="filter-range-wrap">
+                  <input type="range" class="filter-range" id="filterAltitude" min="1000" max="6500" value="6500" step="100" aria-label="Maximum altitude filter"/>
+                  <span class="filter-range-val" id="altRangeVal">6,500 m</span>
+                </div>
+              </div>
 
-              <!-- Northeast -->
-              <path class="state-path" id="map-sikkim" data-state="Sikkim" data-treks="186" data-region="Himalayan" d="M585 180l10-25l15 35l-15 20l-10-30z" />
-              <path class="state-path" id="map-arunachal-pradesh" data-state="Arunachal Pradesh" data-treks="142" data-region="Himalayan" d="M610 155l120-40l50 60l-40 55l-100 10l-30-85z" />
-              <path class="state-path" id="map-assam" data-state="Assam" data-treks="67" data-region="Brahmaputra" d="M600 240l130 15l-30 45l-120-10l20-50z" />
-              <path class="state-path" id="map-nagaland" data-state="Nagaland" data-treks="48" data-region="Purvanchal" d="M700 240l40 20l-15 45l-35-15l10-50z" />
-              <path class="state-path" id="map-manipur" data-state="Manipur" data-treks="39" data-region="Purvanchal" d="M685 285l30 15l-5 50l-30-5l5-60z" />
-              <path class="state-path" id="map-meghalaya" data-state="Meghalaya" data-treks="55" data-region="Shillong" d="M605 280l70 10l-15 30l-65-5l10-35z" />
-              <path class="state-path" id="map-tripura" data-state="Tripura" data-treks="21" data-region="Purvanchal" d="M640 320l25 5l-5 40l-25-5l5-40z" />
-              <path class="state-path" id="map-mizoram" data-state="Mizoram" data-treks="29" data-region="Purvanchal" d="M665 325l20 10l-10 50l-20-10l10-50z" />
+              <!-- Trek Type Toggles -->
+              <div class="filter-group">
+                <div class="filter-group-label">Trek Type</div>
+                <div class="filter-toggle-row" role="switch" aria-checked="false">
+                  <span class="filter-toggle-label">❄️ Snow Treks</span>
+                  <div class="filter-toggle" data-tag="snow"></div>
+                </div>
+                <div class="filter-toggle-row" role="switch" aria-checked="false">
+                  <span class="filter-toggle-label">🏕️ Camping</span>
+                  <div class="filter-toggle" data-tag="camping"></div>
+                </div>
+                <div class="filter-toggle-row" role="switch" aria-checked="false">
+                  <span class="filter-toggle-label">👨‍👩‍👧 Family Friendly</span>
+                  <div class="filter-toggle" data-tag="family"></div>
+                </div>
+                <div class="filter-toggle-row" role="switch" aria-checked="false">
+                  <span class="filter-toggle-label">📅 Weekend Treks</span>
+                  <div class="filter-toggle" data-tag="weekend"></div>
+                </div>
+                <div class="filter-toggle-row" role="switch" aria-checked="false">
+                  <span class="filter-toggle-label">🌊 River Crossing</span>
+                  <div class="filter-toggle" data-tag="river"></div>
+                </div>
+                <div class="filter-toggle-row" role="switch" aria-checked="false">
+                  <span class="filter-toggle-label">🌲 Forest Treks</span>
+                  <div class="filter-toggle" data-tag="forest"></div>
+                </div>
+              </div>
 
-              <!-- Islands -->
-              <g id="map-andaman-nicobar" data-state="Andaman & Nicobar Islands" data-treks="15" data-region="Islands">
-                <path class="state-path island" d="M680 550 l5 20 l-5 20 l-5-20z" />
-                <path class="state-path island" d="M675 600 l5 15 l-5 15 l-5-15z" />
-                <path class="state-path island" d="M670 640 l5 10 l-5 10 l-5-10z" />
-              </g>
-              <g id="map-lakshadweep" data-state="Lakshadweep" data-treks="7" data-region="Islands">
-                <path class="state-path island" d="M150 600 a4,4 0 1,1 -8,0 a4,4 0 1,1 8,0" />
-                <path class="state-path island" d="M145 620 a4,4 0 1,1 -8,0 a4,4 0 1,1 8,0" />
-                <path class="state-path island" d="M140 640 a4,4 0 1,1 -8,0 a4,4 0 1,1 8,0" />
-              </g>
-            </g>
-          </svg>
-          <div class="map-tooltip" id="mapTooltip" aria-live="polite">
-            <div class="tooltip-state">Uttarakhand</div>
-            <div class="tooltip-treks">428 Treks</div>
-            <div class="tooltip-info">
-              <span>🏔 Kedarkantha</span>
-              <span>Best: May-Jun</span>
+            </div>
+            <div class="filter-sidebar-footer">
+              <button class="filter-apply-btn" id="filterApplyBtn">Apply Filters</button>
+              <button class="filter-clear-btn" id="filterClearBtn">Clear</button>
+            </div>
+          </aside>
+
+          <!-- Map Controls Panel -->
+          <div class="map-controls-panel" role="group" aria-label="Map controls">
+            <button class="map-ctrl-btn" id="mapZoomInBtn" aria-label="Zoom in">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button class="map-ctrl-btn" id="mapZoomOutBtn" aria-label="Zoom out">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button class="map-ctrl-btn" id="mapLocateBtn" aria-label="Locate me">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            </button>
+            <button class="map-ctrl-btn" id="mapResetBtn" aria-label="Reset view">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+            <button class="map-ctrl-btn" id="mapFullscreenBtn" aria-label="Fullscreen">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            </button>
+          </div>
+
+          <!-- Map Style Switcher -->
+          <div class="map-style-switcher" role="group" aria-label="Map style">
+            <button class="map-style-btn active" data-style="standard" aria-pressed="true">Standard</button>
+            <button class="map-style-btn" data-style="topo" aria-pressed="false">Topo</button>
+            <button class="map-style-btn" data-style="dark" aria-pressed="false">Dark</button>
+            <button class="map-style-btn" data-style="satellite" aria-pressed="false">Satellite</button>
+          </div>
+
+          <!-- Trek Count Badge -->
+          <div class="map-trek-count" id="mapTrekCount" aria-live="polite">
+            <span>35</span> Treks Shown
+          </div>
+
+          <!-- Leaflet Map Container -->
+          <div id="trekMap" class="leaflet-map-wrap" role="application" aria-label="Interactive Leaflet map of India showing trek locations">
+            <!-- Loading Overlay -->
+            <div class="map-loading-overlay" id="mapLoadingOverlay" aria-label="Loading map">
+              <div class="map-loading-spinner"></div>
+              <div class="map-loading-text">Loading Treks...</div>
             </div>
           </div>
-        </div>
 
+        </div><!-- /.map-outer -->
+
+        <!-- ===== RIGHT: Popular States Sidebar ===== -->
         <div class="states-sidebar">
           <h3 class="sidebar-title">Popular States</h3>
-          <div class="states-list" id="statesList">
-            <a href="/states/uttarakhand" class="state-item active" data-state="Uttarakhand">
+          <div class="states-list" id="statesList" role="list">
+
+            <a href="#states" class="state-item active" data-state="Uttarakhand" role="listitem"
+               data-lat="30.3165" data-lng="78.0322" data-zoom="8">
               <div class="state-item-info">
                 <span class="state-item-name">Uttarakhand</span>
                 <span class="state-item-treks">428 Treks</span>
               </div>
               <div class="state-item-tag">HIMALAYAN</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="/states/himachal-pradesh" class="state-item" data-state="Himachal Pradesh">
+
+            <a href="#states" class="state-item" data-state="Himachal Pradesh" role="listitem"
+               data-lat="31.1048" data-lng="77.1734" data-zoom="8">
               <div class="state-item-info">
                 <span class="state-item-name">Himachal Pradesh</span>
                 <span class="state-item-treks">312 Treks</span>
               </div>
               <div class="state-item-tag">HIMALAYAN</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="/states/jammu-kashmir" class="state-item" data-state="Jammu & Kashmir">
+
+            <a href="#states" class="state-item" data-state="Jammu & Kashmir" role="listitem"
+               data-lat="34.0837" data-lng="74.7973" data-zoom="7">
               <div class="state-item-info">
-                <span class="state-item-name">Jammu & Kashmir</span>
+                <span class="state-item-name">Jammu &amp; Kashmir</span>
                 <span class="state-item-treks">234 Treks</span>
               </div>
               <div class="state-item-tag">HIMALAYAN</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="/states/maharashtra" class="state-item" data-state="Maharashtra">
+
+            <a href="#states" class="state-item" data-state="Maharashtra" role="listitem"
+               data-lat="19.7515" data-lng="75.7139" data-zoom="8">
               <div class="state-item-info">
                 <span class="state-item-name">Maharashtra</span>
                 <span class="state-item-treks">287 Treks</span>
               </div>
               <div class="state-item-tag">SAHYADRI</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="/states/sikkim" class="state-item" data-state="Sikkim">
+
+            <a href="#states" class="state-item" data-state="Sikkim" role="listitem"
+               data-lat="27.5330" data-lng="88.5122" data-zoom="9">
               <div class="state-item-info">
                 <span class="state-item-name">Sikkim</span>
                 <span class="state-item-treks">186 Treks</span>
               </div>
               <div class="state-item-tag">HIMALAYAN</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
             </a>
-            <a href="/states/karnataka" class="state-item" data-state="Karnataka">
+
+            <a href="#states" class="state-item" data-state="Karnataka" role="listitem"
+               data-lat="15.3173" data-lng="75.7139" data-zoom="8">
               <div class="state-item-info">
                 <span class="state-item-name">Karnataka</span>
                 <span class="state-item-treks">165 Treks</span>
               </div>
               <div class="state-item-tag">WESTERN GHATS</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
             </a>
+
           </div>
           <a href="#" class="btn-outline-green" id="viewAllStatesBtn">View All 28 States</a>
-        </div>
-      </div>
+        </div><!-- /.states-sidebar -->
+
+      </div><!-- /.states-layout -->
     </div>
   </section>
 
@@ -1998,6 +2081,11 @@
   </div>
   <div class="modal-backdrop" id="modalBackdrop"></div>
 
+  <!-- Leaflet.js & MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- TrekIndia Map Logic -->
+  <script src="map.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
