@@ -35,18 +35,18 @@ const BrandLogoSystem = {
   },
 
   preloadAndProcessAssets() {
-    this.removeWhiteBackground(this.lightAssetSrc, (dataUrl) => {
+    this.processLogoBackground(this.lightAssetSrc, 'light', (dataUrl) => {
       this.processedLightDataUrl = dataUrl;
       this.applyProcessedImages();
     });
 
-    this.removeWhiteBackground(this.darkAssetSrc, (dataUrl) => {
+    this.processLogoBackground(this.darkAssetSrc, 'dark', (dataUrl) => {
       this.processedDarkDataUrl = dataUrl;
       this.applyProcessedImages();
     });
   },
 
-  removeWhiteBackground(src, callback) {
+  processLogoBackground(src, type, callback) {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = () => {
@@ -65,18 +65,25 @@ const BrandLogoSystem = {
         const queue = [];
         const visited = new Uint8Array(w * h);
 
-        const isWhite = (idx) => {
-          return data[idx] > 230 && data[idx + 1] > 230 && data[idx + 2] > 230;
+        const isBgPixel = (idx) => {
+          const r = data[idx];
+          const g = data[idx + 1];
+          const b = data[idx + 2];
+          if (type === 'light') {
+            return (r > 170 && g > 170 && b > 170);
+          } else {
+            return (r < 80 && g < 80 && b < 80);
+          }
         };
 
         for (let x = 0; x < w; x++) {
           let idxTop = (0 * w + x) * 4;
           let idxBot = ((h - 1) * w + x) * 4;
-          if (isWhite(idxTop) && !visited[0 * w + x]) {
+          if (isBgPixel(idxTop) && !visited[0 * w + x]) {
             queue.push(x, 0);
             visited[0 * w + x] = 1;
           }
-          if (isWhite(idxBot) && !visited[(h - 1) * w + x]) {
+          if (isBgPixel(idxBot) && !visited[(h - 1) * w + x]) {
             queue.push(x, h - 1);
             visited[(h - 1) * w + x] = 1;
           }
@@ -85,11 +92,11 @@ const BrandLogoSystem = {
         for (let y = 0; y < h; y++) {
           let idxLeft = (y * w + 0) * 4;
           let idxRight = (y * w + (w - 1)) * 4;
-          if (isWhite(idxLeft) && !visited[y * w + 0]) {
+          if (isBgPixel(idxLeft) && !visited[y * w + 0]) {
             queue.push(0, y);
             visited[y * w + 0] = 1;
           }
-          if (isWhite(idxRight) && !visited[y * w + (w - 1)]) {
+          if (isBgPixel(idxRight) && !visited[y * w + (w - 1)]) {
             queue.push(w - 1, y);
             visited[y * w + (w - 1)] = 1;
           }
@@ -115,7 +122,7 @@ const BrandLogoSystem = {
               const vIdx = ny * w + nx;
               if (!visited[vIdx]) {
                 const nIdx = (ny * w + nx) * 4;
-                if (isWhite(nIdx)) {
+                if (isBgPixel(nIdx)) {
                   visited[vIdx] = 1;
                   queue.push(nx, ny);
                 }
