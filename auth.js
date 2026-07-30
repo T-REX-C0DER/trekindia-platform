@@ -124,135 +124,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── 2. DARK / LIGHT THEME TOGGLE ──────────────────────────────────────
   /* ─── TREKINDIA BRAND LOGO SYSTEM ─────────────────────────── */
   const BrandLogoSystem = {
-    lightAssetSrc: 'whitebg_logo_processed.jpg',
-    darkAssetSrc: 'darkbg_logo_processed.jpg',
-    processedLightDataUrl: null,
-    processedDarkDataUrl: null,
+    lightAssetSrc: 'whitebg_logo_processed.png',
+    darkAssetSrc: 'darkbg_logo_processed.png',
 
     init() {
-      this.preloadAndProcessAssets();
-    },
-
-    preloadAndProcessAssets() {
-      this.processLogoBackground(this.lightAssetSrc, 'light', (dataUrl) => {
-        this.processedLightDataUrl = dataUrl;
-        this.applyProcessedImages();
-      });
-
-      this.processLogoBackground(this.darkAssetSrc, 'dark', (dataUrl) => {
-        this.processedDarkDataUrl = dataUrl;
-        this.applyProcessedImages();
-      });
-    },
-
-    processLogoBackground(src, type, callback) {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          const w = img.naturalWidth || img.width;
-          const h = img.naturalHeight || img.height;
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-
-          const imgData = ctx.getImageData(0, 0, w, h);
-          const data = imgData.data;
-
-          const queue = [];
-          const visited = new Uint8Array(w * h);
-
-          const isBgPixel = (idx) => {
-            const r = data[idx];
-            const g = data[idx + 1];
-            const b = data[idx + 2];
-            if (type === 'light') {
-              return (r > 170 && g > 170 && b > 170);
-            } else {
-              return (r < 80 && g < 80 && b < 80);
-            }
-          };
-
-          for (let x = 0; x < w; x++) {
-            let idxTop = (0 * w + x) * 4;
-            let idxBot = ((h - 1) * w + x) * 4;
-            if (isBgPixel(idxTop) && !visited[0 * w + x]) {
-              queue.push(x, 0);
-              visited[0 * w + x] = 1;
-            }
-            if (isBgPixel(idxBot) && !visited[(h - 1) * w + x]) {
-              queue.push(x, h - 1);
-              visited[(h - 1) * w + x] = 1;
-            }
-          }
-
-          for (let y = 0; y < h; y++) {
-            let idxLeft = (y * w + 0) * 4;
-            let idxRight = (y * w + (w - 1)) * 4;
-            if (isBgPixel(idxLeft) && !visited[y * w + 0]) {
-              queue.push(0, y);
-              visited[y * w + 0] = 1;
-            }
-            if (isBgPixel(idxRight) && !visited[y * w + (w - 1)]) {
-              queue.push(w - 1, y);
-              visited[y * w + (w - 1)] = 1;
-            }
-          }
-
-          let head = 0;
-          while (head < queue.length) {
-            const cx = queue[head++];
-            const cy = queue[head++];
-            const pIdx = (cy * w + cx) * 4;
-            data[pIdx + 3] = 0;
-
-            const neighbors = [
-              [cx + 1, cy],
-              [cx - 1, cy],
-              [cx, cy + 1],
-              [cx, cy - 1]
-            ];
-            for (let i = 0; i < neighbors.length; i++) {
-              const nx = neighbors[i][0];
-              const ny = neighbors[i][1];
-              if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-                const vIdx = ny * w + nx;
-                if (!visited[vIdx]) {
-                  const nIdx = (ny * w + nx) * 4;
-                  if (isBgPixel(nIdx)) {
-                    visited[vIdx] = 1;
-                    queue.push(nx, ny);
-                  }
-                }
-              }
-            }
-          }
-
-          ctx.putImageData(imgData, 0, 0);
-          callback(canvas.toDataURL('image/png'));
-        } catch (err) {
-          callback(src);
-        }
-      };
-      img.onerror = () => callback(src);
-      img.src = src;
+      this.applyProcessedImages();
     },
 
     applyProcessedImages() {
-      if (this.processedLightDataUrl) {
-        document.querySelectorAll('.brand-icon-img.light-icon').forEach(img => {
-          img.src = this.processedLightDataUrl;
-          img.classList.add('transparent-loaded');
-        });
-      }
-      if (this.processedDarkDataUrl) {
-        document.querySelectorAll('.brand-icon-img.dark-icon').forEach(img => {
-          img.src = this.processedDarkDataUrl;
-          img.classList.add('transparent-loaded');
-        });
-      }
+      document.querySelectorAll('.brand-icon-img.light-icon').forEach(img => {
+        img.src = this.lightAssetSrc;
+        img.classList.add('transparent-loaded');
+      });
+      document.querySelectorAll('.brand-icon-img.dark-icon').forEach(img => {
+        img.src = this.darkAssetSrc;
+        img.classList.add('transparent-loaded');
+      });
     }
   };
 

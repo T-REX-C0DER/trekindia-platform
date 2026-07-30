@@ -309,8 +309,8 @@ body.dark .navbar-inner {
 
 .brand-icon-wrap {
   position: relative;
-  width: 52px;
-  height: 52px;
+  width: 80px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -320,6 +320,12 @@ body.dark .navbar-inner {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  transition: width 0.38s ease, height 0.38s ease;
+}
+
+.navbar.scrolled .brand-icon-wrap {
+  width: 60px;
+  height: 60px;
 }
 
 .brand-icon-img {
@@ -338,13 +344,11 @@ body.dark .navbar-inner {
 .brand-icon-img.light-icon {
   opacity: 1;
   visibility: visible;
-  mix-blend-mode: multiply;
 }
 
 .brand-icon-img.dark-icon {
   opacity: 0;
   visibility: hidden;
-  mix-blend-mode: screen;
 }
 
 /* Dark mode icon switching */
@@ -356,7 +360,6 @@ body.dark .brand-icon-img.light-icon {
 body.dark .brand-icon-img.dark-icon {
   opacity: 1;
   visibility: visible;
-  mix-blend-mode: screen;
 }
 
 /* Wordmark Typography */
@@ -2941,8 +2944,8 @@ body.dark .tooltip-info { color: #a6b095; }
     margin-right: 16px;
   }
   .brand-icon-wrap {
-    width: 44px;
-    height: 44px;
+    width: 64px;
+    height: 64px;
   }
   .brand-wordmark {
     font-size: 22px;
@@ -2955,8 +2958,8 @@ body.dark .tooltip-info { color: #a6b095; }
     margin-right: 12px;
   }
   .brand-icon-wrap {
-    width: 40px;
-    height: 40px;
+    width: 56px;
+    height: 56px;
   }
   .brand-wordmark {
     display: none;
