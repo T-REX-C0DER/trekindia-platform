@@ -1,0 +1,934 @@
+/* =============================================
+   TREKINDIA — TREK CARD SYSTEM CSS
+   Scoped styles for Trek Cards, Filter Bar,
+   Trek Grid, and Pagination.
+   Uses existing :root tokens from style.css.
+   ============================================= */
+
+/* ─── 1. TREK CARD ────────────────────────────────────────────────────────── */
+
+.trek-card {
+  position: relative;
+  background: var(--white);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  transition:
+    transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+
+  /* Entrance animation */
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.5s ease calc(var(--card-delay, 0s)),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--card-delay, 0s)),
+    box-shadow 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trek-card--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.trek-card:hover {
+  transform: translateY(-7px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* ─── Image wrapper ────────────────────────────────────────────────────────── */
+
+.trek-card__image-wrap {
+  position: relative;
+  width: 100%;
+  height: 215px;
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+  flex-shrink: 0;
+}
+
+.trek-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.trek-card:hover .trek-card__image {
+  transform: scale(1.08);
+}
+
+/* Subtle gradient overlay for text legibility */
+.trek-card__image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  pointer-events: none;
+}
+
+/* ─── Bookmark button ──────────────────────────────────────────────────────── */
+
+.trek-card__bookmark {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition:
+    color 0.25s ease,
+    background 0.25s ease,
+    transform 0.25s ease;
+  z-index: 4;
+}
+
+.trek-card__bookmark:hover {
+  color: var(--forest);
+  background: rgba(255, 255, 255, 0.97);
+  transform: scale(1.15);
+}
+
+.trek-card__bookmark--active {
+  color: var(--forest);
+  background: rgba(255, 255, 255, 0.97);
+}
+
+/* Show/hide the two bookmark icon states */
+.bookmark-icon--filled  { display: none; }
+.bookmark-icon--empty   { display: flex; }
+
+.trek-card__bookmark--active .bookmark-icon--filled  { display: flex; }
+.trek-card__bookmark--active .bookmark-icon--empty   { display: none; }
+
+/* Bounce animation on toggle */
+@keyframes bookmark-bounce {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.trek-card__bookmark--bounce {
+  animation: bookmark-bounce 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* ─── Difficulty badge ─────────────────────────────────────────────────────── */
+
+.trek-card__difficulty-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #fff;
+  z-index: 4;
+}
+
+.badge--easy        { background: #16a34a; }
+.badge--moderate    { background: #d97706; }
+.badge--difficult   { background: #dc2626; }
+.badge--very-hard   { background: #7c3aed; }
+
+/* ─── Tag chips (bottom of image) ─────────────────────────────────────────── */
+
+.trek-card__tags {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  z-index: 4;
+}
+
+.trek-tag {
+  padding: 3px 9px;
+  border-radius: 100px;
+  font-size: 10.5px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.trek-tag--featured {
+  background: rgba(245, 158, 11, 0.15);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.trek-tag--popular {
+  background: rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ─── Card body ────────────────────────────────────────────────────────────── */
+
+.trek-card__body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+/* ─── Meta row (State + Rating) ────────────────────────────────────────────── */
+
+.trek-card__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.trek-card__state {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+.trek-card__rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ─── Stats row ────────────────────────────────────────────────────────────── */
+
+.trek-card__stats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.trek-card__stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.trek-card__stat-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+.stat-icon {
+  color: var(--text-secondary);
+  display: flex;
+  flex-shrink: 0;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.stat-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ─── Trek name ────────────────────────────────────────────────────────────── */
+
+.trek-card__name {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-top: -2px;
+}
+
+/* ─── Footer (Season + CTA) ────────────────────────────────────────────────── */
+
+.trek-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.trek-card__season {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.season-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.trek-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: var(--forest);
+  color: #fff;
+  border-radius: 100px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition:
+    background 0.25s ease,
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.trek-card__cta:hover {
+  background: var(--olive);
+  transform: translateX(2px);
+  box-shadow: 0 4px 16px rgba(85, 107, 47, 0.35);
+}
+
+/* ─── 2. TREK GRID ────────────────────────────────────────────────────────── */
+
+.trek-grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.trek-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  min-height: 300px;
+}
+
+/* Responsive grid */
+@media (max-width: 1280px) {
+  .trek-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .trek-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+}
+
+@media (max-width: 540px) {
+  .trek-grid { grid-template-columns: 1fr; gap: 16px; }
+}
+
+/* ─── Empty state ──────────────────────────────────────────────────────────── */
+
+.trek-grid__empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  display: flex;
+  opacity: 0.35;
+  color: var(--forest);
+}
+
+.trek-grid__empty h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.trek-grid__empty p {
+  font-size: 14px;
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+.empty-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 24px;
+  background: var(--forest);
+  color: #fff;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.empty-reset-btn:hover {
+  background: var(--olive);
+  transform: translateY(-1px);
+}
+
+/* ─── 3. FILTER BAR ────────────────────────────────────────────────────────── */
+
+.filter-bar {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
+}
+
+/* Top row: search + sort */
+.filter-bar__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Search */
+.filter-bar__search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  display: flex;
+  pointer-events: none;
+}
+
+.filter-bar__search {
+  width: 100%;
+  padding: 11px 40px 11px 42px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  -webkit-appearance: none;
+}
+
+.filter-bar__search::placeholder { color: var(--text-secondary); }
+
+.filter-bar__search:focus {
+  border-color: var(--forest);
+  box-shadow: 0 0 0 3px rgba(85, 107, 47, 0.12);
+}
+
+/* Hide native search clear */
+.filter-bar__search::-webkit-search-cancel-button { display: none; }
+
+.filter-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  border-radius: 6px;
+  transition: color 0.2s ease;
+}
+
+.filter-search-clear:hover { color: var(--text); }
+
+/* Sort dropdown */
+.filter-bar__sort-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.filter-sort-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  display: flex;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.filter-bar__sort {
+  padding: 11px 16px 11px 36px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.2s ease;
+  min-width: 160px;
+}
+
+.filter-bar__sort:focus {
+  border-color: var(--forest);
+  box-shadow: 0 0 0 3px rgba(85, 107, 47, 0.12);
+}
+
+/* Difficulty + tag rows */
+.filter-bar__difficulty,
+.filter-bar__tags {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-group-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+/* Chips container */
+.filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+/* Individual chip */
+.filter-chip {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.filter-chip:hover {
+  border-color: var(--forest);
+  color: var(--forest);
+  transform: translateY(-1px);
+}
+
+.filter-chip--active {
+  background: var(--forest);
+  color: #fff;
+  border-color: var(--forest);
+}
+
+.filter-chip--active:hover {
+  background: var(--olive);
+  border-color: var(--olive);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Footer row */
+.filter-bar__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.filter-bar__count {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.filter-bar__count strong {
+  color: var(--forest);
+  font-weight: 800;
+}
+
+.filter-bar__clear {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.filter-bar__clear:hover {
+  color: var(--forest);
+  background: rgba(85, 107, 47, 0.08);
+}
+
+/* ─── 4. PAGINATION ────────────────────────────────────────────────────────── */
+
+.trek-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.trek-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.trek-page-btn:hover:not(:disabled) {
+  border-color: var(--forest);
+  color: var(--forest);
+  transform: translateY(-1px);
+}
+
+.trek-page-btn--active {
+  background: var(--forest);
+  color: #fff;
+  border-color: var(--forest);
+}
+
+.trek-page-btn--active:hover {
+  background: var(--olive);
+  border-color: var(--olive);
+  color: #fff;
+}
+
+.trek-page-btn--nav {
+  padding: 0 18px;
+  gap: 4px;
+}
+
+.trek-page-btn--disabled,
+.trek-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.trek-page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 40px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* ─── 5. MAHARASHTRA PAGE HERO ────────────────────────────────────────────── */
+
+.state-hero {
+  background: linear-gradient(
+    135deg,
+    #1a2e1a 0%,
+    #2d4a2d 40%,
+    #3d6b3d 100%
+  );
+  padding: 80px 0 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+.state-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(156, 175, 136, 0.18) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(85, 107, 47, 0.15) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.state-hero__inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.state-hero__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.state-hero__breadcrumb a {
+  color: rgba(255, 255, 255, 0.55);
+  transition: color 0.2s ease;
+}
+
+.state-hero__breadcrumb a:hover { color: rgba(255, 255, 255, 0.9); }
+
+.state-hero__breadcrumb-sep { opacity: 0.4; }
+
+.state-hero__breadcrumb-current { color: rgba(255, 255, 255, 0.85); }
+
+.state-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px;
+  background: rgba(156, 175, 136, 0.2);
+  border: 1px solid rgba(156, 175, 136, 0.3);
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #a8d5a2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+.state-hero__badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.75); }
+}
+
+.state-hero__title {
+  font-size: clamp(36px, 5vw, 58px);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  margin-bottom: 16px;
+}
+
+.state-hero__title em {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+  color: #a8d5a2;
+}
+
+.state-hero__subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.65);
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 36px;
+}
+
+.state-hero__stats {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.state-hero__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.state-hero__stat-value {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.state-hero__stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.state-hero__stat-divider {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ─── 6. TREKS SECTION ────────────────────────────────────────────────────── */
+
+.treks-section {
+  padding: 64px 0 96px;
+  background: var(--bg);
+}
+
+.treks-section .container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.treks-section__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  gap: 20px;
+}
+
+.treks-section__title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.treks-section__title span {
+  color: var(--forest);
+}
+
+.treks-section__subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+/* ─── 7. DARK MODE OVERRIDES ─────────────────────────────────────────────── */
+
+body.dark .trek-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+
+body.dark .filter-bar {
+  background: var(--white);
+  border-color: var(--border);
+}
+
+body.dark .filter-bar__search,
+body.dark .filter-bar__sort {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+body.dark .filter-chip {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+body.dark .trek-page-btn {
+  background: var(--white);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+body.dark .state-hero {
+  background: linear-gradient(135deg, #0d1a0d 0%, #1a2e1a 50%, #243d24 100%);
+}
+
+/* ─── 8. RESPONSIVE OVERRIDES ────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .state-hero { padding: 60px 0 48px; }
+  .state-hero__inner { padding: 0 20px; }
+  .state-hero__stats { gap: 20px; }
+  .state-hero__stat-value { font-size: 22px; }
+  .treks-section .container { padding: 0 20px; }
+  .treks-section__header { flex-direction: column; align-items: flex-start; }
+  .filter-bar { padding: 16px 18px; }
+  .filter-bar__top { gap: 10px; }
+  .filter-bar__sort { min-width: 140px; }
+  .trek-card__image-wrap { height: 190px; }
+}
+
+@media (max-width: 480px) {
+  .state-hero__stat-divider { display: none; }
+  .filter-bar__sort { min-width: 120px; font-size: 12.5px; }
+  .trek-card__body { padding: 14px 16px 16px; }
+  .trek-card__name { font-size: 15px; }
+  .trek-card__cta { padding: 8px 14px; font-size: 12px; }
+}
