@@ -1,91 +1,93 @@
 /* ==========================================================================
-   TREKINDIA — FLAGSHIP LUXURY AUTHENTICATION DESIGN SYSTEM
-   Inspiration: Apple, Stripe, Linear, Vercel, Framer, Arc
+   TREKINDIA — FLAGSHIP LUXURY AUTHENTICATION SYSTEM
+   Modern, ultra-clean design system inspired by Linear, Stripe, Apple & Vercel.
+   Features perfect spacing, crisp typography, and refined micro-interactions.
    ========================================================================== */
 
 /* ─── 1. DESIGN TOKENS & SYSTEM VARIABLES ──────────────────────────────── */
 :root {
-  /* Brand Palette (TrekIndia Spec) */
-  --primary: #15803D;
-  --primary-hover: #166534;
-  --primary-light: #F0FDF4;
-  --primary-ring: rgba(21, 128, 61, 0.25);
-  
-  --brand-trek: #0F172A;
-  --brand-india: #15803D;
-  
-  --emerald-gradient: linear-gradient(135deg, #052E16 0%, #059669 50%, #0284C7 100%);
-  --button-gradient: linear-gradient(135deg, #15803D 0%, #047857 100%);
-  --button-hover-gradient: linear-gradient(135deg, #166534 0%, #065F46 100%);
-  --accent-glow: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(2, 132, 199, 0) 70%);
+  /* Brand Colors */
+  --primary:           #15803D;
+  --primary-hover:     #166534;
+  --primary-active:    #14532D;
+  --primary-light:     #F0FDF4;
+  --primary-ring:      rgba(21, 128, 61, 0.20);
+  --brand-trek:        #0F172A;
+  --brand-india:       #15803D;
 
-  /* Neutrals & Surfaces (Light Theme Default) */
-  --bg-main: #F8FAF8;
-  --surface-card: #FFFFFF;
-  --surface-card-subtle: #F9FAFB;
-  --surface-input: #FFFFFF;
-  
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --text-tertiary: #9CA3AF;
-  
-  --border-color: #E5E7EB;
-  --border-focus: #15803D;
-  --border-glass: rgba(255, 255, 255, 0.18);
-  
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.12);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-blur: blur(16px);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  /* Premium Gradients */
+  --btn-bg:            linear-gradient(135deg, #16803D 0%, #059669 100%);
+  --btn-bg-hover:      linear-gradient(135deg, #156534 0%, #047857 100%);
+
+  /* Surfaces — Light Mode */
+  --bg-page:           #F8FAF8;
+  --card-bg:           #FFFFFF;
+  --card-bg-subtle:    #F9FAFB;
+  --input-bg:          #FFFFFF;
+
+  /* Typography Colors */
+  --txt-primary:       #0F172A;
+  --txt-secondary:     #64748B;
+  --txt-tertiary:      #94A3B8;
+
+  /* Borders */
+  --border:            #E2E8F0;
+  --border-hover:      #CBD5E1;
+  --border-focus:      #15803D;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 24px 48px -12px rgba(17, 24, 39, 0.12), 0 12px 24px -8px rgba(0, 0, 0, 0.06);
-  --shadow-glow: 0 0 24px rgba(21, 128, 61, 0.35);
+  --shadow-card:       0 2px 4px rgba(0,0,0,0.02), 0 12px 32px rgba(15,23,42,0.06);
+  --shadow-input:      0 1px 2px rgba(0,0,0,0.03);
+  --shadow-btn:        0 4px 16px rgba(21, 128, 61, 0.28);
+  --shadow-btn-hover:  0 8px 24px rgba(21, 128, 61, 0.38);
 
-  /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  
-  /* Radii & Transitions */
-  --radius-card: 28px;
-  --radius-inner: 16px;
-  --radius-btn: 14px;
-  --radius-input: 12px;
-  --radius-full: 9999px;
-  
+  /* Radii */
+  --r-card:   24px;
+  --r-inner:  16px;
+  --r-btn:    12px;
+  --r-input:  12px;
+  --r-pill:   9999px;
+
+  /* Fonts */
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Motion & Transitions */
+  --ease:        cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-fast: 150ms var(--ease-smooth);
-  --transition-normal: 250ms var(--ease-smooth);
-  --transition-slow: 400ms var(--ease-smooth);
+  --t-fast:      150ms var(--ease);
+  --t-normal:    250ms var(--ease);
 }
 
-/* Dark Theme Overrides */
+/* Dark Mode Overrides */
 [data-theme="dark"],
 body.dark {
-  --bg-main: #090D14;
-  --surface-card: #111827;
-  --surface-card-subtle: #1F2937;
-  --surface-input: #1F2937;
-  
-  --text-primary: #F9FAFB;
-  --text-secondary: #9CA3AF;
-  --text-tertiary: #6B7280;
-  
-  --border-color: #1F2937;
-  --border-focus: #22C55E;
-  
-  --brand-trek: #FFFFFF;
-  --brand-india: #22C55E;
+  --bg-page:         #090D16;
+  --card-bg:         #111827;
+  --card-bg-subtle:  #1F2937;
+  --input-bg:        #1F2937;
 
-  --shadow-xl: 0 24px 48px -12px rgba(0, 0, 0, 0.7), 0 12px 24px -8px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.5);
-  --primary-light: rgba(34, 197, 94, 0.1);
+  --txt-primary:     #F9FAFB;
+  --txt-secondary:   #9CA3AF;
+  --txt-tertiary:    #6B7280;
+
+  --border:          #1F2937;
+  --border-hover:    #374151;
+  --border-focus:    #22C55E;
+
+  --brand-trek:      #FFFFFF;
+  --brand-india:     #22C55E;
+
+  --primary:         #22C55E;
+  --primary-hover:   #16A34A;
+  --primary-light:   rgba(34, 197, 94, 0.1);
+  --primary-ring:    rgba(34, 197, 94, 0.2);
+
+  --shadow-card:     0 4px 12px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.6);
+  --shadow-btn:      0 4px 16px rgba(34, 197, 94, 0.25);
+  --shadow-btn-hover:0 8px 24px rgba(34, 197, 94, 0.38);
 }
 
-/* ─── 2. RESET & BASE STYLES ────────────────────────────────────────────── */
+/* ─── 2. RESET & GLOBAL STYLES ────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -94,9 +96,9 @@ body.dark {
 
 html, body {
   height: 100%;
-  font-family: var(--font-sans);
-  background-color: var(--bg-main);
-  color: var(--text-primary);
+  font-family: var(--font);
+  background-color: var(--bg-page);
+  color: var(--txt-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -107,9 +109,8 @@ a {
   color: var(--primary);
   text-decoration: none;
   font-weight: 500;
-  transition: color var(--transition-fast);
+  transition: color var(--t-fast);
 }
-
 a:hover {
   color: var(--primary-hover);
   text-decoration: underline;
@@ -120,83 +121,28 @@ button, input, select, textarea {
   color: inherit;
 }
 
-/* ─── 3. TOP NAVIGATION / FLOATING DEV TOOLBAR ─────────────────────────── */
-.top-controls-bar {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px;
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-full);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  color: #FFFFFF;
-}
-
-.theme-toggle-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.12);
-  color: #FFFFFF;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.theme-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.05);
-}
-
-.screen-switcher-select {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 20px;
-  outline: none;
-  cursor: pointer;
-}
-
-.screen-switcher-select option {
-  background: #111827;
-  color: #FFFFFF;
-}
-
-/* ─── 4. MAIN SPLIT LAYOUT (60% / 40%) ──────────────────────────────────── */
+/* ─── 3. MAIN SPLIT ROOT CONTAINER (60% / 40%) ────────────────────────────── */
 .auth-root-container {
   display: grid;
-  grid-template-columns: 1.35fr 1fr; /* ~57-60% vs 40-43% split ratio */
+  grid-template-columns: 1.35fr 1fr;
   min-height: 100vh;
   width: 100vw;
   overflow: hidden;
 }
 
-/* ─── 5. LEFT HERO PANEL (IMMERSIVE ADVENTURE LANDSCAPE) ───────────────── */
+/* ─── 4. LEFT HERO PANEL (CINEMATIC MOUNTAIN VIEW) ────────────────────────── */
 .auth-hero-panel {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 50px 60px;
+  padding: 56px 64px;
   overflow: hidden;
   background-color: #030712;
   color: #FFFFFF;
 }
 
-/* Background Image Layer */
+/* Hero Background Image */
 .hero-bg-image {
   position: absolute;
   inset: 0;
@@ -205,24 +151,23 @@ button, input, select, textarea {
   object-fit: cover;
   object-position: center 30%;
   filter: brightness(0.7) contrast(1.1);
-  transform: scale(1.05);
-  transition: transform 0.1s ease-out;
+  transform: scale(1.04);
+  transition: transform 300ms ease-out;
   z-index: 1;
 }
 
-/* Multi-layer Gradient Overlay for Sunrise Lighting & Mist */
+/* Multi-layer Gradient Overlay */
 .hero-overlay-gradient {
   position: absolute;
   inset: 0;
-  background: 
-    linear-gradient(180deg, rgba(3, 7, 18, 0.5) 0%, rgba(5, 46, 22, 0.4) 40%, rgba(3, 7, 18, 0.85) 100%),
-    radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.25) 0%, transparent 60%),
-    radial-gradient(ellipse at 20% 70%, rgba(16, 185, 129, 0.2) 0%, transparent 60%);
+  background:
+    linear-gradient(180deg, rgba(3, 7, 18, 0.65) 0%, rgba(5, 46, 22, 0.4) 50%, rgba(3, 7, 18, 0.88) 100%),
+    radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.15) 0%, transparent 60%);
   z-index: 2;
   pointer-events: none;
 }
 
-/* Canvas Particle Fog Layer */
+/* Canvas Particle Dust Layer */
 #particles-canvas {
   position: absolute;
   inset: 0;
@@ -230,67 +175,25 @@ button, input, select, textarea {
   height: 100%;
   z-index: 3;
   pointer-events: none;
+  opacity: 0.6;
 }
 
-/* Animated Floating Mist / Fog CSS Effect */
+/* Horizontal Fog / Mist */
 .fog-layer {
   position: absolute;
-  width: 200%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0) 20%,
-    rgba(255, 255, 255, 0.06) 40%,
-    rgba(255, 255, 255, 0) 60%
+  inset: 0;
+  background: linear-gradient(180deg,
+    transparent 50%,
+    rgba(5, 46, 22, 0.2) 75%,
+    rgba(3, 7, 18, 0.5) 100%
   );
-  filter: blur(20px);
   z-index: 3;
   pointer-events: none;
-  animation: floatFog 45s linear infinite;
 }
 
-@keyframes floatFog {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
+.gradient-blob { display: none; }
 
-/* Floating Gradient Blobs */
-.gradient-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(70px);
-  z-index: 2;
-  opacity: 0.5;
-  pointer-events: none;
-  animation: floatBlob 12s ease-in-out infinite alternate;
-}
-
-.blob-1 {
-  width: 350px;
-  height: 350px;
-  background: #059669;
-  top: 10%;
-  left: -5%;
-}
-
-.blob-2 {
-  width: 300px;
-  height: 300px;
-  background: #0284C7;
-  bottom: 15%;
-  right: -5%;
-  animation-delay: -6s;
-}
-
-@keyframes floatBlob {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(30px, -40px) scale(1.1); }
-}
-
-/* Hero Content Hierarchy */
+/* Hero Header Nav */
 .hero-header-nav {
   position: relative;
   z-index: 10;
@@ -299,83 +202,49 @@ button, input, select, textarea {
   justify-content: space-between;
 }
 
-/* ── UNIFIED TREKINDIA BRANDING COMPONENT ── */
+/* TrekIndia Brand Header Component */
 .trekindia-brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-  transition: opacity 200ms ease;
-  vertical-align: middle;
+  transition: opacity var(--t-fast);
 }
-
 .trekindia-brand:hover {
   opacity: 0.92;
+  text-decoration: none;
 }
 
 .brand-icon-wrap {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 76px;
+  height: 76px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  overflow: visible;
 }
 
 .brand-icon-img {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: opacity 250ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity;
-  border: none !important;
-  outline: none !important;
+  transition: opacity 250ms var(--ease);
 }
-
-.brand-icon-img.light-icon {
-  opacity: 1;
-}
-
-.brand-icon-img.dark-icon {
-  opacity: 0;
-}
+.brand-icon-img.light-icon { opacity: 1; }
+.brand-icon-img.dark-icon  { opacity: 0; }
 
 [data-theme="dark"] .brand-icon-img.light-icon,
-body.dark .brand-icon-img.light-icon {
-  opacity: 0;
-}
-
+body.dark .brand-icon-img.light-icon { opacity: 0; }
 [data-theme="dark"] .brand-icon-img.dark-icon,
-body.dark .brand-icon-img.dark-icon {
-  opacity: 1;
-}
-
-@media (max-width: 1023px) {
-  .brand-icon-wrap {
-    width: 64px;
-    height: 64px;
-  }
-}
-
-@media (max-width: 767px) {
-  .brand-icon-wrap {
-    width: 56px;
-    height: 56px;
-  }
-}
+body.dark .brand-icon-img.dark-icon  { opacity: 1; }
 
 .brand-wordmark {
-  font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Manrope', 'Inter', sans-serif;
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.04em;
@@ -384,228 +253,133 @@ body.dark .brand-icon-img.dark-icon {
   align-items: center;
   white-space: nowrap;
 }
+.brand-wordmark .brand-trek  { color: #FFFFFF; }
+.brand-wordmark .brand-india { color: #4ADE80; }
 
-.brand-wordmark .brand-trek {
-  color: var(--brand-trek, #0F172A);
-  transition: color 250ms ease;
-}
-
-.brand-wordmark .brand-india {
-  color: var(--brand-india, #15803D);
-  transition: color 250ms ease;
-}
-
+/* Hero Center Body Content */
 .hero-body-content {
   position: relative;
   z-index: 10;
-  margin-top: auto;
-  margin-bottom: auto;
-  padding: 40px 0;
-  max-width: 580px;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  font-size: 13px;
-  font-weight: 600;
-  color: #6EE7B7;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 24px;
-}
-
-.hero-badge-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #34D399;
-  box-shadow: 0 0 10px #34D399;
-  animation: pulseDot 2s infinite;
-}
-
-@keyframes pulseDot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.3); opacity: 0.7; }
+  max-width: 540px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 0;
 }
 
 .hero-headline {
-  font-size: clamp(40px, 4vw, 54px);
+  font-size: clamp(38px, 4vw, 54px);
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  margin-bottom: 18px;
-  background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.82) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  margin-bottom: 20px;
+  color: #FFFFFF;
 }
 
 .hero-subheading {
   font-size: 18px;
-  line-height: 1.6;
-  color: rgba(243, 244, 246, 0.85);
+  line-height: 1.65;
+  color: rgba(241, 245, 249, 0.82);
   font-weight: 400;
-  margin-bottom: 40px;
+  max-width: 480px;
 }
 
-/* Premium Stat Cards Grid */
-.hero-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  position: relative;
-  z-index: 10;
-}
-
-.stat-card {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-inner);
-  padding: 18px 16px;
-  transition: all var(--transition-normal);
-  cursor: default;
-}
-
-.stat-card:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-}
-
-.stat-card-icon {
-  font-size: 22px;
-  margin-bottom: 8px;
-  display: inline-block;
-  transition: transform var(--transition-fast);
-}
-
-.stat-card:hover .stat-card-icon {
-  transform: scale(1.2) rotate(-5deg);
-}
-
-.stat-card-value {
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: #FFFFFF;
-  letter-spacing: -0.02em;
-}
-
-.stat-card-label {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
-  margin-top: 4px;
-}
-
+/* Hero Footer Credits */
 .hero-footer-credit {
   position: relative;
   z-index: 10;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
   color: rgba(255, 255, 255, 0.45);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-
 .hero-footer-credit span::after {
   content: "•";
-  margin-left: 16px;
-  color: rgba(255, 255, 255, 0.2);
+  margin: 0 14px;
+  color: rgba(255, 255, 255, 0.25);
 }
-.hero-footer-credit span:last-child::after {
-  content: "";
-}
+.hero-footer-credit span:last-child::after { content: ""; margin: 0; }
 
-/* ─── 6. RIGHT AUTHENTICATION PANEL & CARDS ───────────────────────────── */
+/* ─── 5. RIGHT AUTHENTICATION FORM PANEL ─────────────────────────────────── */
 .auth-form-panel {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 40px 24px;
+  padding: 48px 36px;
   overflow-y: auto;
-  position: relative;
-  background-color: var(--bg-main);
-  transition: background-color var(--transition-normal);
+  background-color: var(--bg-page);
+  transition: background-color var(--t-normal);
 }
 
+/* ─── 6. AUTH CARD CONTAINER ─────────────────────────────────────────────── */
 .auth-card-container {
   width: 100%;
-  max-width: 480px;
-  background: var(--surface-card);
-  border-radius: var(--radius-card);
-  padding: 48px 40px;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid var(--border-color);
-  position: relative;
-  transition: all var(--transition-normal);
+  max-width: 460px;
+  background: var(--card-bg);
+  border-radius: var(--r-card);
+  padding: 44px 38px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  transition: background-color var(--t-normal), border-color var(--t-normal), box-shadow var(--t-normal);
 }
 
-/* Auth View Switcher Animations */
+/* View Switching Animation */
 .auth-view {
   display: none;
   opacity: 0;
-  transform: translateY(12px) scale(0.98);
-  transition: opacity 300ms var(--ease-smooth), transform 300ms var(--ease-smooth);
+  transform: translateY(12px);
+  transition: opacity 280ms var(--ease), transform 280ms var(--ease);
 }
-
 .auth-view.active {
   display: block;
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
 }
 
+/* Card Header Section */
 .auth-card-header {
   margin-bottom: 28px;
-  text-align: left;
 }
-
 .auth-card-title {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  margin-bottom: 6px;
+  letter-spacing: -0.025em;
+  color: var(--txt-primary);
+  margin-bottom: 8px;
+  line-height: 1.25;
 }
-
 .auth-card-subtitle {
-  font-size: 15px;
-  color: var(--text-secondary);
+  font-size: 14.5px;
+  color: var(--txt-secondary);
   line-height: 1.5;
 }
 
-/* Illustration Wrappers for Forgot/Email/Reset/Success */
+/* Illustration Icon Badge Box */
 .auth-illustration-box {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
   background: var(--primary-light);
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
   border: 1px solid rgba(21, 128, 61, 0.15);
-  box-shadow: 0 4px 14px rgba(21, 128, 61, 0.1);
+}
+.auth-illustration-box svg,
+.auth-illustration-box i {
+  width: 26px;
+  height: 26px;
 }
 
-.auth-illustration-box svg {
-  width: 32px;
-  height: 32px;
-}
-
-/* ─── 7. FORM ELEMENTS & FLOATING LABELS ──────────────────────────────── */
+/* ─── 7. FORM FIELDS & FLOATING LABELS ───────────────────────────────────── */
 .auth-form-grid {
   display: flex;
   flex-direction: column;
@@ -633,60 +407,64 @@ body.dark .brand-icon-img.dark-icon {
 .input-leading-icon {
   position: absolute;
   left: 16px;
-  color: var(--text-tertiary);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--txt-tertiary);
   pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color var(--transition-fast);
+  transition: color var(--t-fast);
+  z-index: 1;
 }
-
-.input-leading-icon svg {
-  width: 20px;
-  height: 20px;
+.input-leading-icon svg,
+.input-leading-icon i {
+  width: 18px;
+  height: 18px;
 }
 
 .floating-input {
   width: 100%;
   height: 54px;
-  padding: 22px 16px 6px 48px;
-  background-color: var(--surface-input);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-input);
-  font-size: 15px;
-  color: var(--text-primary);
+  padding: 22px 46px 6px 46px;
+  background-color: var(--input-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-input);
+  font-size: 14.5px;
+  font-weight: 400;
+  color: var(--txt-primary);
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+  box-shadow: var(--shadow-input);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), background-color var(--t-normal);
 }
 
-/* Input without leading icon */
 .floating-input.no-icon {
   padding-left: 16px;
 }
-
-.floating-label {
-  position: absolute;
-  left: 48px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  color: var(--text-secondary);
-  pointer-events: none;
-  transition: all 200ms var(--ease-smooth);
-}
-
 .floating-input.no-icon ~ .floating-label {
   left: 16px;
 }
 
-/* Floating Label Active / Focus States */
+.floating-label {
+  position: absolute;
+  left: 46px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--txt-secondary);
+  pointer-events: none;
+  transition: all 180ms var(--ease);
+}
+
+/* Floating Label Focused & Filled States */
 .floating-input:focus ~ .floating-label,
 .floating-input:not(:placeholder-shown) ~ .floating-label {
   top: 13px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--primary);
   letter-spacing: 0.02em;
+  color: var(--primary);
+  transform: none;
 }
 
 .floating-input:focus {
@@ -694,11 +472,12 @@ body.dark .brand-icon-img.dark-icon {
   box-shadow: 0 0 0 4px var(--primary-ring);
 }
 
-.floating-input:focus ~ .input-leading-icon {
+.floating-input:focus ~ .input-leading-icon,
+.input-floating-wrapper:focus-within .input-leading-icon {
   color: var(--primary);
 }
 
-/* Password Toggle Button */
+/* Password Toggle Icon Button */
 .password-toggle-btn {
   position: absolute;
   right: 14px;
@@ -706,49 +485,52 @@ body.dark .brand-icon-img.dark-icon {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: var(--text-tertiary);
+  color: var(--txt-tertiary);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  transition: color var(--transition-fast);
+  transition: color var(--t-fast);
 }
-
 .password-toggle-btn:hover {
-  color: var(--text-primary);
+  color: var(--txt-primary);
+}
+.password-toggle-btn svg,
+.password-toggle-btn i {
+  width: 18px;
+  height: 18px;
 }
 
-/* Real-time Validation State */
+/* Validation Feedback States */
 .input-field-group.is-valid .floating-input {
   border-color: #10B981;
 }
-
 .input-field-group.is-invalid .floating-input {
   border-color: #EF4444;
-  animation: shakeError 350ms ease-in-out;
+  animation: shakeError 340ms ease;
 }
 
 @keyframes shakeError {
   0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+  20%, 60%  { transform: translateX(-5px); }
+  40%, 80%  { transform: translateX(5px); }
 }
 
 .input-error-msg {
   font-size: 12px;
   color: #EF4444;
-  margin-top: 4px;
+  margin-top: 6px;
   display: none;
   font-weight: 500;
+  padding-left: 2px;
 }
-
 .input-field-group.is-invalid .input-error-msg {
   display: block;
 }
 
-/* Checkbox & Options */
+/* ─── 8. FORM OPTIONS & CHECKBOXES ───────────────────────────────────────── */
 .form-options-row {
   display: flex;
   align-items: center;
@@ -760,10 +542,11 @@ body.dark .brand-icon-img.dark-icon {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-size: 13.5px;
+  color: var(--txt-secondary);
   cursor: pointer;
   user-select: none;
+  line-height: 1.4;
 }
 
 .custom-checkbox-input {
@@ -772,17 +555,29 @@ body.dark .brand-icon-img.dark-icon {
   accent-color: var(--primary);
   border-radius: 4px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
-/* ─── 8. BUTTONS & CTAS ─────────────────────────────────────────────────── */
+.forgot-link {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+}
+.forgot-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* ─── 9. PRIMARY BUTTON & CTA ────────────────────────────────────────────── */
 .btn-cta-primary {
   width: 100%;
   height: 52px;
-  background: var(--button-gradient);
+  background: var(--btn-bg);
   color: #FFFFFF;
   border: none;
-  border-radius: var(--radius-btn);
-  font-size: 16px;
+  border-radius: var(--r-btn);
+  font-size: 15px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -791,256 +586,238 @@ body.dark .brand-icon-img.dark-icon {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 14px rgba(21, 128, 61, 0.35);
-  transition: all 200ms var(--ease-smooth);
+  box-shadow: var(--shadow-btn);
+  transition: background var(--t-fast), transform 140ms var(--ease), box-shadow 140ms var(--ease);
+  letter-spacing: 0.01em;
+  text-decoration: none;
 }
-
 .btn-cta-primary:hover {
-  background: var(--button-hover-gradient);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(21, 128, 61, 0.45);
+  background: var(--btn-bg-hover);
+  transform: translateY(-1.5px);
+  box-shadow: var(--shadow-btn-hover);
 }
-
 .btn-cta-primary:active {
-  transform: translateY(0) scale(0.99);
+  transform: translateY(0) scale(0.985);
+  box-shadow: var(--shadow-btn);
 }
-
 .btn-cta-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-/* Button Ripple Effect */
+/* Ripple Animation */
 .ripple-effect {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.28);
   transform: scale(0);
-  animation: ripple 600ms linear;
+  animation: ripple 580ms linear;
   pointer-events: none;
 }
-
 @keyframes ripple {
-  to {
-    transform: scale(4);
-    opacity: 0;
-  }
+  to { transform: scale(4); opacity: 0; }
 }
 
-/* Loading Spinner */
+/* Button Loading Spinner */
 .spinner-icon {
-  width: 20px;
-  height: 20px;
-  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #FFFFFF;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.75s linear infinite;
   display: none;
 }
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .btn-cta-primary.is-loading .btn-text,
-.btn-cta-primary.is-loading .btn-arrow {
-  display: none;
+.btn-cta-primary.is-loading .btn-arrow { display: none; }
+.btn-cta-primary.is-loading .spinner-icon { display: block; }
+
+.btn-arrow {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
-.btn-cta-primary.is-loading .spinner-icon {
-  display: block;
-}
-
-/* Secondary Outlined Buttons */
+/* ─── 10. SECONDARY OUTLINED BUTTON ─────────────────────────────────────── */
 .btn-outlined {
   width: 100%;
-  height: 48px;
+  height: 50px;
   background: transparent;
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-btn);
-  font-size: 15px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-btn);
+  font-size: 14.5px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--txt-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
 }
-
 .btn-outlined:hover {
   border-color: var(--primary);
   background: var(--primary-light);
   color: var(--primary);
 }
 
-/* ─── 9. SOCIAL LOGIN BUTTONS ──────────────────────────────────────────── */
+/* ─── 11. SOCIAL LOGIN DIVIDER & BUTTONS ─────────────────────────────────── */
 .social-divider {
   display: flex;
   align-items: center;
-  text-align: center;
+  gap: 0;
+  color: var(--txt-tertiary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   margin: 24px 0;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
 }
-
 .social-divider::before,
 .social-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid var(--border-color);
+  height: 1px;
+  background: var(--border);
 }
+.social-divider span { padding: 0 16px; }
 
-.social-divider span {
-  padding: 0 14px;
-}
-
+/* 2-Column Social Buttons (Google & Apple) */
 .social-buttons-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
 .btn-social {
   height: 46px;
-  background: var(--surface-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-input);
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-input);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 9px;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
+  font-weight: 600;
+  color: var(--txt-primary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: border-color var(--t-fast), background var(--t-fast), transform 120ms var(--ease), box-shadow var(--t-fast);
 }
-
 .btn-social:hover {
-  border-color: #9CA3AF;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-  background: var(--surface-card-subtle);
+  border-color: var(--border-hover);
+  transform: translateY(-1.5px);
+  background: var(--card-bg-subtle);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-
-.btn-social img, .btn-social svg {
+.btn-social img,
+.btn-social svg {
   width: 18px;
   height: 18px;
 }
 
-/* ─── 10. PASSWORD STRENGTH METER & CHECKLIST ───────────────────────────── */
+/* ─── 12. PASSWORD STRENGTH METER & CHECKLIST ───────────────────────────── */
 .password-strength-box {
-  margin-top: 6px;
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--card-bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--r-input);
 }
-
-.strength-bar-track {
-  height: 6px;
-  width: 100%;
-  background: var(--border-color);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.strength-bar-fill {
-  height: 100%;
-  width: 0%;
-  border-radius: var(--radius-full);
-  transition: width 300ms var(--ease-smooth), background-color 300ms var(--ease-smooth);
-}
-
-/* Strength Colors */
-.strength-bar-fill.weak { width: 25%; background-color: #EF4444; }
-.strength-bar-fill.fair { width: 50%; background-color: #F59E0B; }
-.strength-bar-fill.good { width: 75%; background-color: #3B82F6; }
-.strength-bar-fill.strong { width: 100%; background-color: #10B981; }
 
 .strength-header-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--txt-secondary);
   font-weight: 500;
+  margin-bottom: 8px;
+}
+.strength-badge          { font-weight: 700; }
+.strength-badge.weak     { color: #EF4444; }
+.strength-badge.fair     { color: #F59E0B; }
+.strength-badge.good     { color: #3B82F6; }
+.strength-badge.strong   { color: #10B981; }
+
+.strength-bar-track {
+  height: 5px;
+  width: 100%;
+  background: var(--border);
+  border-radius: var(--r-pill);
+  overflow: hidden;
   margin-bottom: 10px;
 }
-
-.strength-badge {
-  font-weight: 600;
-  text-transform: capitalize;
+.strength-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: var(--r-pill);
+  transition: width 300ms var(--ease), background-color 300ms var(--ease);
 }
-.strength-badge.weak { color: #EF4444; }
-.strength-badge.fair { color: #F59E0B; }
-.strength-badge.good { color: #3B82F6; }
-.strength-badge.strong { color: #10B981; }
+.strength-bar-fill.weak   { width: 25%; background-color: #EF4444; }
+.strength-bar-fill.fair   { width: 50%; background-color: #F59E0B; }
+.strength-bar-fill.good   { width: 75%; background-color: #3B82F6; }
+.strength-bar-fill.strong { width: 100%; background-color: #10B981; }
 
-/* Password Checklist Rules Grid */
 .password-requirements-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px 12px;
 }
-
 .requirement-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  color: var(--text-tertiary);
-  transition: color var(--transition-fast);
+  font-size: 11.5px;
+  color: var(--txt-tertiary);
+  transition: color var(--t-fast);
 }
-
 .requirement-item.met {
   color: #10B981;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .requirement-icon {
   width: 14px;
   height: 14px;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 1.5px solid var(--text-tertiary);
-  font-size: 9px;
-  transition: all var(--transition-fast);
+  border: 1.5px solid currentColor;
+  font-size: 8px;
+  transition: all var(--t-fast);
 }
-
 .requirement-item.met .requirement-icon {
   border-color: #10B981;
   background: #10B981;
   color: #FFFFFF;
 }
 
-/* ─── 11. OTP 6-DIGIT VERIFICATION BOXES ────────────────────────────────── */
+/* ─── 13. OTP CODE BOXES ─────────────────────────────────────────────────── */
 .otp-container {
   display: flex;
   gap: 10px;
   justify-content: space-between;
-  margin: 20px 0;
+  margin: 24px 0;
 }
-
 .otp-box {
-  width: 52px;
+  width: 54px;
   height: 60px;
-  border-radius: var(--radius-input);
-  border: 1.5px solid var(--border-color);
-  background: var(--surface-input);
+  border-radius: var(--r-input);
+  border: 1.5px solid var(--border);
+  background: var(--input-bg);
   text-align: center;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--txt-primary);
   outline: none;
-  transition: all var(--transition-fast);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
 }
-
 .otp-box:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 4px var(--primary-ring);
@@ -1049,11 +826,10 @@ body.dark .brand-icon-img.dark-icon {
 
 .resend-timer-box {
   text-align: center;
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 13.5px;
+  color: var(--txt-secondary);
   margin-top: 14px;
 }
-
 .resend-timer-box button {
   background: none;
   border: none;
@@ -1062,11 +838,11 @@ body.dark .brand-icon-img.dark-icon {
   cursor: pointer;
 }
 .resend-timer-box button:disabled {
-  color: var(--text-tertiary);
+  color: var(--txt-tertiary);
   cursor: not-allowed;
 }
 
-/* ─── 12. SUCCESS SCREEN ANIMATIONS ────────────────────────────────────── */
+/* ─── 14. SUCCESS STATE ANIMATIONS ───────────────────────────────────────── */
 .success-check-circle {
   width: 80px;
   height: 80px;
@@ -1076,88 +852,70 @@ body.dark .brand-icon-img.dark-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 24px auto;
-  position: relative;
-  box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
-  animation: bouncePop 600ms var(--ease-spring);
+  margin: 0 auto 24px;
+  box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.12);
+  animation: bouncePop 550ms var(--ease-spring);
 }
-
 @keyframes bouncePop {
-  0% { transform: scale(0); opacity: 0; }
-  60% { transform: scale(1.15); }
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.12); }
   100% { transform: scale(1); opacity: 1; }
 }
-
 .success-check-circle svg {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
-  animation: drawCheck 800ms 300ms forwards var(--ease-smooth);
+  animation: drawCheck 700ms 280ms forwards var(--ease);
 }
+@keyframes drawCheck { to { stroke-dashoffset: 0; } }
 
-@keyframes drawCheck {
-  to { stroke-dashoffset: 0; }
-}
-
-/* ─── 13. CARD FOOTER ───────────────────────────────────────────────────── */
+/* ─── 15. AUTH CARD FOOTER ───────────────────────────────────────────────── */
 .auth-card-footer {
   margin-top: 28px;
   padding-top: 20px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   text-align: center;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--txt-secondary);
+}
+.auth-card-footer a {
+  font-weight: 600;
 }
 
 .trust-badge-row {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--txt-secondary);
   margin-top: 18px;
-  background: var(--surface-card-subtle);
-  padding: 6px 14px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-color);
+  background: var(--card-bg-subtle);
+  padding: 8px 16px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
 }
-
-.trust-badge-row svg {
+.trust-badge-row svg,
+.trust-badge-row i {
   width: 16px;
   height: 16px;
   color: var(--primary);
 }
 
-/* ─── 14. RESPONSIVE BREAKPOINTS ────────────────────────────────────────── */
+/* ─── 16. RESPONSIVE MEDIA QUERIES ───────────────────────────────────────── */
 @media (max-width: 1024px) {
   .auth-root-container {
     grid-template-columns: 1fr;
     overflow-y: auto;
   }
-  
   .auth-hero-panel {
-    min-height: 420px;
+    min-height: 340px;
     padding: 40px 32px;
   }
-
-  .hero-headline {
-    font-size: 36px;
-  }
-
-  .hero-subheading {
-    font-size: 16px;
-    margin-bottom: 24px;
-  }
-
-  .hero-stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    overflow-x: auto;
-    padding-bottom: 8px;
-  }
-  
+  .hero-headline { font-size: 34px; }
+  .hero-subheading { font-size: 16px; }
   .auth-form-panel {
-    padding: 32px 16px;
+    padding: 40px 20px;
   }
 }
 
@@ -1166,23 +924,9 @@ body.dark .brand-icon-img.dark-icon {
     padding: 32px 20px;
     border-radius: 20px;
   }
-
-  .hero-stats-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .form-row-two-col {
-    grid-template-columns: 1fr;
-  }
-
-  .social-buttons-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .otp-box {
-    width: 44px;
-    height: 52px;
-    font-size: 20px;
-  }
+  .auth-card-title { font-size: 24px; }
+  .form-row-two-col { grid-template-columns: 1fr; }
+  .social-buttons-grid { grid-template-columns: 1fr; }
+  .otp-box { width: 44px; height: 52px; font-size: 18px; }
+  .auth-form-panel { padding: 24px 16px; }
 }
