@@ -354,17 +354,145 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Simulated Form Submissions with Loading States
-  const forms = [
-    { id: 'form-login', nextView: null, successMsg: 'Welcome back! Redirecting to dashboard...' },
-    { id: 'form-signup', nextView: 'verify-email', successMsg: 'Account created! Please verify your email.' },
-    { id: 'form-forgot', nextView: 'email-sent', successMsg: 'Reset link sent!' },
-    { id: 'form-reset', nextView: 'success', successMsg: 'Password updated!' },
-  ];
+  // ─── 6. REAL BACKEND AUTH INTEGRATION & UI FEEDBACK ────────────────────
+  function showFormError(form, message) {
+    let errorBox = form.querySelector('.auth-error-banner');
+    if (!errorBox) {
+      errorBox = document.createElement('div');
+      errorBox.className = 'auth-error-banner';
+      errorBox.style.cssText = 'background: rgba(220, 53, 69, 0.12); border: 1px solid rgba(220, 53, 69, 0.4); color: #e63946; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px;';
+      form.insertBefore(errorBox, form.firstChild);
+    }
+    errorBox.innerHTML = `<span style="font-size: 1.1rem; line-height: 1;">⚠️</span> <span>${message}</span>`;
+    errorBox.style.display = 'flex';
+  }
 
-  forms.forEach(({ id, nextView, successMsg }) => {
-    const form = document.getElementById(id);
+  function clearFormError(form) {
+    const errorBox = form.querySelector('.auth-error-banner');
+    if (errorBox) {
+      errorBox.style.display = 'none';
+      errorBox.innerHTML = '';
+    }
+  }
+
+  // Real Login Handler
+  const loginForm = document.getElementById('form-login');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearFormError(loginForm);
+
+      const emailInput = document.getElementById('login-email');
+      const passwordInput = document.getElementById('login-password');
+
+      const email = emailInput ? emailInput.value.trim() : '';
+      const password = passwordInput ? passwordInput.value : '';
+
+      if (!email || !password) {
+        showFormError(loginForm, 'Please enter both your email address and password.');
+        return;
+      }
+
+      const submitBtn = loginForm.querySelector('.btn-cta-primary');
+      if (submitBtn) {
+        submitBtn.classList.add('is-loading');
+        submitBtn.disabled = true;
+      }
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          window.location.href = 'index.html';
+        } else {
+          showFormError(loginForm, data.message || 'Invalid email or password.');
+        }
+      } catch (err) {
+        showFormError(loginForm, 'Network error. Unable to reach server. Please check your connection.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.classList.remove('is-loading');
+          submitBtn.disabled = false;
+        }
+      }
+    });
+  }
+
+  // Real Signup Handler
+  const signupForm = document.getElementById('form-signup');
+  if (signupForm) {
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearFormError(signupForm);
+
+      const firstNameEl = document.getElementById('signup-firstname');
+      const lastNameEl = document.getElementById('signup-lastname');
+      const usernameEl = document.getElementById('signup-username');
+      const emailEl = document.getElementById('signup-email');
+      const passwordEl = document.getElementById('signup-password');
+
+      const firstName = firstNameEl ? firstNameEl.value.trim() : '';
+      const lastName = lastNameEl ? lastNameEl.value.trim() : '';
+      const fullName = `${firstName} ${lastName}`.trim();
+      const username = usernameEl ? usernameEl.value.trim() : '';
+      const email = emailEl ? emailEl.value.trim() : '';
+      const password = passwordEl ? passwordEl.value : '';
+
+      if (!fullName || !username || !email || !password) {
+        showFormError(signupForm, 'Please fill in all required fields.');
+        return;
+      }
+
+      const submitBtn = signupForm.querySelector('.btn-cta-primary');
+      if (submitBtn) {
+        submitBtn.classList.add('is-loading');
+        submitBtn.disabled = true;
+      }
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            full_name: fullName,
+            username,
+            email,
+            password,
+            confirm_password: password
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          window.location.href = 'index.html';
+        } else {
+          showFormError(signupForm, data.message || 'Registration failed.');
+        }
+      } catch (err) {
+        showFormError(signupForm, 'Network error. Unable to reach server. Please check your connection.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.classList.remove('is-loading');
+          submitBtn.disabled = false;
+        }
+      }
+    });
+  }
+
+  // Simulated handlers for non-auth forms (Forgot Password / Password Reset)
+  ['form-forgot', 'form-reset'].forEach((formId) => {
+    const form = document.getElementById(formId);
     if (!form) return;
+    const nextViewMap = { 'form-forgot': 'email-sent', 'form-reset': 'success' };
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -376,16 +504,14 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           submitBtn.classList.remove('is-loading');
           submitBtn.disabled = false;
-
-          if (nextView) {
-            navigateToView(nextView);
-          } else {
-            alert(successMsg);
+          if (nextViewMap[formId]) {
+            navigateToView(nextViewMap[formId]);
           }
-        }, 1200);
+        }, 1000);
       }
     });
   });
+
 
   // Verify OTP button simulation
   const verifyBtn = document.getElementById('btn-verify-otp');

@@ -1,0 +1,33 @@
+{
+  "name": "trekindia-platform",
+  "version": "1.0.0",
+  "description": "TrekIndia - India's Premier Outdoor Exploration & Trekking Platform Authentication System",
+  "main": "backend/src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "nodemon backend/src/server.js"
+  },
+  "keywords": [
+    "trekindia",
+    "authentication",
+    "express",
+    "postgresql",
+    "argon2"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "argon2": "^0.40.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
