@@ -5,7 +5,10 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import authRoutes from './routes/authRoutes.js';
+import authRoutes     from './routes/authRoutes.js';
+import trekRoutes     from './routes/trekRoutes.js';
+import stateRoutes    from './routes/stateRoutes.js';
+import districtRoutes from './routes/districtRoutes.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 
 dotenv.config();
@@ -73,6 +76,15 @@ app.get('/api/users/me', requireAuth, (req, res) => {
 
 // Authentication V1 Routes
 app.use('/api/auth', authRoutes);
+
+// Trek API Routes
+app.use('/api/treks', trekRoutes);
+
+// State API Routes
+app.use('/api/states', stateRoutes);
+
+// District API Routes
+app.use('/api/districts', districtRoutes);
 
 // Centralized Error Handling Middleware
 app.use(errorMiddleware);

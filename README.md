@@ -105,6 +105,45 @@ NODE_ENV=development
 - `GET /api/auth/me`
   - **Returns**: 200 OK with authenticated user object or 401 Unauthorized.
 
+### Treks API
+- `GET /api/treks`
+  - **Query Params**: `page`, `limit`, `state`, `district`, `difficulty`, `minRating`, `minDuration`, `maxDuration`, `minElevation`, `maxElevation`, `minDistance`, `maxDistance`, `season`, `sort`, `order`
+  - **Returns**: Paginated list of treks with total count and page metadata.
+- `GET /api/treks/map`
+  - **Returns**: Optimized lightweight list of coordinates, trek names, slugs, state, district, difficulty, rating for Leaflet map markers.
+- `GET /api/treks/search?q=query`
+  - **Returns**: Treks matching search query in name, district, state, description, or starting point.
+- `GET /api/treks/:id`
+  - **Returns**: Complete trek details by numeric ID.
+- `GET /api/treks/slug/:slug`
+  - **Returns**: Complete trek details by slug.
+
+### States & Districts API
+- `GET /api/states`
+  - **Returns**: All 27 states with live PostgreSQL-generated trek counts.
+- `GET /api/states/:state/treks`
+  - **Returns**: Paginated list of treks for a specific state.
+- `GET /api/states/:state/districts`
+  - **Returns**: Districts for a given state with trek counts.
+- `GET /api/districts`
+  - **Returns**: All districts grouped by state.
+
+---
+
+## 🗺️ PostGIS Spatial Integration
+
+- PostGIS geometry column: `trek_locations.location` (type: `geometry(Point, 4326)`).
+- Spatial Index: `idx_trek_locations_gist` (GiST index for spatial queries).
+- All 692 treks in the PostgreSQL database have valid coordinates and appear on the Leaflet interactive map with marker clustering and popup detail cards.
+
+---
+
+## 🗄️ Database Schema & Data Integrity
+
+- The single source of truth is PostgreSQL (`trekindia`).
+- **692 treks** across 27 Indian states and 248 districts are loaded dynamically via REST APIs.
+- Trek images remain blank/null by design until real assets are attached; neutral CSS placeholders prevent broken image icons.
+
 ---
 
 ## 🗄️ Database Tables Used

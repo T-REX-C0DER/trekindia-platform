@@ -2970,3 +2970,82 @@ body.dark .tooltip-info { color: #a6b095; }
   }
 }
 
+/* ─── TREK CARD PLACEHOLDER & PAGINATION ─── */
+.trek-card-img-placeholder {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--forest);
+}
+
+.skeleton-pulse {
+  animation: skeletonPulse 1.5s infinite ease-in-out;
+  background: rgba(255, 255, 255, 0.08);
+}
+@keyframes skeletonPulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0.3; }
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+}
+.skeleton-line.w-60 { width: 60%; }
+.skeleton-line.w-40 { width: 40%; }
+.skeleton-line.w-80 { width: 80%; }
+.skeleton-line.w-50 { width: 50%; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+
+/* Pagination Controls */
+.explore-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(156, 175, 136, 0.2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(.disabled) {
+  background: rgba(156, 175, 136, 0.25);
+  border-color: #9caf88;
+  color: #fff;
+}
+
+.page-btn.active {
+  background: #9caf88;
+  color: #0b0f0b;
+  border-color: #9caf88;
+  font-weight: 700;
+}
+
+.page-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-ellipsis {
+  color: var(--text-secondary);
+  padding: 0 4px;
+}

@@ -302,205 +302,59 @@
     </div>
   </section>
 
-  <!-- ===== TRENDING TREKS ===== -->
-  <section class="section trending-section" id="treks" aria-label="Trending expeditions">
+  <!-- ===== EXPLORE ALL TREKS (API & DATABASE DRIVEN) ===== -->
+  <section class="section explore-section" id="explore-all" aria-label="Explore all database treks">
     <div class="container">
       <div class="section-header">
-        <div class="section-tag">Seasonal Selection</div>
+        <div class="section-tag">Live Database Search & Filter</div>
         <div class="section-title-row">
-          <h2 class="section-title">Trending Expeditions</h2>
-          <a href="maharashtra.html" class="view-all-link" id="viewAllPathsLink">View All Paths <span>&#8594;</span></a>
+          <h2 class="section-title">All Expeditions & Trails</h2>
+          <span class="explore-trek-count" id="exploreTrekCount" style="color:var(--color-text-muted);font-size:14px;font-weight:600;">Loading database treks...</span>
         </div>
       </div>
-      <div class="trek-cards-grid">
 
-        <article class="trek-card" id="trekCard1" tabindex="0" aria-label="Roopkund Sanctuary trek">
-          <div class="trek-card-img-wrap">
-            <img src="trek_roopkund_1784286741949.png" alt="Roopkund alpine lake" class="trek-img" loading="lazy" />
-            <div class="trek-card-overlay"></div>
-            <span class="difficulty-badge moderate">Moderate</span>
-            <button class="bookmark-btn" aria-label="Bookmark Roopkund Sanctuary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-              </svg>
-            </button>
-          </div>
-          <div class="trek-card-body">
-            <div class="trek-meta-top">
-              <span class="trek-state">Uttarakhand</span>
-              <div class="trek-rating">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none">
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                4.9
-              </div>
-            </div>
-            <div class="trek-key-metrics">
-              <div class="metric-item">
-                <span class="metric-icon">🕒</span>
-                <span class="metric-value">8 Days</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-icon">🥾</span>
-                <span class="metric-value">54 km</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-icon">⛰️</span>
-                <span class="metric-label">Summit</span>
-                <span class="metric-value">5029 m</span>
-              </div>
-            </div>
-            <h3 class="trek-name">Roopkund Trek</h3>
-            <div class="trek-footer">
-              <span class="trek-season">Best: May – Jun</span>
-              <button class="btn-explore-sm" aria-label="View operators for Roopkund Trek">View Operators</button>
-            </div>
-          </div>
-        </article>
+      <!-- Controls Toolbar -->
+      <div class="explore-controls-bar" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;margin-bottom:32px;background:rgba(255,255,255,0.03);padding:16px 20px;border-radius:16px;border:1px solid rgba(156,175,136,0.15);">
+        <!-- Search Input -->
+        <div style="position:relative;flex:1;min-width:240px;">
+          <input type="text" id="exploreSearchInput" placeholder="Search by trek name, district, location..." aria-label="Search database treks" style="width:100%;padding:10px 16px;border-radius:30px;background:rgba(0,0,0,0.3);border:1px solid rgba(156,175,136,0.2);color:var(--color-text);font-size:14px;outline:none;" />
+        </div>
 
-        <article class="trek-card" id="trekCard2" tabindex="0" aria-label="Valley of Stillness trek">
-          <div class="trek-card-img-wrap">
-            <img src="trek_valley_flowers_1784286752079.png" alt="Valley of flowers" class="trek-img" loading="lazy" />
-            <div class="trek-card-overlay"></div>
-            <span class="difficulty-badge easy">Easy</span>
-            <button class="bookmark-btn" aria-label="Bookmark Valley of Stillness">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-              </svg>
-            </button>
-          </div>
-          <div class="trek-card-body">
-            <div class="trek-meta-top">
-              <span class="trek-state">Uttarakhand</span>
-              <div class="trek-rating">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none">
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                4.8
-              </div>
-            </div>
-            <div class="trek-key-metrics">
-              <div class="metric-item">
-                <span class="metric-icon">🕒</span>
-                <span class="metric-value">6 Days</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-icon">🥾</span>
-                <span class="metric-value">38 km</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-icon">⛰️</span>
-                <span class="metric-label">Summit</span>
-                <span class="metric-value">3658 m</span>
-              </div>
-            </div>
-            <h3 class="trek-name">Valley of Flowers</h3>
-            <div class="trek-footer">
-              <span class="trek-season">Best: Jul – Aug</span>
-              <button class="btn-explore-sm" aria-label="View operators for Valley of Flowers">View Operators</button>
-            </div>
-          </div>
-        </article>
+        <!-- Filter Dropdowns -->
+        <div style="display:flex;flex-wrap:wrap;gap:12px;">
+          <select id="exploreStateFilter" aria-label="Filter by state" style="padding:10px 16px;border-radius:30px;background:rgba(0,0,0,0.4);border:1px solid rgba(156,175,136,0.2);color:var(--color-text);font-size:13px;outline:none;cursor:pointer;">
+            <option value="">All States</option>
+          </select>
 
-        <article class="trek-card" id="trekCard3" tabindex="0" aria-label="Pin Parvati Passage trek">
-          <div class="trek-card-img-wrap">
-            <img src="trek_pin_parvati_1784286774167.png" alt="Pin Parvati mountain pass" class="trek-img"
-              loading="lazy" />
-            <div class="trek-card-overlay"></div>
-            <span class="difficulty-badge difficult">Difficult</span>
-            <button class="bookmark-btn" aria-label="Bookmark Pin Parvati Passage">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-              </svg>
-            </button>
-          </div>
-          <div class="trek-card-body">
-            <div class="trek-meta-top">
-              <span class="trek-state">Himachal Pradesh</span>
-              <div class="trek-rating">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none">
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                5.0
-              </div>
-            </div>
-            <div class="trek-key-metrics">
-              <div class="metric-item">
-                <span class="metric-icon">🕒</span>
-                <span class="metric-value">11 Days</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-icon">🥾</span>
-                <span class="metric-value">100 km</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-icon">⛰️</span>
-                <span class="metric-label">Summit</span>
-                <span class="metric-value">5319 m</span>
-              </div>
-            </div>
-            <h3 class="trek-name">Pin Parvati Pass</h3>
-            <div class="trek-footer">
-              <span class="trek-season">Best: Aug – Sep</span>
-              <button class="btn-explore-sm" aria-label="View operators for Pin Parvati Pass">View Operators</button>
-            </div>
-          </div>
-        </article>
+          <select id="exploreDiffFilter" aria-label="Filter by difficulty" style="padding:10px 16px;border-radius:30px;background:rgba(0,0,0,0.4);border:1px solid rgba(156,175,136,0.2);color:var(--color-text);font-size:13px;outline:none;cursor:pointer;">
+            <option value="">All Difficulties</option>
+            <option value="Easy">Easy</option>
+            <option value="Moderate">Moderate</option>
+            <option value="Difficult">Difficult</option>
+            <option value="Hard">Hard</option>
+          </select>
 
-        <article class="trek-card" id="trekCard4" tabindex="0" aria-label="Markha Valley trek">
-          <div class="trek-card-img-wrap">
-            <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80" alt="Ladakh landscape"
-              class="trek-img" loading="lazy" />
-            <div class="trek-card-overlay"></div>
-            <span class="difficulty-badge moderate">Moderate</span>
-            <button class="bookmark-btn" aria-label="Bookmark Markha Valley">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-              </svg>
-            </button>
-          </div>
-          <div class="trek-card-body">
-            <div class="trek-meta-top">
-              <span class="trek-state">Ladakh</span>
-              <div class="trek-rating">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none">
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                4.7
-              </div>
-            </div>
-            <div class="trek-key-metrics">
-              <div class="metric-item">
-                <span class="metric-icon">🕒</span>
-                <span class="metric-value">9 Days</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-icon">🥾</span>
-                <span class="metric-value">65 km</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-icon">⛰️</span>
-                <span class="metric-label">Summit</span>
-                <span class="metric-value">5260 m</span>
-              </div>
-            </div>
-            <h3 class="trek-name">Markha Valley</h3>
-            <div class="trek-footer">
-              <span class="trek-season">Best: Jun – Sep</span>
-              <button class="btn-explore-sm" aria-label="View operators for Markha Valley">View Operators</button>
-            </div>
-          </div>
-        </article>
+          <select id="exploreRatingFilter" aria-label="Filter by rating" style="padding:10px 16px;border-radius:30px;background:rgba(0,0,0,0.4);border:1px solid rgba(156,175,136,0.2);color:var(--color-text);font-size:13px;outline:none;cursor:pointer;">
+            <option value="">All Ratings</option>
+            <option value="4.5">★ 4.5+</option>
+            <option value="4.0">★ 4.0+</option>
+            <option value="3.5">★ 3.5+</option>
+          </select>
 
+          <select id="exploreSortSelect" aria-label="Sort treks" style="padding:10px 16px;border-radius:30px;background:rgba(0,0,0,0.4);border:1px solid rgba(156,175,136,0.2);color:var(--color-text);font-size:13px;outline:none;cursor:pointer;">
+            <option value="name:asc">Sort: Name (A-Z)</option>
+            <option value="rating:desc">Sort: Highest Rated</option>
+            <option value="distance:asc">Sort: Distance (Short to Long)</option>
+            <option value="elevation:desc">Sort: Highest Summit</option>
+          </select>
+        </div>
       </div>
+
+      <!-- Dynamic Cards Grid -->
+      <div class="trek-cards-grid" id="exploreTrekGrid"></div>
+
+      <!-- Pagination Container -->
+      <div id="explorePagination" style="margin-top:40px;display:flex;justify-content:center;"></div>
     </div>
   </section>
 
@@ -2575,7 +2429,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <!-- TrekIndia Map Logic -->
+  <!-- TrekIndia Map & API Logic -->
+  <script src="trek-api.js"></script>
   <script src="map.js"></script>
   <script src="main.js"></script>
   <script src="auth-client.js"></script>
