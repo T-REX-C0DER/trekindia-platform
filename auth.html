@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TrekIndia — Premium Authentication Experience</title>
-  <meta name="description" content="Sign in or register for TrekIndia — India's premier outdoor exploration and trekking platform." />
+  <title>TrekIndia — Flagship Authentication Experience</title>
+  <meta name="description" content="Sign in or create your explorer account for TrekIndia — India's premier outdoor exploration and trekking platform." />
 
-  <!-- Google Fonts: Inter -->
+  <!-- Google Fonts: Inter & Manrope -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -19,69 +19,88 @@
 </head>
 <body>
 
-  <!-- ===== MAIN ROOT SPLIT CONTAINER (60% / 40%) ===== -->
-  <main class="auth-root-container">
+  <!-- ===== IMMERSIVE BACKGROUND BACKDROP & CANVAS ===== -->
+  <div class="auth-viewport-bg">
+    <!-- Cinematic Himalayan Aurora Backdrop Image -->
+    <img src="auth_bg.jpg" alt="Himalayan Aurora Mountain Lake Landscape" class="bg-mountain-image" />
+    
+    <!-- Multi-Layer Vignette & Atmosphere Overlays -->
+    <div class="bg-overlay-vignette"></div>
+    <div class="bg-overlay-radial"></div>
 
-    <!-- ==================== LEFT HERO PANEL (60%) ==================== -->
-    <section class="auth-hero-panel">
-      <!-- Background Himalayan Image -->
-      <img src="hero_himalayas_1784286730612.png" alt="Himalayan Mountain Range" class="hero-bg-image" />
-      
-      <!-- Multi-layer Gradient Overlays for Sunrise Lighting & Mist -->
-      <div class="hero-overlay-gradient"></div>
-      
-      <!-- Animated Canvas for Floating Particle Dust -->
-      <canvas id="particles-canvas"></canvas>
-      
-      <!-- CSS Floating Fog Layer -->
-      <div class="fog-layer"></div>
+    <!-- Animated Full-Screen Particle Canvas (Aurora Stars & Snow Dust) -->
+    <canvas id="particles-canvas"></canvas>
 
-      <!-- Ambient Glow Blobs -->
-      <div class="gradient-blob blob-1"></div>
-      <div class="gradient-blob blob-2"></div>
+    <!-- Cursor Follow Glow Orb -->
+    <div class="cursor-glow-orb" id="cursor-glow-orb"></div>
 
-      <!-- Hero Header Navigation -->
-      <div class="hero-header-nav">
-        <a href="index.html" class="trekindia-brand show-mobile-text" aria-label="TrekIndia home">
-          <div class="brand-icon-wrap">
-            <img src="whitebg_logo_processed.png" alt="TrekIndia Logo" class="brand-icon-img light-icon" />
-            <img src="darkbg_logo_processed.png" alt="TrekIndia Logo" class="brand-icon-img dark-icon" />
-          </div>
-          <div class="brand-wordmark">
-            <span class="brand-trek">Trek</span><span class="brand-india">India</span>
-          </div>
+    <!-- Glowing Ambient Orbs -->
+    <div class="glow-orb orb-top-left"></div>
+    <div class="glow-orb orb-bottom-right"></div>
+    <div class="glow-orb orb-center-accent"></div>
+  </div>
+
+  <!-- ===== TOP GLASS NAVIGATION BAR ===== -->
+  <header class="auth-top-header">
+    <div class="header-container">
+      <!-- Brand Logo -->
+      <a href="index.html" class="trekindia-brand" aria-label="TrekIndia home">
+        <div class="brand-icon-wrap">
+          <img src="whitebg_logo_processed.png" alt="TrekIndia Logo" class="brand-icon-img light-icon" />
+          <img src="darkbg_logo_processed.png" alt="TrekIndia Logo" class="brand-icon-img dark-icon" />
+        </div>
+        <div class="brand-wordmark">
+          <span class="brand-trek">Trek</span><span class="brand-india">India</span>
+        </div>
+      </a>
+
+      <!-- Right Header Actions -->
+      <div class="header-actions">
+        <a href="index.html" class="header-home-btn" aria-label="Return to Home">
+          <i data-lucide="arrow-left"></i>
+          <span>Explore Trails</span>
         </a>
+        <button type="button" id="theme-toggle-btn" class="theme-switch-btn" aria-label="Toggle light and dark mode">
+          <i data-lucide="moon" id="theme-icon"></i>
+        </button>
       </div>
+    </div>
+  </header>
 
-      <!-- Hero Dynamic Central Body Text -->
-      <div class="hero-body-content">
+  <!-- ===== MAIN UNIFIED FLOATING AUTH CONTAINER ===== -->
+  <main class="auth-main-wrapper">
+    <div class="auth-glass-card" id="auth-glass-card">
+
+      <!-- Dynamic Hero Header Badge Inside Card -->
+      <div class="card-hero-header">
+        <div class="hero-badge-pill">
+          <span class="hero-badge-dot"></span>
+          <span class="hero-badge-text">EXPLORE THE HIMALAYAS</span>
+        </div>
         <h1 class="hero-headline">Welcome Back, Explorer.</h1>
         <p class="hero-subheading">
-          Continue discovering India's most breathtaking trekking experiences, high-altitude passes, and pristine alpine wilderness.
+          Continue discovering India's most breathtaking trekking experiences, high-altitude passes, and alpine wilderness.
         </p>
       </div>
 
-
-
-      <!-- Hero Footer Credit -->
-      <div class="hero-footer-credit">
-        <span>EST. 2024</span>
-        <span>PREMIUM OUTDOOR COLLECTIVE</span>
-        <span>WCAG AA COMPLIANT</span>
+      <!-- Navigation Tabs (Visible on Login / Signup Views) -->
+      <div class="auth-tabs-nav" id="auth-tabs-nav">
+        <div class="tab-sliding-indicator" id="tab-sliding-indicator"></div>
+        <button type="button" class="auth-tab-btn active" data-tab="login" data-navigate="login">
+          <i data-lucide="log-in"></i>
+          <span>Sign In</span>
+        </button>
+        <button type="button" class="auth-tab-btn" data-tab="signup" data-navigate="signup">
+          <i data-lucide="user-plus"></i>
+          <span>Create Account</span>
+        </button>
       </div>
-    </section>
 
-    <!-- ==================== RIGHT AUTHENTICATION PANEL (40%) ==================== -->
-    <section class="auth-form-panel">
-      <div class="auth-card-container">
+      <!-- Card Views Container -->
+      <div class="auth-views-container">
 
         <!-- ──────────────── 1. LOGIN VIEW ──────────────── -->
         <div id="view-login" class="auth-view active">
-          <div class="auth-card-header">
-            <h2 class="auth-card-title">Welcome Back</h2>
-            <p class="auth-card-subtitle">Sign in to continue your next adventure.</p>
-          </div>
-
           <form id="form-login" class="auth-form-grid" novalidate>
             <div class="input-field-group">
               <div class="input-floating-wrapper">
@@ -106,6 +125,7 @@
             <div class="form-options-row">
               <label class="custom-checkbox-label">
                 <input type="checkbox" id="remember-me" class="custom-checkbox-input" />
+                <span class="checkbox-custom-box"><i data-lucide="check"></i></span>
                 <span>Remember Me</span>
               </label>
               <a href="#forgot-password" data-navigate="forgot-password" class="forgot-link">Forgot Password?</a>
@@ -122,7 +142,7 @@
             <span>OR CONTINUE WITH</span>
           </div>
 
-          <div class="social-buttons-grid social-buttons-grid--two">
+          <div class="social-buttons-grid">
             <button type="button" class="btn-social">
               <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" />
               <span>Google</span>
@@ -140,11 +160,6 @@
 
         <!-- ──────────────── 2. SIGNUP VIEW ──────────────── -->
         <div id="view-signup" class="auth-view">
-          <div class="auth-card-header">
-            <h2 class="auth-card-title">Create Account</h2>
-            <p class="auth-card-subtitle">Join 100,000+ explorers discovering Indian wilderness.</p>
-          </div>
-
           <form id="form-signup" class="auth-form-grid" novalidate>
             <!-- 2 Col First & Last Name -->
             <div class="form-row-two-col">
@@ -253,11 +268,13 @@
             <!-- Terms & Newsletter -->
             <label class="custom-checkbox-label">
               <input type="checkbox" class="custom-checkbox-input" required checked />
+              <span class="checkbox-custom-box"><i data-lucide="check"></i></span>
               <span>I agree to TrekIndia <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a></span>
             </label>
 
             <label class="custom-checkbox-label">
               <input type="checkbox" class="custom-checkbox-input" checked />
+              <span class="checkbox-custom-box"><i data-lucide="check"></i></span>
               <span>Receive weekly Himalayan trail updates & expedition guides</span>
             </label>
 
@@ -277,11 +294,6 @@
         <div id="view-forgot-password" class="auth-view">
           <div class="auth-illustration-box">
             <i data-lucide="key-round"></i>
-          </div>
-
-          <div class="auth-card-header">
-            <h2 class="auth-card-title">Forgot your password?</h2>
-            <p class="auth-card-subtitle">No worries. Enter your registered email address and we'll send you a secure reset link.</p>
           </div>
 
           <form id="form-forgot" class="auth-form-grid">
@@ -311,11 +323,6 @@
             <i data-lucide="send"></i>
           </div>
 
-          <div class="auth-card-header">
-            <h2 class="auth-card-title">Check Your Inbox</h2>
-            <p class="auth-card-subtitle">We've dispatched a password reset link to <strong>explorer@trekindia.in</strong>. Please check your inbox and spam folder.</p>
-          </div>
-
           <div class="auth-form-grid">
             <a href="https://mail.google.com" target="_blank" class="btn-cta-primary" style="text-decoration: none;">
               <span>Open Email App</span>
@@ -337,11 +344,6 @@
         <div id="view-reset-password" class="auth-view">
           <div class="auth-illustration-box">
             <i data-lucide="shield-check"></i>
-          </div>
-
-          <div class="auth-card-header">
-            <h2 class="auth-card-title">Set New Password</h2>
-            <p class="auth-card-subtitle">Choose a strong, secure password for your TrekIndia account.</p>
           </div>
 
           <form id="form-reset" class="auth-form-grid">
@@ -412,11 +414,6 @@
             <i data-lucide="shield-alert"></i>
           </div>
 
-          <div class="auth-card-header">
-            <h2 class="auth-card-title">Verify Your Email</h2>
-            <p class="auth-card-subtitle">Enter the 6-digit verification code sent to <strong>explorer@trekindia.in</strong>.</p>
-          </div>
-
           <div class="otp-container">
             <input type="text" maxlength="1" class="otp-box" autofocus />
             <input type="text" maxlength="1" class="otp-box" />
@@ -453,11 +450,6 @@
             </svg>
           </div>
 
-          <div class="auth-card-header" style="text-align: center;">
-            <h2 class="auth-card-title">Password Updated!</h2>
-            <p class="auth-card-subtitle">You're all set. Your credentials have been successfully updated. Continue your adventure with TrekIndia.</p>
-          </div>
-
           <div class="auth-form-grid">
             <a href="#login" data-navigate="login" class="btn-cta-primary" style="text-decoration: none;">
               <span>Go to Login</span>
@@ -472,15 +464,24 @@
         </div>
 
       </div>
-    </section>
 
+      <!-- Trust & Compliance Footer Badge -->
+      <div class="card-bottom-trust">
+        <span><i data-lucide="shield-check"></i> Encrypted 256-Bit SSL</span>
+        <span class="dot-separator">•</span>
+        <span>Est. 2024</span>
+      </div>
+
+    </div>
   </main>
 
   <!-- Application Engine Script -->
   <script src="auth.js"></script>
   <script>
     // Initialize Lucide Icons
-    lucide.createIcons();
+    if (window.lucide) {
+      lucide.createIcons();
+    }
   </script>
 </body>
 </html>

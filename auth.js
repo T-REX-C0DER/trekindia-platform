@@ -1,62 +1,64 @@
 /* ==========================================================================
    TREKINDIA — INTERACTIVE AUTHENTICATION APPLICATION ENGINE
-   Features: 7-Screen Routing, Live Password Strength Calculator, 6-Digit OTP,
-   Background Particles Canvas, Parallax, Micro-interactions & Theme Switching
+   Features: 7-Screen Routing, Dynamic Tab Sliding Indicator, Full Canvas Particles,
+   Cursor-Tracking Aurora Glow Orb, Password Strength Calculator, 6-Digit OTP,
+   3D Card Parallax Tilt & Theme Toggle
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
   // ─── 1. STATE & ROUTING ENGINE ──────────────────────────────────────────
   const views = document.querySelectorAll('.auth-view');
-  const screenSwitcher = document.getElementById('screen-switcher');
+  const tabsNav = document.getElementById('auth-tabs-nav');
+  const tabButtons = document.querySelectorAll('.auth-tab-btn');
   const themeToggleBtn = document.getElementById('theme-toggle-btn');
   const themeIcon = document.getElementById('theme-icon');
 
-  // Hero section dynamic headlines per view
+  // Dynamic headlines per view
   const heroContentMap = {
     'login': {
       badge: 'EXPLORE THE HIMALAYAS',
       headline: 'Welcome Back, Explorer.',
-      subheading: 'Continue discovering India\'s most breathtaking trekking experiences.'
+      subheading: 'Continue discovering India\'s most breathtaking trekking experiences, high-altitude passes, and alpine wilderness.'
     },
     'signup': {
       badge: 'JOIN THE ADVENTURE',
       headline: 'Begin Your Ascent.',
-      subheading: 'Create an account to unlock exclusive high-altitude trails & expert guides.'
+      subheading: 'Create an explorer account to unlock exclusive high-altitude trails, expedition planning & expert guides.'
     },
     'forgot-password': {
       badge: 'ACCOUNT RECOVERY',
       headline: 'Recover Your Key.',
-      subheading: 'We will send a secure link to reset your TrekIndia account password.'
+      subheading: 'Enter your registered email and we\'ll dispatch a secure password reset link to your inbox.'
     },
     'email-sent': {
       badge: 'INBOX VERIFICATION',
       headline: 'Check Your Inbox.',
-      subheading: 'A password reset link has been dispatched to your email address.'
+      subheading: 'A secure password reset link has been dispatched. Please check your inbox and spam folder.'
     },
     'reset-password': {
       badge: 'SECURITY RESET',
       headline: 'Set New Password.',
-      subheading: 'Choose a strong, unique password to safeguard your account.'
+      subheading: 'Choose a strong, unique password to safeguard your TrekIndia explorer profile.'
     },
     'verify-email': {
       badge: 'IDENTITY CONFIRMATION',
       headline: 'Verify Your Email.',
-      subheading: 'Enter the 6-digit code sent to your email to complete registration.'
+      subheading: 'Enter the 6-digit verification code sent to your email address to complete registration.'
     },
     'success': {
       badge: 'JOURNEY READY',
       headline: 'Password Updated!',
-      subheading: 'Your credentials have been updated successfully. Adventure awaits.'
+      subheading: 'Your credentials have been updated successfully. Your next Himalayan adventure awaits.'
     }
   };
 
   function navigateToView(viewId) {
     if (!viewId) viewId = 'login';
-    
+
     // Hide all views
     views.forEach(v => v.classList.remove('active'));
 
-    // Target view
+    // Show target view
     const targetView = document.getElementById(`view-${viewId}`);
     if (targetView) {
       targetView.classList.add('active');
@@ -66,17 +68,30 @@ document.addEventListener('DOMContentLoaded', () => {
       viewId = 'login';
     }
 
-    // Sync select dropdown if available
-    if (screenSwitcher) {
-      screenSwitcher.value = viewId;
+    // Toggle Tab Bar Visibility (Only visible for login & signup)
+    if (tabsNav) {
+      if (viewId === 'login' || viewId === 'signup') {
+        tabsNav.style.display = 'flex';
+        tabsNav.setAttribute('data-active-tab', viewId);
+        
+        tabButtons.forEach(btn => {
+          if (btn.getAttribute('data-tab') === viewId) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      } else {
+        tabsNav.style.display = 'none';
+      }
     }
 
-    // Sync URL hash without triggering scroll jump
+    // Sync URL hash without triggering page jump
     if (window.location.hash !== `#${viewId}`) {
       history.pushState(null, null, `#${viewId}`);
     }
 
-    // Update Left Panel Content dynamically
+    // Update Hero Content dynamically
     updateHeroText(viewId);
   }
 
@@ -104,14 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('hashchange', handleHashChange);
   handleHashChange();
 
-  // Screen Switcher Dropdown Listener
-  if (screenSwitcher) {
-    screenSwitcher.addEventListener('change', (e) => {
-      navigateToView(e.target.value);
-    });
-  }
-
-  // Intercept data-navigate links
+  // Intercept data-navigate links & buttons
   document.addEventListener('click', (e) => {
     const link = e.target.closest('[data-navigate]');
     if (link) {
@@ -122,7 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─── 2. DARK / LIGHT THEME TOGGLE ──────────────────────────────────────
-  /* ─── TREKINDIA BRAND LOGO SYSTEM ─────────────────────────── */
   const BrandLogoSystem = {
     lightAssetSrc: 'whitebg_logo_processed.png',
     darkAssetSrc: 'darkbg_logo_processed.png',
@@ -263,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Setup validators for Signup & Reset Password forms
   setupPasswordValidator('signup-password', 'signup-strength-bar', 'signup-strength-text', 'signup-checklist');
   setupPasswordValidator('reset-password-input', 'reset-strength-bar', 'reset-strength-text', 'reset-checklist');
 
@@ -273,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
     box.addEventListener('input', (e) => {
       const value = e.target.value;
       if (value.length >= 1) {
-        // Keep last typed char
         box.value = value.charAt(value.length - 1);
         if (idx < otpBoxes.length - 1) {
           otpBoxes[idx + 1].focus();
@@ -336,7 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── 6. BUTTON RIPPLE EFFECT & FORM SUBMISSIONS ────────────────────────
   document.querySelectorAll('.btn-cta-primary').forEach(btn => {
     btn.addEventListener('click', function (e) {
-      // Create ripple element
       const circle = document.createElement('span');
       const diameter = Math.max(btn.clientWidth, btn.clientHeight);
       const radius = diameter / 2;
@@ -354,13 +358,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ─── 6. REAL BACKEND AUTH INTEGRATION & UI FEEDBACK ────────────────────
   function showFormError(form, message) {
     let errorBox = form.querySelector('.auth-error-banner');
     if (!errorBox) {
       errorBox = document.createElement('div');
       errorBox.className = 'auth-error-banner';
-      errorBox.style.cssText = 'background: rgba(220, 53, 69, 0.12); border: 1px solid rgba(220, 53, 69, 0.4); color: #e63946; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px;';
+      errorBox.style.cssText = 'background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; margin-bottom: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(10px);';
       form.insertBefore(errorBox, form.firstChild);
     }
     errorBox.innerHTML = `<span style="font-size: 1.1rem; line-height: 1;">⚠️</span> <span>${message}</span>`;
@@ -512,7 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-
   // Verify OTP button simulation
   const verifyBtn = document.getElementById('btn-verify-otp');
   if (verifyBtn) {
@@ -527,16 +529,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ─── 7. ANIMATED PARTICLES CANVAS FOR MIST & STARS ────────────────────
+  // ─── 7. ANIMATED PARTICLES CANVAS FOR AURORA STARS & SNOW DUST ─────────
   const canvas = document.getElementById('particles-canvas');
   if (canvas) {
     const ctx = canvas.getContext('2d');
     let particles = [];
-    const particleCount = 45;
+    const particleCount = 70;
 
     function resizeCanvas() {
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
 
     window.addEventListener('resize', resizeCanvas);
@@ -551,9 +553,11 @@ document.addEventListener('DOMContentLoaded', () => {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
         this.radius = Math.random() * 2 + 0.5;
-        this.opacity = Math.random() * 0.6 + 0.2;
-        this.speedX = (Math.random() - 0.5) * 0.3;
-        this.speedY = -Math.random() * 0.4 - 0.1; // Gentle upwards drift
+        this.opacity = Math.random() * 0.7 + 0.2;
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.speedY = -Math.random() * 0.45 - 0.15; // Upward ambient drift
+        // Color variation between emerald glow and white stars
+        this.isEmerald = Math.random() > 0.65;
       }
 
       update() {
@@ -568,7 +572,11 @@ document.addEventListener('DOMContentLoaded', () => {
       draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        if (this.isEmerald) {
+          ctx.fillStyle = `rgba(52, 211, 153, ${this.opacity})`;
+        } else {
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        }
         ctx.fill();
       }
     }
@@ -589,22 +597,41 @@ document.addEventListener('DOMContentLoaded', () => {
     animateParticles();
   }
 
-  // ─── 8. MOUSE PARALLAX EFFECT FOR LEFT HERO IMAGE ──────────────────────
-  const heroPanel = document.querySelector('.auth-hero-panel');
-  const heroBgImage = document.querySelector('.hero-bg-image');
+  // ─── 8. CURSOR FOLLOW GLOW ORB & 3D CARD PARALLAX ──────────────────────
+  const cursorOrb = document.getElementById('cursor-glow-orb');
+  const authCard = document.getElementById('auth-glass-card');
+  const bgImage = document.querySelector('.bg-mountain-image');
 
-  if (heroPanel && heroBgImage) {
-    heroPanel.addEventListener('mousemove', (e) => {
-      const { clientX, clientY } = e;
-      const { left, top, width, height } = heroPanel.getBoundingClientRect();
-      const xPercent = (clientX - left) / width - 0.5;
-      const yPercent = (clientY - top) / height - 0.5;
+  document.addEventListener('mousemove', (e) => {
+    const { clientX, clientY } = e;
 
-      heroBgImage.style.transform = `scale(1.06) translate(${xPercent * -15}px, ${yPercent * -15}px)`;
-    });
+    // Position cursor glow orb smoothly
+    if (cursorOrb) {
+      cursorOrb.style.left = `${clientX}px`;
+      cursorOrb.style.top = `${clientY}px`;
+    }
 
-    heroPanel.addEventListener('mouseleave', () => {
-      heroBgImage.style.transform = `scale(1.05) translate(0px, 0px)`;
-    });
-  }
+    // Subtle 3D card tilt & shadow shift
+    if (authCard) {
+      const xPercent = (clientX / window.innerWidth - 0.5);
+      const yPercent = (clientY / window.innerHeight - 0.5);
+
+      const rotateX = yPercent * -6;
+      const rotateY = xPercent * 6;
+      authCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+
+      if (bgImage) {
+        bgImage.style.transform = `scale(1.06) translate(${xPercent * -18}px, ${yPercent * -18}px)`;
+      }
+    }
+  });
+
+  document.addEventListener('mouseleave', () => {
+    if (authCard) {
+      authCard.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg)`;
+    }
+    if (bgImage) {
+      bgImage.style.transform = `scale(1.04) translate(0px, 0px)`;
+    }
+  });
 });

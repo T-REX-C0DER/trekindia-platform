@@ -71,23 +71,54 @@
       position: absolute;
       top: 60px;
       right: 20px;
-      width: 220px;
+      width: 230px;
       background: var(--card-bg, #ffffff);
       border: 1px solid var(--border, rgba(0,0,0,0.1));
       box-shadow: 0 12px 32px rgba(0,0,0,0.15);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 12px;
       z-index: 9999;
       font-family: 'Inter', sans-serif;
       animation: fadeInDown 0.2s ease-out;
     `;
 
+    const avatarHtml = user.profile_image
+      ? `<img src="${escapeHtml(user.profile_image)}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;" />`
+      : `<div style="width: 36px; height: 36px; border-radius: 50%; background: #285D2A; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem;">
+          ${(user.full_name || user.username || 'U').charAt(0).toUpperCase()}
+        </div>`;
+
     menu.innerHTML = `
-      <div style="padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(128,128,128,0.2);">
-        <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-heading, #111); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(user.full_name)}</div>
-        <div style="font-size: 0.8rem; color: var(--text-muted, #666); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(user.email)}</div>
+      <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #E1E7E2;">
+        ${avatarHtml}
+        <div style="min-width: 0;">
+          <div style="font-weight: 700; font-size: 0.9rem; color: #17231A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(user.full_name)}</div>
+          <div style="font-size: 0.75rem; color: #6B766F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${escapeHtml(user.username)}</div>
+        </div>
       </div>
-      <button id="btn-logout-dropdown" style="width: 100%; padding: 8px 12px; background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.2); color: #dc3545; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+      <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid #E1E7E2;">
+        <a href="/profile#overview" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#285D2A" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Profile Dashboard
+        </a>
+        <a href="/profile#treks" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#285D2A" stroke-width="2"><path d="M8 3l4 8 5-5 4 15H3L8 3z"></path></svg>
+          My Treks
+        </a>
+        <a href="/profile#saved" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#285D2A" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          Saved Treks
+        </a>
+        <a href="/profile#badges" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C8A65A" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+          Badges & Achievements
+        </a>
+        <a href="/profile#settings" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B766F" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
+        </a>
+      </div>
+      <button id="btn-logout-dropdown" style="width: 100%; padding: 8px 12px; background: rgba(220, 53, 69, 0.08); border: 1px solid rgba(220, 53, 69, 0.2); color: #dc3545; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s;" onmouseover="this.style.background='rgba(220, 53, 69, 0.15)'" onmouseout="this.style.background='rgba(220, 53, 69, 0.08)'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         Log Out
       </button>

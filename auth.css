@@ -1,93 +1,91 @@
 /* ==========================================================================
-   TREKINDIA — FLAGSHIP LUXURY AUTHENTICATION SYSTEM
-   Modern, ultra-clean design system inspired by Linear, Stripe, Apple & Vercel.
-   Features perfect spacing, crisp typography, and refined micro-interactions.
+   TREKINDIA — ULTRA-PREMIUM UNIFIED GLASSMORPHIC AUTHENTICATION SYSTEM
+   Aesthetic, Flagship Design System inspired by Linear, Apple, Vercel & Stripe.
+   Features a single unified glass card, atmospheric aurora backdrop, neon accents,
+   smooth sliding tabs, glowing floating labels & interactive particle canvas.
    ========================================================================== */
 
 /* ─── 1. DESIGN TOKENS & SYSTEM VARIABLES ──────────────────────────────── */
 :root {
-  /* Brand Colors */
-  --primary:           #15803D;
-  --primary-hover:     #166534;
-  --primary-active:    #14532D;
-  --primary-light:     #F0FDF4;
-  --primary-ring:      rgba(21, 128, 61, 0.20);
-  --brand-trek:        #0F172A;
-  --brand-india:       #15803D;
+  /* Brand Palette */
+  --primary:             #10B981;
+  --primary-hover:       #059669;
+  --primary-glow:        rgba(16, 185, 129, 0.35);
+  --primary-ring:        rgba(16, 185, 129, 0.22);
+  --brand-trek:          #0F172A;
+  --brand-india:         #10B981;
 
   /* Premium Gradients */
-  --btn-bg:            linear-gradient(135deg, #16803D 0%, #059669 100%);
-  --btn-bg-hover:      linear-gradient(135deg, #156534 0%, #047857 100%);
+  --btn-bg:              linear-gradient(135deg, #10B981 0%, #047857 100%);
+  --btn-bg-hover:        linear-gradient(135deg, #34D399 0%, #059669 100%);
+  --accent-glow-gradient: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0) 70%);
 
-  /* Surfaces — Light Mode */
-  --bg-page:           #F8FAF8;
-  --card-bg:           #FFFFFF;
-  --card-bg-subtle:    #F9FAFB;
-  --input-bg:          #FFFFFF;
+  /* Surfaces — Light Mode Glass */
+  --bg-viewport:         #060B11;
+  --glass-bg:            rgba(255, 255, 255, 0.86);
+  --glass-bg-subtle:     rgba(243, 244, 246, 0.85);
+  --glass-border:        rgba(255, 255, 255, 0.65);
+  --glass-border-inner:  rgba(0, 0, 0, 0.08);
+  --input-bg:            rgba(255, 255, 255, 0.95);
+  --input-border:        rgba(209, 213, 219, 0.8);
 
-  /* Typography Colors */
-  --txt-primary:       #0F172A;
-  --txt-secondary:     #64748B;
-  --txt-tertiary:      #94A3B8;
-
-  /* Borders */
-  --border:            #E2E8F0;
-  --border-hover:      #CBD5E1;
-  --border-focus:      #15803D;
+  /* Typography Colors — Light Mode */
+  --txt-primary:         #0F172A;
+  --txt-secondary:       #475569;
+  --txt-tertiary:        #94A3B8;
 
   /* Shadows */
-  --shadow-card:       0 2px 4px rgba(0,0,0,0.02), 0 12px 32px rgba(15,23,42,0.06);
-  --shadow-input:      0 1px 2px rgba(0,0,0,0.03);
-  --shadow-btn:        0 4px 16px rgba(21, 128, 61, 0.28);
-  --shadow-btn-hover:  0 8px 24px rgba(21, 128, 61, 0.38);
+  --shadow-card:         0 25px 60px rgba(0, 0, 0, 0.35), 0 0 50px rgba(16, 185, 129, 0.15);
+  --shadow-input:        0 2px 6px rgba(0, 0, 0, 0.03);
+  --shadow-btn:          0 6px 20px rgba(16, 185, 129, 0.32);
+  --shadow-btn-hover:    0 10px 28px rgba(16, 185, 129, 0.45);
 
   /* Radii */
-  --r-card:   24px;
-  --r-inner:  16px;
-  --r-btn:    12px;
-  --r-input:  12px;
+  --r-card:   28px;
+  --r-inner:  18px;
+  --r-btn:    14px;
+  --r-input:  14px;
   --r-pill:   9999px;
 
   /* Fonts */
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-brand: 'Manrope', 'Inter', sans-serif;
 
   /* Motion & Transitions */
-  --ease:        cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --t-fast:      150ms var(--ease);
-  --t-normal:    250ms var(--ease);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast:      160ms var(--ease-spring);
+  --t-normal:    280ms var(--ease-spring);
 }
 
 /* Dark Mode Overrides */
 [data-theme="dark"],
 body.dark {
-  --bg-page:         #090D16;
-  --card-bg:         #111827;
-  --card-bg-subtle:  #1F2937;
-  --input-bg:        #1F2937;
+  --bg-viewport:         #030712;
+  --glass-bg:            rgba(15, 23, 42, 0.78);
+  --glass-bg-subtle:     rgba(30, 41, 59, 0.65);
+  --glass-border:        rgba(255, 255, 255, 0.16);
+  --glass-border-inner:  rgba(255, 255, 255, 0.06);
+  --input-bg:            rgba(15, 23, 42, 0.75);
+  --input-border:        rgba(51, 65, 85, 0.85);
 
-  --txt-primary:     #F9FAFB;
-  --txt-secondary:   #9CA3AF;
-  --txt-tertiary:    #6B7280;
+  --txt-primary:         #F8FAFC;
+  --txt-secondary:       #94A3B8;
+  --txt-tertiary:        #64748B;
 
-  --border:          #1F2937;
-  --border-hover:    #374151;
-  --border-focus:    #22C55E;
+  --brand-trek:          #FFFFFF;
+  --brand-india:         #34D399;
 
-  --brand-trek:      #FFFFFF;
-  --brand-india:     #22C55E;
+  --primary:             #34D399;
+  --primary-hover:       #10B981;
+  --primary-glow:        rgba(52, 211, 153, 0.35);
+  --primary-ring:        rgba(52, 211, 153, 0.25);
 
-  --primary:         #22C55E;
-  --primary-hover:   #16A34A;
-  --primary-light:   rgba(34, 197, 94, 0.1);
-  --primary-ring:    rgba(34, 197, 94, 0.2);
-
-  --shadow-card:     0 4px 12px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.6);
-  --shadow-btn:      0 4px 16px rgba(34, 197, 94, 0.25);
-  --shadow-btn-hover:0 8px 24px rgba(34, 197, 94, 0.38);
+  --shadow-card:         0 25px 70px rgba(0, 0, 0, 0.65), 0 0 60px rgba(52, 211, 153, 0.18);
+  --shadow-btn:          0 6px 22px rgba(52, 211, 153, 0.3);
+  --shadow-btn-hover:    0 10px 30px rgba(52, 211, 153, 0.45);
 }
 
-/* ─── 2. RESET & GLOBAL STYLES ────────────────────────────────────────────── */
+/* ─── 2. RESET & GLOBAL BASE ─────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -95,20 +93,22 @@ body.dark {
 }
 
 html, body {
-  height: 100%;
-  font-family: var(--font);
-  background-color: var(--bg-page);
+  min-height: 100vh;
+  width: 100%;
+  font-family: var(--font-sans);
+  background-color: var(--bg-viewport);
   color: var(--txt-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  position: relative;
 }
 
 a {
   color: var(--primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   transition: color var(--t-fast);
 }
 a:hover {
@@ -121,106 +121,150 @@ button, input, select, textarea {
   color: inherit;
 }
 
-/* ─── 3. MAIN SPLIT ROOT CONTAINER (60% / 40%) ────────────────────────────── */
-.auth-root-container {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  min-height: 100vh;
+/* ─── 3. IMMERSIVE FULL-VIEWPORT BACKDROP LAYER ─────────────────────────── */
+.auth-viewport-bg {
+  position: fixed;
+  inset: 0;
   width: 100vw;
+  height: 100vh;
+  z-index: 1;
   overflow: hidden;
+  pointer-events: none;
 }
 
-/* ─── 4. LEFT HERO PANEL (CINEMATIC MOUNTAIN VIEW) ────────────────────────── */
-.auth-hero-panel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 56px 64px;
-  overflow: hidden;
-  background-color: #030712;
-  color: #FFFFFF;
-}
-
-/* Hero Background Image */
-.hero-bg-image {
+.bg-mountain-image {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center 30%;
-  filter: brightness(0.7) contrast(1.1);
+  filter: brightness(0.7) contrast(1.12) saturate(1.15);
   transform: scale(1.04);
-  transition: transform 300ms ease-out;
-  z-index: 1;
+  transition: transform 600ms ease-out;
+  animation: subtleKenBurns 24s ease-in-out infinite alternate;
 }
 
-/* Multi-layer Gradient Overlay */
-.hero-overlay-gradient {
+@keyframes subtleKenBurns {
+  0%   { transform: scale(1.04) translate(0, 0); }
+  100% { transform: scale(1.09) translate(-10px, -8px); }
+}
+
+.bg-overlay-vignette {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(3, 7, 18, 0.65) 0%, rgba(5, 46, 22, 0.4) 50%, rgba(3, 7, 18, 0.88) 100%),
-    radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.15) 0%, transparent 60%);
-  z-index: 2;
-  pointer-events: none;
+    radial-gradient(ellipse at center, rgba(3, 7, 18, 0.25) 0%, rgba(3, 7, 18, 0.8) 100%),
+    linear-gradient(180deg, rgba(3, 7, 18, 0.65) 0%, rgba(5, 46, 22, 0.25) 50%, rgba(3, 7, 18, 0.88) 100%);
 }
 
-/* Canvas Particle Dust Layer */
+.bg-overlay-radial {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 25%, rgba(52, 211, 153, 0.16) 0%, transparent 65%);
+}
+
 #particles-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 3;
-  pointer-events: none;
-  opacity: 0.6;
+  z-index: 2;
+  opacity: 0.85;
 }
 
-/* Horizontal Fog / Mist */
-.fog-layer {
+/* Cursor Follow Glow Orb */
+.cursor-glow-orb {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg,
-    transparent 50%,
-    rgba(5, 46, 22, 0.2) 75%,
-    rgba(3, 7, 18, 0.5) 100%
-  );
-  z-index: 3;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.22) 0%, rgba(16, 185, 129, 0) 70%);
+  filter: blur(50px);
   pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: width 300ms ease, height 300ms ease;
+  z-index: 2;
 }
 
-.gradient-blob { display: none; }
+/* Ambient Glowing Orbs */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  animation: floatOrb 12s ease-in-out infinite alternate;
+}
+.orb-top-left {
+  top: -100px;
+  left: -100px;
+  width: 450px;
+  height: 450px;
+  background: rgba(52, 211, 153, 0.2);
+}
+.orb-bottom-right {
+  bottom: -120px;
+  right: -100px;
+  width: 500px;
+  height: 500px;
+  background: rgba(5, 150, 105, 0.22);
+  animation-delay: -4s;
+}
+.orb-center-accent {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 550px;
+  height: 550px;
+  background: rgba(16, 185, 129, 0.1);
+  animation-delay: -8s;
+}
 
-/* Hero Header Nav */
-.hero-header-nav {
-  position: relative;
-  z-index: 10;
+@keyframes floatOrb {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(35px, -30px) scale(1.12); }
+  100% { transform: translate(-25px, 40px) scale(0.95); }
+}
+
+/* ─── 4. TOP GLASS NAVIGATION BAR ────────────────────────────────────────── */
+.auth-top-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  padding: 0 36px;
+}
+
+.header-container {
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* TrekIndia Brand Header Component */
 .trekindia-brand {
   display: inline-flex;
   align-items: center;
   gap: 14px;
   text-decoration: none;
-  cursor: pointer;
   user-select: none;
-  transition: opacity var(--t-fast);
+  transition: transform var(--t-fast), opacity var(--t-fast);
 }
 .trekindia-brand:hover {
-  opacity: 0.92;
+  transform: translateY(-1px);
   text-decoration: none;
 }
 
 .brand-icon-wrap {
   position: relative;
-  width: 76px;
-  height: 76px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -233,7 +277,7 @@ button, input, select, textarea {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: opacity 250ms var(--ease);
+  transition: opacity var(--t-normal);
 }
 .brand-icon-img.light-icon { opacity: 1; }
 .brand-icon-img.dark-icon  { opacity: 0; }
@@ -244,142 +288,266 @@ body.dark .brand-icon-img.light-icon { opacity: 0; }
 body.dark .brand-icon-img.dark-icon  { opacity: 1; }
 
 .brand-wordmark {
-  font-family: 'Manrope', 'Inter', sans-serif;
-  font-size: 26px;
+  font-family: var(--font-brand);
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1;
+  letter-spacing: -0.03em;
   display: flex;
   align-items: center;
-  white-space: nowrap;
 }
 .brand-wordmark .brand-trek  { color: #FFFFFF; }
-.brand-wordmark .brand-india { color: #4ADE80; }
+.brand-wordmark .brand-india { color: #34D399; }
 
-/* Hero Center Body Content */
-.hero-body-content {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: all var(--t-fast);
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+.header-home-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #FFFFFF;
+  text-decoration: none;
+  transform: translateY(-1.5px);
+}
+.header-home-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.theme-switch-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+.theme-switch-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.45);
+  transform: scale(1.08);
+}
+.theme-switch-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ─── 5. MAIN UNIFIED FLOATING AUTH WRAPPER ───────────────────────────── */
+.auth-main-wrapper {
   position: relative;
   z-index: 10;
-  max-width: 540px;
-  flex: 1;
+  min-height: 100vh;
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 48px 0;
+  padding: 100px 20px 48px;
+}
+
+/* ─── 6. LUXURY GLASSMORPHIC AUTH CARD ──────────────────────────────────── */
+.auth-glass-card {
+  width: 100%;
+  max-width: 500px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border-radius: var(--r-card);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+  padding: 42px 38px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 400ms var(--ease-spring), box-shadow 400ms var(--ease-spring), background 300ms var(--ease-spring);
+}
+
+.auth-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent 0%, rgba(52, 211, 153, 0.8) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ─── 7. CARD DYNAMIC HERO HEADER ───────────────────────────────────────── */
+.card-hero-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.hero-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  background: var(--primary-glow);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  margin-bottom: 14px;
+}
+.hero-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--primary);
+  animation: pulseDot 2s infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.85); }
+}
+
+.hero-badge-text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+  text-transform: uppercase;
 }
 
 .hero-headline {
-  font-size: clamp(38px, 4vw, 54px);
+  font-family: var(--font-brand);
+  font-size: 28px;
   font-weight: 800;
-  line-height: 1.1;
   letter-spacing: -0.03em;
-  margin-bottom: 20px;
-  color: #FFFFFF;
+  color: var(--txt-primary);
+  line-height: 1.25;
+  margin-bottom: 8px;
 }
 
 .hero-subheading {
-  font-size: 18px;
-  line-height: 1.65;
-  color: rgba(241, 245, 249, 0.82);
-  font-weight: 400;
-  max-width: 480px;
+  font-size: 14px;
+  color: var(--txt-secondary);
+  line-height: 1.55;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
-/* Hero Footer Credits */
-.hero-footer-credit {
+/* ─── 8. DYNAMIC NAVIGATION TABS (LOGIN / SIGNUP) ────────────────────────── */
+.auth-tabs-nav {
   position: relative;
-  z-index: 10;
-  font-size: 12px;
+  display: flex;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-inner);
+  border-radius: 16px;
+  padding: 4px;
+  margin-bottom: 28px;
+}
+
+.tab-sliding-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: var(--glass-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--glass-border);
+  transition: transform 300ms var(--ease-spring);
+  z-index: 1;
+}
+
+.auth-tabs-nav[data-active-tab="signup"] .tab-sliding-indicator {
+  transform: translateX(100%);
+}
+
+.auth-tab-btn {
+  flex: 1;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--txt-secondary);
+  font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
-  display: flex;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
-  gap: 0;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.hero-footer-credit span::after {
-  content: "•";
-  margin: 0 14px;
-  color: rgba(255, 255, 255, 0.25);
-}
-.hero-footer-credit span:last-child::after { content: ""; margin: 0; }
-
-/* ─── 5. RIGHT AUTHENTICATION FORM PANEL ─────────────────────────────────── */
-.auth-form-panel {
-  display: flex;
-  flex-direction: column;
   justify-content: center;
-  align-items: center;
-  padding: 48px 36px;
-  overflow-y: auto;
-  background-color: var(--bg-page);
-  transition: background-color var(--t-normal);
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+  transition: color var(--t-fast);
+}
+.auth-tab-btn:hover {
+  color: var(--txt-primary);
+}
+.auth-tab-btn.active {
+  color: var(--primary);
+  font-weight: 700;
+}
+.auth-tab-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
-/* ─── 6. AUTH CARD CONTAINER ─────────────────────────────────────────────── */
-.auth-card-container {
-  width: 100%;
-  max-width: 460px;
-  background: var(--card-bg);
-  border-radius: var(--r-card);
-  padding: 44px 38px;
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border);
-  transition: background-color var(--t-normal), border-color var(--t-normal), box-shadow var(--t-normal);
+/* ─── 9. CARD VIEWS CONTAINER & TRANSITIONS ─────────────────────────────── */
+.auth-views-container {
+  position: relative;
 }
 
-/* View Switching Animation */
 .auth-view {
   display: none;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 280ms var(--ease), transform 280ms var(--ease);
+  transform: translateY(14px) scale(0.98);
+  transition: opacity 300ms var(--ease-spring), transform 300ms var(--ease-spring);
 }
 .auth-view.active {
   display: block;
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
-/* Card Header Section */
-.auth-card-header {
-  margin-bottom: 28px;
-}
-.auth-card-title {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: var(--txt-primary);
-  margin-bottom: 8px;
-  line-height: 1.25;
-}
-.auth-card-subtitle {
-  font-size: 14.5px;
-  color: var(--txt-secondary);
-  line-height: 1.5;
-}
-
-/* Illustration Icon Badge Box */
+/* Illustration Icon Badge for Utility Views */
 .auth-illustration-box {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: var(--primary-light);
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--primary-glow);
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 22px;
-  border: 1px solid rgba(21, 128, 61, 0.15);
+  margin: 0 auto 24px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
 }
 .auth-illustration-box svg,
 .auth-illustration-box i {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
 }
 
-/* ─── 7. FORM FIELDS & FLOATING LABELS ───────────────────────────────────── */
+/* ─── 10. FORM INPUTS & FLOATING LABELS ─────────────────────────────────── */
 .auth-form-grid {
   display: flex;
   flex-direction: column;
@@ -406,7 +574,7 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
 
 .input-leading-icon {
   position: absolute;
-  left: 16px;
+  left: 18px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--txt-tertiary);
@@ -415,7 +583,7 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   align-items: center;
   justify-content: center;
   transition: color var(--t-fast);
-  z-index: 1;
+  z-index: 2;
 }
 .input-leading-icon svg,
 .input-leading-icon i {
@@ -425,51 +593,50 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
 
 .floating-input {
   width: 100%;
-  height: 54px;
-  padding: 22px 46px 6px 46px;
-  background-color: var(--input-bg);
-  border: 1.5px solid var(--border);
+  height: 56px;
+  padding: 24px 46px 6px 48px;
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
   border-radius: var(--r-input);
   font-size: 14.5px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--txt-primary);
   outline: none;
   box-shadow: var(--shadow-input);
-  transition: border-color var(--t-fast), box-shadow var(--t-fast), background-color var(--t-normal);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-normal);
 }
 
 .floating-input.no-icon {
-  padding-left: 16px;
+  padding-left: 18px;
 }
 .floating-input.no-icon ~ .floating-label {
-  left: 16px;
+  left: 18px;
 }
 
 .floating-label {
   position: absolute;
-  left: 46px;
+  left: 48px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 14px;
   color: var(--txt-secondary);
   pointer-events: none;
-  transition: all 180ms var(--ease);
+  transition: all 180ms var(--ease-spring);
 }
 
-/* Floating Label Focused & Filled States */
 .floating-input:focus ~ .floating-label,
 .floating-input:not(:placeholder-shown) ~ .floating-label {
   top: 13px;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   color: var(--primary);
   transform: none;
 }
 
 .floating-input:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 4px var(--primary-ring);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-ring), 0 4px 14px rgba(16, 185, 129, 0.1);
 }
 
 .floating-input:focus ~ .input-leading-icon,
@@ -491,11 +658,16 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  transition: color var(--t-fast);
+  border-radius: 8px;
+  transition: color var(--t-fast), background var(--t-fast);
+  z-index: 3;
 }
 .password-toggle-btn:hover {
   color: var(--txt-primary);
+  background: rgba(0, 0, 0, 0.05);
+}
+[data-theme="dark"] .password-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 .password-toggle-btn svg,
 .password-toggle-btn i {
@@ -530,12 +702,12 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   display: block;
 }
 
-/* ─── 8. FORM OPTIONS & CHECKBOXES ───────────────────────────────────────── */
+/* ─── 11. CHECKBOXES & OPTIONS ───────────────────────────────────────────── */
 .form-options-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .custom-checkbox-label {
@@ -547,15 +719,45 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   cursor: pointer;
   user-select: none;
   line-height: 1.4;
+  position: relative;
 }
 
 .custom-checkbox-input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--primary);
-  border-radius: 4px;
-  cursor: pointer;
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-custom-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--input-border);
+  background: var(--input-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
   flex-shrink: 0;
+  transition: all var(--t-fast);
+}
+.checkbox-custom-box svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all var(--t-fast);
+}
+
+.custom-checkbox-input:checked ~ .checkbox-custom-box {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+.custom-checkbox-input:checked ~ .checkbox-custom-box svg {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .forgot-link {
@@ -569,16 +771,16 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   text-decoration: underline;
 }
 
-/* ─── 9. PRIMARY BUTTON & CTA ────────────────────────────────────────────── */
+/* ─── 12. PRIMARY BUTTON & CTA ───────────────────────────────────────────── */
 .btn-cta-primary {
   width: 100%;
-  height: 52px;
+  height: 54px;
   background: var(--btn-bg);
   color: #FFFFFF;
   border: none;
   border-radius: var(--r-btn);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -587,13 +789,13 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-btn);
-  transition: background var(--t-fast), transform 140ms var(--ease), box-shadow 140ms var(--ease);
+  transition: background var(--t-fast), transform 140ms var(--ease-spring), box-shadow 140ms var(--ease-spring);
   letter-spacing: 0.01em;
   text-decoration: none;
 }
 .btn-cta-primary:hover {
   background: var(--btn-bg-hover);
-  transform: translateY(-1.5px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-btn-hover);
 }
 .btn-cta-primary:active {
@@ -611,7 +813,7 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
 .ripple-effect {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.35);
   transform: scale(0);
   animation: ripple 580ms linear;
   pointer-events: none;
@@ -622,9 +824,9 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
 
 /* Button Loading Spinner */
 .spinner-icon {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
   border-top-color: #FFFFFF;
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
@@ -640,14 +842,18 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  transition: transform var(--t-fast);
+}
+.btn-cta-primary:hover .btn-arrow {
+  transform: translateX(3px);
 }
 
-/* ─── 10. SECONDARY OUTLINED BUTTON ─────────────────────────────────────── */
+/* Secondary Outlined Button */
 .btn-outlined {
   width: 100%;
-  height: 50px;
+  height: 52px;
   background: transparent;
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--input-border);
   border-radius: var(--r-btn);
   font-size: 14.5px;
   font-weight: 600;
@@ -661,11 +867,11 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
 }
 .btn-outlined:hover {
   border-color: var(--primary);
-  background: var(--primary-light);
+  background: var(--primary-glow);
   color: var(--primary);
 }
 
-/* ─── 11. SOCIAL LOGIN DIVIDER & BUTTONS ─────────────────────────────────── */
+/* ─── 13. SOCIAL LOGIN BUTTONS & DIVIDER ─────────────────────────────────── */
 .social-divider {
   display: flex;
   align-items: center;
@@ -673,7 +879,7 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   color: var(--txt-tertiary);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   margin: 24px 0;
 }
@@ -682,11 +888,10 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--border);
+  background: var(--glass-border-inner);
 }
 .social-divider span { padding: 0 16px; }
 
-/* 2-Column Social Buttons (Google & Apple) */
 .social-buttons-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -694,25 +899,25 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
 }
 
 .btn-social {
-  height: 46px;
-  background: var(--card-bg);
-  border: 1.5px solid var(--border);
+  height: 48px;
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
   border-radius: var(--r-input);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: 10px;
   font-size: 14px;
   font-weight: 600;
   color: var(--txt-primary);
   cursor: pointer;
-  transition: border-color var(--t-fast), background var(--t-fast), transform 120ms var(--ease), box-shadow var(--t-fast);
+  transition: border-color var(--t-fast), background var(--t-fast), transform 120ms var(--ease-spring), box-shadow var(--t-fast);
 }
 .btn-social:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-1.5px);
-  background: var(--card-bg-subtle);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  background: var(--glass-bg-subtle);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 .btn-social img,
 .btn-social svg {
@@ -720,12 +925,12 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   height: 18px;
 }
 
-/* ─── 12. PASSWORD STRENGTH METER & CHECKLIST ───────────────────────────── */
+/* ─── 14. PASSWORD STRENGTH METER ───────────────────────────────────────── */
 .password-strength-box {
   margin-top: 12px;
-  padding: 12px;
-  background: var(--card-bg-subtle);
-  border: 1px solid var(--border);
+  padding: 14px;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border-inner);
   border-radius: var(--r-input);
 }
 
@@ -734,7 +939,7 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   justify-content: space-between;
   font-size: 12px;
   color: var(--txt-secondary);
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 8px;
 }
 .strength-badge          { font-weight: 700; }
@@ -744,18 +949,18 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
 .strength-badge.strong   { color: #10B981; }
 
 .strength-bar-track {
-  height: 5px;
+  height: 6px;
   width: 100%;
-  background: var(--border);
+  background: var(--input-border);
   border-radius: var(--r-pill);
   overflow: hidden;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .strength-bar-fill {
   height: 100%;
   width: 0%;
   border-radius: var(--r-pill);
-  transition: width 300ms var(--ease), background-color 300ms var(--ease);
+  transition: width 300ms var(--ease-spring), background-color 300ms var(--ease-spring);
 }
 .strength-bar-fill.weak   { width: 25%; background-color: #EF4444; }
 .strength-bar-fill.fair   { width: 50%; background-color: #F59E0B; }
@@ -798,7 +1003,7 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   color: #FFFFFF;
 }
 
-/* ─── 13. OTP CODE BOXES ─────────────────────────────────────────────────── */
+/* ─── 15. OTP CODE BOXES ─────────────────────────────────────────────────── */
 .otp-container {
   display: flex;
   gap: 10px;
@@ -806,10 +1011,10 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   margin: 24px 0;
 }
 .otp-box {
-  width: 54px;
-  height: 60px;
+  width: 56px;
+  height: 64px;
   border-radius: var(--r-input);
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--input-border);
   background: var(--input-bg);
   text-align: center;
   font-size: 22px;
@@ -819,9 +1024,9 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
 }
 .otp-box:focus {
-  border-color: var(--border-focus);
+  border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-ring);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 .resend-timer-box {
@@ -834,7 +1039,7 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   background: none;
   border: none;
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 .resend-timer-box button:disabled {
@@ -842,18 +1047,18 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   cursor: not-allowed;
 }
 
-/* ─── 14. SUCCESS STATE ANIMATIONS ───────────────────────────────────────── */
+/* ─── 16. SUCCESS STATE ANIMATIONS ───────────────────────────────────────── */
 .success-check-circle {
-  width: 80px;
-  height: 80px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
-  background: #DCFCE7;
-  color: #166534;
+  background: var(--primary-glow);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 24px;
-  box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.12);
+  box-shadow: 0 0 0 10px rgba(16, 185, 129, 0.12);
   animation: bouncePop 550ms var(--ease-spring);
 }
 @keyframes bouncePop {
@@ -862,71 +1067,92 @@ body.dark .brand-icon-img.dark-icon  { opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
 .success-check-circle svg {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
-  animation: drawCheck 700ms 280ms forwards var(--ease);
+  animation: drawCheck 700ms 280ms forwards var(--ease-spring);
 }
 @keyframes drawCheck { to { stroke-dashoffset: 0; } }
 
-/* ─── 15. AUTH CARD FOOTER ───────────────────────────────────────────────── */
+/* ─── 17. CARD FOOTER & TRUST BADGES ─────────────────────────────────────── */
 .auth-card-footer {
   margin-top: 28px;
   padding-top: 20px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--glass-border-inner);
   text-align: center;
   font-size: 14px;
   color: var(--txt-secondary);
 }
 .auth-card-footer a {
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.trust-badge-row {
-  display: inline-flex;
+.card-bottom-trust {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--glass-border-inner);
+  display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--txt-secondary);
-  margin-top: 18px;
-  background: var(--card-bg-subtle);
-  padding: 8px 16px;
-  border-radius: var(--r-pill);
-  border: 1px solid var(--border);
+  justify-content: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--txt-tertiary);
 }
-.trust-badge-row svg,
-.trust-badge-row i {
-  width: 16px;
-  height: 16px;
+.card-bottom-trust svg {
+  width: 14px;
+  height: 14px;
   color: var(--primary);
 }
+.dot-separator {
+  color: var(--txt-tertiary);
+  opacity: 0.6;
+}
 
-/* ─── 16. RESPONSIVE MEDIA QUERIES ───────────────────────────────────────── */
-@media (max-width: 1024px) {
-  .auth-root-container {
+/* ─── 18. RESPONSIVE MEDIA QUERIES ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .auth-top-header {
+    padding: 0 20px;
+    height: 70px;
+  }
+  .auth-main-wrapper {
+    padding: 90px 16px 36px;
+  }
+  .auth-glass-card {
+    padding: 32px 24px;
+    border-radius: 24px;
+  }
+  .hero-headline {
+    font-size: 24px;
+  }
+  .hero-subheading {
+    font-size: 13.5px;
+  }
+  .form-row-two-col {
     grid-template-columns: 1fr;
-    overflow-y: auto;
   }
-  .auth-hero-panel {
-    min-height: 340px;
-    padding: 40px 32px;
+  .social-buttons-grid {
+    grid-template-columns: 1fr;
   }
-  .hero-headline { font-size: 34px; }
-  .hero-subheading { font-size: 16px; }
-  .auth-form-panel {
-    padding: 40px 20px;
+  .otp-box {
+    width: 44px;
+    height: 52px;
+    font-size: 18px;
   }
 }
 
-@media (max-width: 640px) {
-  .auth-card-container {
-    padding: 32px 20px;
-    border-radius: 20px;
+@media (max-width: 480px) {
+  .auth-top-header .brand-wordmark {
+    font-size: 18px;
   }
-  .auth-card-title { font-size: 24px; }
-  .form-row-two-col { grid-template-columns: 1fr; }
-  .social-buttons-grid { grid-template-columns: 1fr; }
-  .otp-box { width: 44px; height: 52px; font-size: 18px; }
-  .auth-form-panel { padding: 24px 16px; }
+  .header-home-btn span {
+    display: none;
+  }
+  .header-home-btn {
+    padding: 10px;
+  }
+  .auth-glass-card {
+    padding: 26px 18px;
+  }
 }

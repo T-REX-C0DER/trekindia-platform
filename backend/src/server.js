@@ -6,10 +6,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import authRoutes     from './routes/authRoutes.js';
+import profileRoutes  from './routes/profileRoutes.js';
 import trekRoutes     from './routes/trekRoutes.js';
 import stateRoutes    from './routes/stateRoutes.js';
 import districtRoutes from './routes/districtRoutes.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
+import { runMigrations }  from './config/initDb.js';
 
 dotenv.config();
 
@@ -19,6 +21,9 @@ const rootDir = path.resolve(__dirname, '../../');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Run DB migrations automatically
+runMigrations();
 
 // CORS configuration
 const clientUrl = process.env.CLIENT_URL;
@@ -37,11 +42,10 @@ if (clientUrl && !allowedOrigins.includes(clientUrl)) {
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, or same-origin static files)
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(null, true); // Permissive in dev fallback
+    return callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -53,6 +57,11 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Serve /profile to profile.html
+app.get('/profile', (req, res) => {
+  res.sendFile(path.join(rootDir, 'profile.html'));
+});
+
 // Static File Server (serves existing TrekIndia UI)
 app.use(express.static(rootDir));
 
@@ -62,8 +71,7 @@ app.get('/api/health', (req, res) => {
     success: true,
     message: 'TrekIndia API is running.'
   });
-}
-);
+});
 
 // Protected Test Route (Demonstrating requireAuth usage)
 import { requireAuth, requireRole } from './middleware/authMiddleware.js';
@@ -76,6 +84,9 @@ app.get('/api/users/me', requireAuth, (req, res) => {
 
 // Authentication V1 Routes
 app.use('/api/auth', authRoutes);
+
+// Profile API Routes
+app.use('/api/profile', profileRoutes);
 
 // Trek API Routes
 app.use('/api/treks', trekRoutes);
@@ -93,6 +104,7 @@ app.use(errorMiddleware);
 app.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(`🚀 TrekIndia Server running on http://localhost:${PORT}`);
+  console.log(`   Profile Dashboard: http://localhost:${PORT}/profile`);
   console.log(`   Healthcheck: http://localhost:${PORT}/api/health`);
   console.log(`====================================================`);
 });
