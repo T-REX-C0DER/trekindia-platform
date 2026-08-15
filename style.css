@@ -692,19 +692,19 @@ body.dark .nav-mega-card {
 }
 .hero-subtitle {
   font-size: clamp(16px, 2vw, 19px);
-  color: rgba(255,255,255,0.82);
+  color: rgba(255,255,255,0.85);
   line-height: 1.7;
-  max-width: 650px;
-  margin-bottom: 28px;
+  max-width: 680px;
+  margin-bottom: 36px;
 }
 .break-desktop { display: block; }
 .hero-ctas {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 34px;
+  margin-bottom: 42px;
 }
 .hero-ctas .btn-primary,
 .hero-ctas .btn-ghost {
@@ -2970,21 +2970,32 @@ body.dark .tooltip-info { color: #a6b095; }
   }
 }
 
-/* ─── TREK CARD PLACEHOLDER & PAGINATION ─── */
+/* ─── TREK CARD PLACEHOLDER & EXPLORE CONTROLS ─── */
 .trek-card-img-placeholder {
   width: 100%;
   height: 200px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+  background: linear-gradient(135deg, rgba(85, 107, 47, 0.08), rgba(156, 175, 136, 0.12));
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--forest);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.dark .trek-card-img-placeholder {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  color: var(--accent);
 }
 
 .skeleton-pulse {
   animation: skeletonPulse 1.5s infinite ease-in-out;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body.dark .skeleton-pulse {
   background: rgba(255, 255, 255, 0.08);
 }
+
 @keyframes skeletonPulse {
   0% { opacity: 0.3; }
   50% { opacity: 0.7; }
@@ -2994,13 +3005,149 @@ body.dark .tooltip-info { color: #a6b095; }
 .skeleton-line {
   height: 14px;
   border-radius: 6px;
+  background: rgba(0, 0, 0, 0.06);
 }
+
+body.dark .skeleton-line {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .skeleton-line.w-60 { width: 60%; }
 .skeleton-line.w-40 { width: 40%; }
 .skeleton-line.w-80 { width: 80%; }
 .skeleton-line.w-50 { width: 50%; }
 .mb-8 { margin-bottom: 8px; }
 .mb-16 { margin-bottom: 16px; }
+
+/* ─── EXPLORE SECTION CONTROLS TOOLBAR ─── */
+.explore-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  background: var(--white);
+  padding: 16px 20px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.dark .explore-controls-bar {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(156, 175, 136, 0.15);
+  box-shadow: none;
+}
+
+.explore-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  align-items: center;
+}
+
+.explore-search-icon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-secondary);
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.explore-search-input {
+  width: 100%;
+  padding: 11px 16px 11px 42px;
+  border-radius: 30px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1.5px solid rgba(85, 107, 47, 0.18);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.explore-search-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+.explore-search-input:focus {
+  background: var(--white);
+  border-color: var(--forest);
+  box-shadow: 0 0 0 3.5px rgba(85, 107, 47, 0.15);
+}
+
+body.dark .explore-search-input {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(156, 175, 136, 0.22);
+  color: var(--text);
+}
+
+body.dark .explore-search-input:focus {
+  background: rgba(0, 0, 0, 0.55);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3.5px rgba(156, 175, 136, 0.2);
+}
+
+.explore-filters-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.explore-filter-select {
+  padding: 10px 36px 10px 16px;
+  border-radius: 30px;
+  background-color: rgba(0, 0, 0, 0.03);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23707070' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  border: 1.5px solid rgba(85, 107, 47, 0.18);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  transition: all 0.2s ease;
+}
+
+.explore-filter-select:hover {
+  border-color: var(--forest);
+  background-color: rgba(85, 107, 47, 0.06);
+}
+
+.explore-filter-select:focus {
+  border-color: var(--forest);
+  box-shadow: 0 0 0 3.5px rgba(85, 107, 47, 0.15);
+}
+
+.explore-filter-select option {
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+body.dark .explore-filter-select {
+  background-color: rgba(0, 0, 0, 0.35);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a6b095' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  border-color: rgba(156, 175, 136, 0.22);
+  color: var(--text);
+}
+
+body.dark .explore-filter-select:hover {
+  border-color: var(--accent);
+  background-color: rgba(156, 175, 136, 0.1);
+}
+
+body.dark .explore-filter-select option {
+  background-color: #151c15;
+  color: #f0f5ec;
+}
 
 /* Pagination Controls */
 .explore-pagination {
@@ -3018,25 +3165,26 @@ body.dark .tooltip-info { color: #a6b095; }
   height: 38px;
   padding: 0 12px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(156, 175, 136, 0.2);
+  background: var(--white);
+  border: 1.5px solid var(--border);
   color: var(--text);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .page-btn:hover:not(.disabled) {
-  background: rgba(156, 175, 136, 0.25);
-  border-color: #9caf88;
-  color: #fff;
+  background: var(--forest);
+  border-color: var(--forest);
+  color: #ffffff;
 }
 
 .page-btn.active {
-  background: #9caf88;
-  color: #0b0f0b;
-  border-color: #9caf88;
+  background: var(--forest);
+  color: #ffffff;
+  border-color: var(--forest);
   font-weight: 700;
 }
 
@@ -3048,4 +3196,23 @@ body.dark .tooltip-info { color: #a6b095; }
 .page-ellipsis {
   color: var(--text-secondary);
   padding: 0 4px;
+}
+
+body.dark .page-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(156, 175, 136, 0.2);
+  color: var(--text);
+  box-shadow: none;
+}
+
+body.dark .page-btn:hover:not(.disabled) {
+  background: rgba(156, 175, 136, 0.25);
+  border-color: #9caf88;
+  color: #ffffff;
+}
+
+body.dark .page-btn.active {
+  background: #9caf88;
+  color: #0b0f0b;
+  border-color: #9caf88;
 }

@@ -313,8 +313,8 @@ const TrekExplorer = {
       this.gridEl.innerHTML = `
         <div class="explore-empty-state" style="grid-column:1/-1;text-align:center;padding:60px 20px;">
           <div style="font-size:48px;margin-bottom:16px;">🏔️</div>
-          <h3 style="font-size:20px;font-weight:700;margin-bottom:8px;color:var(--color-text);">No treks found</h3>
-          <p style="color:var(--color-text-muted);font-size:14px;">Try adjusting your filters or search terms.</p>
+          <h3 style="font-size:20px;font-weight:700;margin-bottom:8px;color:var(--text);">No treks found</h3>
+          <p style="color:var(--text-secondary);font-size:14px;">Try adjusting your filters or search terms.</p>
         </div>`;
       return;
     }
@@ -409,7 +409,7 @@ const TrekExplorer = {
   renderError(message) {
     if (!this.gridEl) return;
     this.gridEl.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--color-text-muted);">
+      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-secondary);">
         <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
         <p style="font-size:14px;">${message}</p>
       </div>`;
