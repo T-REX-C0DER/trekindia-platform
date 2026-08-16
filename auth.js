@@ -95,6 +95,30 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeroText(viewId);
   }
 
+  // Check for Community Redirect Notice
+  function checkCommunityNotice() {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    const message = params.get('message');
+    if (redirect === '/community' || message === 'community_required') {
+      const cardHeader = document.querySelector('.card-hero-header');
+      if (cardHeader && !document.getElementById('community-auth-banner')) {
+        const banner = document.createElement('div');
+        banner.id = 'community-auth-banner';
+        banner.style.cssText = 'background: rgba(40, 93, 42, 0.18); border: 1px solid rgba(72, 187, 120, 0.4); color: #72D572; padding: 14px 18px; border-radius: 14px; font-size: 0.88rem; margin: 12px 0 18px; line-height: 1.5; text-align: left; display: flex; align-items: flex-start; gap: 10px; backdrop-filter: blur(8px);';
+        banner.innerHTML = `
+          <span style="font-size: 1.25rem; line-height: 1;">🏔️</span>
+          <div>
+            <strong style="display: block; font-size: 0.92rem; color: #fff; margin-bottom: 2px;">Join the TrekIndia Community</strong>
+            <span>Sign in or register to connect with trekkers, share high-altitude expeditions, and access private routes.</span>
+          </div>
+        `;
+        cardHeader.appendChild(banner);
+      }
+    }
+  }
+  checkCommunityNotice();
+
   function updateHeroText(viewId) {
     const config = heroContentMap[viewId] || heroContentMap['login'];
     const badgeEl = document.querySelector('.hero-badge-text');
@@ -413,7 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok && data.success) {
-          window.location.href = 'index.html';
+          const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+          window.location.href = redirectUrl;
         } else {
           showFormError(loginForm, data.message || 'Invalid email or password.');
         }
@@ -476,7 +501,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok && data.success) {
-          window.location.href = 'index.html';
+          const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+          window.location.href = redirectUrl;
         } else {
           showFormError(signupForm, data.message || 'Registration failed.');
         }

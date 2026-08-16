@@ -8,13 +8,17 @@ const __dirname = path.dirname(__filename);
 
 export async function runMigrations() {
   try {
-    const migrationPath = path.resolve(__dirname, '../migrations/001_create_profile_tables.sql');
-    if (fs.existsSync(migrationPath)) {
-      const sql = fs.readFileSync(migrationPath, 'utf8');
-      await query(sql);
-      console.log('✅ PostgreSQL migrations executed successfully.');
+    const migrationsDir = path.resolve(__dirname, '../migrations');
+    if (fs.existsSync(migrationsDir)) {
+      const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+      for (const file of files) {
+        const filePath = path.join(migrationsDir, file);
+        const sql = fs.readFileSync(filePath, 'utf8');
+        await query(sql);
+        console.log(`✅ Migration executed: ${file}`);
+      }
     }
   } catch (err) {
-    console.error('❌ Migration Error:', err.message);
+    console.warn('⚠️ Note on Database Migrations:', err.message);
   }
 }

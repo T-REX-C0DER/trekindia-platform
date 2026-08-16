@@ -159,7 +159,30 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', checkAuthStatus);
+  function initCommunityLinkGuards() {
+    document.addEventListener('click', (e) => {
+      const commLink = e.target.closest('a[href="/community"], a[href="community.html"], a[href="#community"]');
+      if (commLink) {
+        // If we are already on /community or community.html, allow normal behavior
+        if (window.location.pathname === '/community' || window.location.pathname.endsWith('community.html')) {
+          return;
+        }
+
+        if (!currentUser) {
+          e.preventDefault();
+          window.location.href = 'auth.html?redirect=/community&message=community_required';
+        } else {
+          e.preventDefault();
+          window.location.href = '/community';
+        }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    checkAuthStatus();
+    initCommunityLinkGuards();
+  });
 
   window.TrekIndiaAuth = {
     checkAuthStatus,

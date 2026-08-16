@@ -5,12 +5,13 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import authRoutes     from './routes/authRoutes.js';
-import profileRoutes  from './routes/profileRoutes.js';
-import trekRoutes     from './routes/trekRoutes.js';
-import stateRoutes    from './routes/stateRoutes.js';
-import districtRoutes from './routes/districtRoutes.js';
-import gearRoutes     from './routes/gearRoutes.js';
+import authRoutes      from './routes/authRoutes.js';
+import profileRoutes   from './routes/profileRoutes.js';
+import trekRoutes      from './routes/trekRoutes.js';
+import stateRoutes     from './routes/stateRoutes.js';
+import districtRoutes  from './routes/districtRoutes.js';
+import gearRoutes      from './routes/gearRoutes.js';
+import communityRoutes from './routes/communityRoutes.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 import { runMigrations }  from './config/initDb.js';
 
@@ -54,13 +55,18 @@ app.use(cors({
 }));
 
 // Core Middlewares
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // Serve /profile to profile.html
 app.get('/profile', (req, res) => {
   res.sendFile(path.join(rootDir, 'profile.html'));
+});
+
+// Serve /community to community.html
+app.get('/community', (req, res) => {
+  res.sendFile(path.join(rootDir, 'community.html'));
 });
 
 // Static File Server (serves existing TrekIndia UI)
@@ -101,6 +107,9 @@ app.use('/api/districts', districtRoutes);
 // Gear API Routes
 app.use('/api/gear', gearRoutes);
 
+// Community API Routes
+app.use('/api/community', communityRoutes);
+
 // Centralized Error Handling Middleware
 app.use(errorMiddleware);
 
@@ -108,8 +117,9 @@ app.use(errorMiddleware);
 app.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(`🚀 TrekIndia Server running on http://localhost:${PORT}`);
+  console.log(`   Community Hub:     http://localhost:${PORT}/community`);
   console.log(`   Profile Dashboard: http://localhost:${PORT}/profile`);
-  console.log(`   Healthcheck: http://localhost:${PORT}/api/health`);
+  console.log(`   Healthcheck:       http://localhost:${PORT}/api/health`);
   console.log(`====================================================`);
 });
 
