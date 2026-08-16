@@ -10,6 +10,7 @@ import profileRoutes  from './routes/profileRoutes.js';
 import trekRoutes     from './routes/trekRoutes.js';
 import stateRoutes    from './routes/stateRoutes.js';
 import districtRoutes from './routes/districtRoutes.js';
+import gearRoutes     from './routes/gearRoutes.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 import { runMigrations }  from './config/initDb.js';
 
@@ -96,6 +97,9 @@ app.use('/api/states', stateRoutes);
 
 // District API Routes
 app.use('/api/districts', districtRoutes);
+
+// Gear API Routes
+app.use('/api/gear', gearRoutes);
 
 // Centralized Error Handling Middleware
 app.use(errorMiddleware);

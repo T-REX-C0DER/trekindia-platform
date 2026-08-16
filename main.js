@@ -600,73 +600,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ─── B. GEAR MARKETPLACE ──────────────────────────────────
+  // Managed dynamically by GearMarketplace in trek-api.js (database-driven)
 
-  // Horizontal scroll buttons
-  const gearTrack = document.getElementById('gearTrack');
-  const gearScrollLeft = document.getElementById('gearScrollLeft');
-  const gearScrollRight = document.getElementById('gearScrollRight');
-
-  if (gearTrack) {
-    gearScrollLeft?.addEventListener('click', () => {
-      gearTrack.scrollBy({ left: -320, behavior: 'smooth' });
-    });
-    gearScrollRight?.addEventListener('click', () => {
-      gearTrack.scrollBy({ left: 320, behavior: 'smooth' });
-    });
-    // Show/hide scroll buttons based on scroll position
-    gearTrack.addEventListener('scroll', updateGearScrollBtns, { passive: true });
-    updateGearScrollBtns();
-  }
-
-  function updateGearScrollBtns() {
-    if (!gearTrack || !gearScrollLeft || !gearScrollRight) return;
-    gearScrollLeft.style.opacity = gearTrack.scrollLeft <= 0 ? '0.4' : '1';
-    gearScrollRight.style.opacity =
-      gearTrack.scrollLeft >= gearTrack.scrollWidth - gearTrack.clientWidth - 1 ? '0.4' : '1';
-  }
-
-  // Category filter tabs
-  document.querySelectorAll('.gear-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.gear-tab').forEach(t => {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected', 'false');
-      });
-      tab.classList.add('active');
-      tab.setAttribute('aria-selected', 'true');
-
-      const filter = tab.dataset.gearFilter;
-      document.querySelectorAll('.gear-card').forEach(card => {
-        const show = filter === 'all' || card.dataset.category === filter;
-        card.style.display = show ? 'flex' : 'none';
-      });
-      if (gearTrack) gearTrack.scrollTo({ left: 0, behavior: 'smooth' });
-    });
-  });
-
-  // Wishlist toggle
-  document.querySelectorAll('.gear-wishlist-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const isWishlisted = btn.dataset.wishlisted === 'true';
-      btn.dataset.wishlisted = !isWishlisted;
-      btn.classList.toggle('wishlisted', !isWishlisted);
-      btn.setAttribute('aria-label', !isWishlisted ? 'Remove from wishlist' : 'Add to wishlist');
-      // Future: persist to user profile API
-    });
-  });
-
-  // Buy now button (future: affiliate link redirect)
-  document.querySelectorAll('.gear-buy-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const product = btn.dataset.product;
-      // Future integration: window.open(affiliateLinks[product], '_blank');
-      btn.textContent = '✓ Opening...';
-      setTimeout(() => { btn.textContent = 'Buy Now'; }, 1500);
-    });
-  });
 
   // ─── C. PHYSICAL READINESS DASHBOARD ──────────────────────
 

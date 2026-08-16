@@ -32,6 +32,8 @@ const TrekAPIClient = {
   searchTreks(q, limit)     { return this.get('/treks/search', { q, limit }); },
   getStates()               { return this.get('/states'); },
   getStateTreks(s, params)  { return this.get(`/states/${encodeURIComponent(s)}/treks`, params); },
+  getGear(params)           { return this.get('/gear', params); },
+  getGearCategories()       { return this.get('/gear/categories'); },
 };
 
 /* =============================================
@@ -510,6 +512,380 @@ function initHeroSearch() {
 }
 
 /* =============================================
+   ESSENTIAL TREK GEAR MARKETPLACE (DYNAMIC & DATABASE-DRIVEN)
+   ============================================= */
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getCategoryPlaceholderIcon(category = '') {
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('shoe') || cat.includes('boot') || cat.includes('footwear')) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3l3 4h8a4 4 0 0 0 4-4v-1a2 2 0 0 0-2-2h-3l-2-4H7L3 11v3z"/><path d="M8 18v2"/><path d="M12 18v2"/><path d="M16 18v2"/></svg>`;
+  }
+  if (cat.includes('pack') || cat.includes('bag') || cat.includes('rucksack')) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="14" rx="3"/><path d="M9 8V5a3 3 0 0 1 6 0v3"/><path d="M4 13h16"/><path d="M9 13v5"/><path d="M15 13v5"/></svg>`;
+  }
+  if (cat.includes('tent') || cat.includes('camp')) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 4 5 21"/><path d="M12 4v17"/><path d="m9 16 3-3 3 3"/><path d="M2 21h20"/></svg>`;
+  }
+  if (cat.includes('jacket') || cat.includes('cloth') || cat.includes('rain') || cat.includes('layer')) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/><path d="M12 2v20"/></svg>`;
+  }
+  if (cat.includes('pole')) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 14-14"/><path d="m15 3 6 6"/><path d="m14 8 2 2"/><path d="m10 12 2 2"/><path d="M3 21l3-1-2-2z"/></svg>`;
+  }
+  if (cat.includes('lamp') || cat.includes('light') || cat.includes('torch')) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><circle cx="12" cy="12" r="5"/></svg>`;
+  }
+  if (cat.includes('sleep') || cat.includes('mat')) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14"/><path d="M3 19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2"/><path d="M7 7h10"/><path d="M7 11h10"/><path d="M7 15h6"/></svg>`;
+  }
+  if (cat.includes('cook') || cat.includes('food') || cat.includes('stove')) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
+  }
+  if (cat.includes('safe') || cat.includes('aid') || cat.includes('first')) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>`;
+  }
+  return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/><path d="M4.14 15.08 9 11l4 5"/></svg>`;
+}
+
+const GearMarketplace = {
+  trackEl: null,
+  tabsEl: null,
+  btnLeft: null,
+  btnRight: null,
+  currentCategory: 'all',
+  cachedProducts: {},
+
+  async init() {
+    this.trackEl  = document.getElementById('gearTrack');
+    this.tabsEl   = document.getElementById('gearCategoryTabs');
+    this.btnLeft  = document.getElementById('gearScrollLeft');
+    this.btnRight = document.getElementById('gearScrollRight');
+
+    if (!this.trackEl) return;
+
+    this.bindEvents();
+    await this.loadCategories();
+    await this.loadProducts('all');
+  },
+
+  bindEvents() {
+    if (this.btnLeft) {
+      this.btnLeft.addEventListener('click', () => this.scrollByDirection(-1));
+    }
+    if (this.btnRight) {
+      this.btnRight.addEventListener('click', () => this.scrollByDirection(1));
+    }
+
+    if (this.trackEl) {
+      let scrollTimer = null;
+      this.trackEl.addEventListener('scroll', () => {
+        if (scrollTimer) cancelAnimationFrame(scrollTimer);
+        scrollTimer = requestAnimationFrame(() => this.updateScrollBtns());
+      }, { passive: true });
+    }
+
+    window.addEventListener('resize', () => this.updateScrollBtns(), { passive: true });
+  },
+
+  scrollByDirection(direction) {
+    if (!this.trackEl) return;
+    const cardEl = this.trackEl.querySelector('.gear-card, .gear-skeleton-card');
+    const cardWidth = cardEl ? cardEl.offsetWidth + 22 : 300;
+    const visibleCards = Math.max(1, Math.floor(this.trackEl.clientWidth / cardWidth));
+    const scrollAmount = cardWidth * Math.max(1, visibleCards >= 3 ? visibleCards - 1 : visibleCards);
+
+    this.trackEl.scrollBy({
+      left: direction * scrollAmount,
+      behavior: 'smooth'
+    });
+  },
+
+  updateScrollBtns() {
+    if (!this.trackEl || !this.btnLeft || !this.btnRight) return;
+
+    const scrollLeft = this.trackEl.scrollLeft;
+    const maxScroll = Math.max(0, this.trackEl.scrollWidth - this.trackEl.clientWidth);
+
+    const isAtStart = scrollLeft <= 4;
+    const isAtEnd = scrollLeft >= maxScroll - 4;
+    const noScrollNeeded = maxScroll <= 2;
+
+    this.btnLeft.disabled = isAtStart || noScrollNeeded;
+    this.btnLeft.setAttribute('aria-disabled', (isAtStart || noScrollNeeded) ? 'true' : 'false');
+
+    this.btnRight.disabled = isAtEnd || noScrollNeeded;
+    this.btnRight.setAttribute('aria-disabled', (isAtEnd || noScrollNeeded) ? 'true' : 'false');
+  },
+
+  async loadCategories() {
+    if (!this.tabsEl) return;
+
+    try {
+      const res = await TrekAPIClient.getGearCategories();
+      if (res && res.success && Array.isArray(res.data)) {
+        let html = `<button class="gear-tab active" role="tab" aria-selected="true" data-gear-filter="all">All</button>`;
+        res.data.forEach(cat => {
+          html += `<button class="gear-tab" role="tab" aria-selected="false" data-gear-filter="${escapeHtml(cat.name)}">${escapeHtml(cat.name)}</button>`;
+        });
+        this.tabsEl.innerHTML = html;
+
+        // Attach click listeners to tabs
+        this.tabsEl.querySelectorAll('.gear-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const filter = tab.dataset.gearFilter;
+            this.setCategory(filter, tab);
+          });
+        });
+      }
+    } catch (err) {
+      console.warn('TrekIndia: Could not load dynamic gear categories', err);
+    }
+  },
+
+  async setCategory(categoryName, activeTabEl) {
+    if (this.currentCategory === categoryName) return;
+    this.currentCategory = categoryName;
+
+    // Update active tab styling
+    if (this.tabsEl) {
+      this.tabsEl.querySelectorAll('.gear-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      if (activeTabEl) {
+        activeTabEl.classList.add('active');
+        activeTabEl.setAttribute('aria-selected', 'true');
+      }
+    }
+
+    // Reset scroll to beginning immediately
+    if (this.trackEl) {
+      this.trackEl.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+
+    await this.loadProducts(categoryName);
+  },
+
+  renderSkeletons(count = 4) {
+    if (!this.trackEl) return;
+    let html = '';
+    for (let i = 0; i < count; i++) {
+      html += `
+        <div class="gear-skeleton-card" aria-hidden="true">
+          <div class="gear-skeleton-img"></div>
+          <div class="gear-skeleton-line gear-skeleton-line--short"></div>
+          <div class="gear-skeleton-line gear-skeleton-line--long"></div>
+          <div class="gear-skeleton-line gear-skeleton-line--med"></div>
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px;">
+            <div class="gear-skeleton-line gear-skeleton-line--long"></div>
+            <div class="gear-skeleton-line gear-skeleton-line--long"></div>
+          </div>
+        </div>
+      `;
+    }
+    this.trackEl.innerHTML = html;
+    this.updateScrollBtns();
+  },
+
+  async loadProducts(category = 'all') {
+    if (!this.trackEl) return;
+
+    // Show skeleton
+    this.renderSkeletons(4);
+
+    try {
+      const params = { limit: 40 };
+      if (category && category !== 'all') {
+        params.category = category;
+      }
+
+      const res = await TrekAPIClient.getGear(params);
+      if (res && res.success && Array.isArray(res.data)) {
+        this.renderCards(res.data);
+      } else {
+        this.renderEmpty();
+      }
+    } catch (err) {
+      console.error('TrekIndia: Error loading gear products:', err);
+      this.renderError();
+    }
+  },
+
+  renderCards(products) {
+    if (!this.trackEl) return;
+
+    if (!products || products.length === 0) {
+      this.renderEmpty();
+      return;
+    }
+
+    const html = products.map((product, index) => this.createCardHtml(product, index)).join('');
+    this.trackEl.innerHTML = html;
+
+    // Attach wishlist button listeners
+    this.trackEl.querySelectorAll('.gear-wishlist-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isWishlisted = btn.dataset.wishlisted === 'true';
+        btn.dataset.wishlisted = !isWishlisted ? 'true' : 'false';
+        btn.classList.toggle('wishlisted', !isWishlisted);
+        const name = btn.dataset.productName || 'product';
+        btn.setAttribute('aria-label', !isWishlisted ? `Remove ${name} from favorites` : `Add ${name} to favorites`);
+      });
+    });
+
+    // Reset scroll to 0 and update scroll button states
+    this.trackEl.scrollTo({ left: 0, behavior: 'instant' });
+    requestAnimationFrame(() => this.updateScrollBtns());
+  },
+
+  createCardHtml(product, index = 0) {
+    const hasImage = product.image_url && String(product.image_url).trim().length > 0;
+    const category = product.category || 'Trek Gear';
+    const name = product.product_name || 'Trek Gear';
+    const brand = product.brand || '';
+    const description = product.description && product.description.trim().length > 0 ? product.description : '';
+
+    const iconSvg = getCategoryPlaceholderIcon(category);
+
+    // Image / Placeholder Markup
+    let mediaMarkup = '';
+    if (hasImage) {
+      mediaMarkup = `
+        <img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(name)}" class="gear-img" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'gear-placeholder\\'><div class=\\'gear-placeholder-icon\\'>${iconSvg.replace(/'/g, "\\'")}</div><span class=\\'gear-placeholder-tag\\'>${escapeHtml(category)}</span></div>';" />
+      `;
+    } else {
+      mediaMarkup = `
+        <div class="gear-placeholder" aria-hidden="true">
+          <div class="gear-placeholder-icon">${iconSvg}</div>
+          <span class="gear-placeholder-tag">${escapeHtml(category)}</span>
+        </div>
+      `;
+    }
+
+    // Where to Buy Store Links (Amazon, Flipkart, Official Brand)
+    const storeLinks = [];
+
+    if (product.amazon_url && String(product.amazon_url).trim().length > 0) {
+      storeLinks.push(`
+        <a href="${escapeHtml(product.amazon_url)}" target="_blank" rel="noopener noreferrer" class="gear-store-btn gear-store-btn--amazon" aria-label="Buy ${escapeHtml(name)} on Amazon (opens in new tab)">
+          <span class="gear-store-btn-name">
+            <span class="gear-store-dot" aria-hidden="true"></span>
+            <span>Amazon</span>
+          </span>
+          <span class="gear-store-arrow" aria-hidden="true">↗</span>
+        </a>
+      `);
+    }
+
+    if (product.flipkart_url && String(product.flipkart_url).trim().length > 0) {
+      storeLinks.push(`
+        <a href="${escapeHtml(product.flipkart_url)}" target="_blank" rel="noopener noreferrer" class="gear-store-btn gear-store-btn--flipkart" aria-label="Buy ${escapeHtml(name)} on Flipkart (opens in new tab)">
+          <span class="gear-store-btn-name">
+            <span class="gear-store-dot" aria-hidden="true"></span>
+            <span>Flipkart</span>
+          </span>
+          <span class="gear-store-arrow" aria-hidden="true">↗</span>
+        </a>
+      `);
+    }
+
+    if (product.brand_url && String(product.brand_url).trim().length > 0) {
+      storeLinks.push(`
+        <a href="${escapeHtml(product.brand_url)}" target="_blank" rel="noopener noreferrer" class="gear-store-btn gear-store-btn--brand" aria-label="Buy ${escapeHtml(name)} from Official Brand (opens in new tab)">
+          <span class="gear-store-btn-name">
+            <span class="gear-store-dot" aria-hidden="true"></span>
+            <span>Official Brand</span>
+          </span>
+          <span class="gear-store-arrow" aria-hidden="true">↗</span>
+        </a>
+      `);
+    }
+
+    const storeLinksHtml = storeLinks.length > 0
+      ? storeLinks.join('')
+      : `<a href="https://www.google.com/search?q=${encodeURIComponent(name + ' buy online')}" target="_blank" rel="noopener noreferrer" class="gear-store-btn" aria-label="Search ${escapeHtml(name)} online (opens in new tab)"><span class="gear-store-btn-name"><span class="gear-store-dot"></span>Find Online</span><span class="gear-store-arrow" aria-hidden="true">↗</span></a>`;
+
+    const descHtml = description
+      ? `<p class="gear-card-desc">${escapeHtml(description)}</p>`
+      : '';
+
+    const brandHtml = brand
+      ? `<div class="gear-card-brand">${escapeHtml(brand)}</div>`
+      : '';
+
+    return `
+      <div class="gear-card" data-category="${escapeHtml(category)}" data-product-id="${product.id}" role="listitem">
+        <div class="gear-card-img-wrap">
+          ${mediaMarkup}
+          <button class="gear-wishlist-btn" aria-label="Add ${escapeHtml(name)} to favorites" data-wishlisted="false" data-product-name="${escapeHtml(name)}" data-product-id="${product.id}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        </div>
+        <div class="gear-card-body">
+          <div class="gear-card-info">
+            <div class="gear-card-category">${escapeHtml(category)}</div>
+            <h3 class="gear-card-name" title="${escapeHtml(name)}">${escapeHtml(name)}</h3>
+            ${brandHtml}
+            ${descHtml}
+          </div>
+          <div class="gear-where-to-buy">
+            <div class="gear-buy-label">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+              <span>WHERE TO BUY</span>
+            </div>
+            <div class="gear-store-links">
+              ${storeLinksHtml}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  renderEmpty() {
+    if (!this.trackEl) return;
+    this.trackEl.innerHTML = `
+      <div class="gear-empty-state">
+        <div class="gear-state-icon" aria-hidden="true">🎒</div>
+        <div class="gear-state-title">No gear available in this category yet.</div>
+        <div class="gear-state-subtitle">Explore other outdoor categories or view all gear items.</div>
+      </div>
+    `;
+    this.updateScrollBtns();
+  },
+
+  renderError() {
+    if (!this.trackEl) return;
+    this.trackEl.innerHTML = `
+      <div class="gear-error-state">
+        <div class="gear-state-icon" aria-hidden="true">⚠️</div>
+        <div class="gear-state-title">Gear couldn't be loaded right now.</div>
+        <div class="gear-state-subtitle">Please check your network connection and try again.</div>
+        <button class="gear-retry-btn" onclick="GearMarketplace.loadProducts(GearMarketplace.currentCategory)">Retry</button>
+      </div>
+    `;
+    this.updateScrollBtns();
+  }
+};
+
+/* =============================================
    GLOBAL MAP INTEGRATION
    Override the map.js loadTreks to use the API
    ============================================= */
@@ -527,4 +903,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize explore section
   await TrekExplorer.init();
+
+  // Initialize Essential Trek Gear marketplace
+  await GearMarketplace.init();
 });
+
