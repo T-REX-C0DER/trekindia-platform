@@ -75,13 +75,13 @@ body.community-body {
 }
 
 .header-spacer {
-  height: 84px;
+  height: 112px; /* Navbar is ~104px tall (16px top padding + 72px inner + 16px bottom padding), extra 8px breathing room */
 }
 
 .community-app-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 24px 60px;
+  padding: 32px 24px 80px;
   display: grid;
   grid-template-columns: 240px 1fr;
   gap: 32px;
@@ -92,7 +92,7 @@ body.community-body {
 /* ─── 3. COMMUNITY LEFT SIDEBAR ───────────────────────────────────────────── */
 .community-sidebar {
   position: sticky;
-  top: 100px;
+  top: 120px; /* 112px spacer + 8px gap from sticky top */
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -2701,7 +2701,7 @@ body.dark .conversation-item {
   .community-app-container {
     grid-template-columns: 80px 1fr;
     gap: 20px;
-    padding: 16px;
+    padding: 28px 16px 60px; /* extra top padding so navbar doesn't overlap */
   }
 
   .comm-nav-item span,
@@ -2722,10 +2722,14 @@ body.dark .conversation-item {
 }
 
 @media (max-width: 768px) {
+  .header-spacer {
+    height: 96px; /* slightly shorter on mobile since navbar collapses */
+  }
+
   .community-app-container {
     display: flex;
     flex-direction: column;
-    padding: 12px;
+    padding: 24px 12px 60px; /* adequate top padding on mobile */
   }
 
   .community-sidebar {
