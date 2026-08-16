@@ -100,3 +100,48 @@ export async function getTrekBySlug(req, res, next) {
     next(err);
   }
 }
+
+/**
+ * GET /api/treks/slug/:slug/companies  — or —
+ * GET /api/treks/:id/companies
+ *
+ * Resolves the trek by slug or numeric ID, then returns
+ * every trekking company associated with that trek's name.
+ */
+export async function getTrekCompanies(req, res, next) {
+  try {
+    // Works for both /slug/:slug/companies and /:id/companies
+    const identifier = req.params.slug || req.params.id;
+    if (!identifier) {
+      return res.status(400).json({ success: false, message: 'Trek identifier (ID or slug) is required.' });
+    }
+
+    let trek;
+    const numericId = parseInt(identifier, 10);
+    if (!isNaN(numericId) && String(numericId) === identifier) {
+      trek = await trekService.getTrekById(numericId);
+    } else {
+      trek = await trekService.getTrekBySlug(identifier);
+    }
+
+    if (!trek) {
+      return res.status(404).json({ success: false, message: 'Trek not found.' });
+    }
+
+    const companies = await trekService.getCompaniesForTrek(trek.name);
+    return res.status(200).json({
+      success: true,
+      trek: {
+        id: trek.trek_id,
+        name: trek.name,
+        slug: trek.slug
+      },
+      count: companies.length,
+      companies
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+

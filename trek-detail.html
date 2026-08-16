@@ -13,15 +13,28 @@
   <link rel="stylesheet" href="trek-detail.css"/>
   <!-- Leaflet.js Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- ANTI-FOUC: Apply saved theme before any paint -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('trekindia-theme');
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark-pending');
+        }
+      } catch(e) {}
+    })();
+  </script>
 </head>
-<body class="dark">
+<body class="dark" id="detailBody">
 
   <!-- Floating Navbar -->
   <nav class="navbar scrolled" id="navbar">
     <div class="navbar-inner">
-      <a href="index.html" class="trekindia-brand">
+      <a href="index.html" class="trekindia-brand" aria-label="TrekIndia home">
         <div class="brand-icon-wrap">
-          <img src="darkbg_logo_processed.png" alt="TrekIndia Logo" class="brand-icon-img dark-icon"/>
+          <img src="whitebg_logo_processed.png" alt="TrekIndia Logo" class="brand-icon-img light-icon"/>
+          <img src="darkbg_logo_processed.png"  alt="TrekIndia Logo" class="brand-icon-img dark-icon"/>
         </div>
         <div class="brand-wordmark">
           <span class="brand-trek">Trek</span><span class="brand-india">India</span>
@@ -29,12 +42,31 @@
       </a>
       <div class="nav-center">
         <ul class="nav-links">
-          <li class="nav-item"><a href="index.html#treks" class="nav-link">Explore</a></li>
-          <li class="nav-item"><a href="index.html#states" class="nav-link">Destinations</a></li>
+          <li class="nav-item"><a href="index.html#treks"     class="nav-link">Explore</a></li>
+          <li class="nav-item"><a href="index.html#states"    class="nav-link">Destinations</a></li>
           <li class="nav-item"><a href="index.html#companies" class="nav-link">Companies</a></li>
         </ul>
       </div>
-      <div class="nav-actions">
+      <div class="nav-actions" style="display:flex;align-items:center;gap:10px;">
+        <!-- Theme Toggle -->
+        <button class="nav-icon-btn detail-theme-btn" id="themeToggleBtn" aria-label="Toggle light/dark mode" title="Toggle theme">
+          <!-- Moon icon (shown in light mode) -->
+          <svg class="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <!-- Sun icon (shown in dark mode) -->
+          <svg class="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
         <a href="index.html#treks" class="btn-primary">← Back to Exploration</a>
       </div>
     </div>
@@ -107,13 +139,13 @@
 
       <!-- Left Column: Details & Reviews -->
       <div>
-        <!-- Neutral Image Placeholder Container (No fake/broken images per prompt) -->
+        <!-- Neutral Image Placeholder Container -->
         <div class="detail-hero-placeholder">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 20L9 8l4 6 3-4 5 10"/>
             <circle cx="18" cy="5" r="2"/>
           </svg>
-          <p>Trek Media & Photo Gallery (Image placeholder — imagery pending)</p>
+          <p>Trek Media &amp; Photo Gallery (Image placeholder — imagery pending)</p>
         </div>
 
         <!-- Description Card -->
@@ -126,7 +158,7 @@
 
         <!-- Route Details Card -->
         <section class="detail-card">
-          <h2 class="detail-card-title">📍 Trailhead & Route</h2>
+          <h2 class="detail-card-title">📍 Trailhead &amp; Route</h2>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
             <div>
               <div class="detail-metric-label">Starting Point</div>
@@ -149,7 +181,7 @@
 
         <!-- Reviews & Rating Section -->
         <section class="detail-card">
-          <h2 class="detail-card-title">💬 Trekker Reviews & Ratings</h2>
+          <h2 class="detail-card-title">💬 Trekker Reviews &amp; Ratings</h2>
 
           <!-- Add Review Form -->
           <div class="review-form">
@@ -172,19 +204,57 @@
         </section>
       </div>
 
-      <!-- Right Column: Interactive Map & Location Sidebar -->
-      <div>
-        <div class="detail-card" style="position:sticky;top:100px;">
+      <!-- Right Column: Map, Companies Sidebar -->
+      <div class="detail-right-col">
+
+        <!-- Geographic Location Card -->
+        <div class="detail-card detail-sidebar-card">
           <h3 class="detail-card-title">🗺️ Geographic Location</h3>
           <div id="detailMap"></div>
           <div style="margin-top:16px;font-size:13px;color:var(--detail-text-muted);line-height:1.6;">
-            <div><strong>Latitude:</strong> <span id="latCoord">—</span></div>
+            <div><strong>Latitude:</strong>  <span id="latCoord">—</span></div>
             <div><strong>Longitude:</strong> <span id="lngCoord">—</span></div>
-            <div><strong>District:</strong> <span id="districtText">—</span></div>
-            <div><strong>State:</strong> <span id="stateText">—</span></div>
+            <div><strong>District:</strong>  <span id="districtText">—</span></div>
+            <div><strong>State:</strong>     <span id="stateText">—</span></div>
           </div>
         </div>
-      </div>
+
+        <!-- Trekking Companies Card -->
+        <div class="detail-card detail-companies-card" id="companiesSection">
+          <h3 class="detail-card-title">🏢 Trekking Companies</h3>
+
+          <!-- Skeleton loading state -->
+          <div id="companiesSkeleton" class="companies-skeleton" aria-hidden="true">
+            <div class="company-skeleton-card">
+              <div class="skel skel-name"></div>
+              <div class="skel skel-tag"></div>
+              <div class="skel skel-url"></div>
+              <div class="skel skel-btn"></div>
+            </div>
+            <div class="company-skeleton-card">
+              <div class="skel skel-name"></div>
+              <div class="skel skel-tag"></div>
+              <div class="skel skel-url"></div>
+              <div class="skel skel-btn"></div>
+            </div>
+          </div>
+
+          <!-- Companies grid (populated by JS) -->
+          <div id="companiesGrid" class="companies-grid" aria-live="polite" style="display:none;"></div>
+
+          <!-- Empty state (shown when no companies exist) -->
+          <div id="companiesEmpty" class="companies-empty" style="display:none;">
+            <span class="companies-empty-icon">🏢</span>
+            <p>No trekking operators are currently listed for this trek.</p>
+          </div>
+
+          <!-- Error state -->
+          <div id="companiesError" class="companies-error" style="display:none;">
+            <p>Could not load company information. Please try again later.</p>
+          </div>
+        </div>
+
+      </div><!-- /.detail-right-col -->
 
     </div>
   </main>

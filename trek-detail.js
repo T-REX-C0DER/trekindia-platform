@@ -1,14 +1,59 @@
 /**
  * TrekIndia — Trek Detail JavaScript
  * Fetches trek by slug from /api/treks/slug/:slug and populates page.
+ * Fetches matching trekking companies from /api/treks/slug/:slug/companies.
+ * Handles global light/dark theme toggle tied to localStorage.
  */
 
 'use strict';
 
+/* ─── 1. THEME SYSTEM ────────────────────────────────────────
+   Mirrors the homepage theme logic. Reads from / writes to
+   localStorage key 'trekindia-theme'. Applies 'dark' class
+   on <body> immediately on load to avoid FOUC.
+   ─────────────────────────────────────────────────────────── */
+(function initTheme() {
+  const saved = localStorage.getItem('trekindia-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = saved === 'dark' || (!saved && prefersDark);
+  document.body.classList.toggle('dark', isDark);
+})();
+
+/* ─── 2. BRAND LOGO ──────────────────────────────────────────
+   Apply correct logo src (mirrors main.js BrandLogoSystem)
+   ─────────────────────────────────────────────────────────── */
+function applyBrandLogos() {
+  document.querySelectorAll('.brand-icon-img.light-icon').forEach(img => {
+    img.src = 'whitebg_logo_processed.png';
+  });
+  document.querySelectorAll('.brand-icon-img.dark-icon').forEach(img => {
+    img.src = 'darkbg_logo_processed.png';
+  });
+}
+
+/* ─── 3. THEME TOGGLE ────────────────────────────────────────
+   Uses the same localStorage key as the homepage so theme
+   state is shared across all pages.
+   ─────────────────────────────────────────────────────────── */
+function initThemeToggle() {
+  const btn = document.getElementById('themeToggleBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('trekindia-theme', isDark ? 'dark' : 'light');
+  });
+}
+
+/* ─── 4. MAIN INIT ───────────────────────────────────────────  */
 document.addEventListener('DOMContentLoaded', async () => {
+  applyBrandLogos();
+  initThemeToggle();
+
   const urlParams = new URLSearchParams(window.location.search);
   const slug = urlParams.get('slug') || 'kedarkantha';
 
+  // Load trek data
   try {
     const res = await fetch(`/api/treks/slug/${encodeURIComponent(slug)}`);
     if (!res.ok) throw new Error('Trek not found');
@@ -17,13 +62,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const trek = json.data;
     renderTrekDetails(trek);
+
+    // Load companies concurrently (non-blocking, isolated error handling)
+    loadTrekCompanies(slug);
   } catch (err) {
     console.error('Failed to load trek:', err);
     document.getElementById('trekTitle').textContent = 'Trek Not Found';
-    document.getElementById('trekDescription').textContent = 'The requested trek could not be loaded. Please return to the explore page.';
+    document.getElementById('trekDescription').textContent =
+      'The requested trek could not be loaded. Please return to the explore page.';
+
+    // Still try to show companies section gracefully
+    showCompaniesError();
   }
 });
 
+/* ─── 5. RENDER TREK DETAILS ─────────────────────────────── */
 function renderTrekDetails(trek) {
   // Page Title
   document.title = `${trek.name} — TrekIndia`;
@@ -39,14 +92,18 @@ function renderTrekDetails(trek) {
   // Badge
   const badgeEl = document.getElementById('trekDifficultyBadge');
   badgeEl.textContent = trek.difficulty || 'Moderate';
-  badgeEl.className = `detail-badge ${diffClass(trek.difficulty)}`;
+  badgeEl.className   = `detail-badge ${diffClass(trek.difficulty)}`;
 
   // Metrics
-  document.getElementById('metricElevation').textContent = trek.elevation_m ? `${trek.elevation_m.toLocaleString()} m` : '—';
-  document.getElementById('metricDuration').textContent  = trek.duration_label || (trek.duration_hours ? `${trek.duration_hours}h` : '—');
-  document.getElementById('metricDistance').textContent  = trek.distance_km ? `${trek.distance_km} km` : '—';
-  document.getElementById('metricRating').textContent    = trek.rating ? `★ ${parseFloat(trek.rating).toFixed(1)}` : 'Unrated';
-  document.getElementById('metricSeason').textContent    = trek.best_time || '—';
+  document.getElementById('metricElevation').textContent = trek.elevation_m
+    ? `${trek.elevation_m.toLocaleString()} m` : '—';
+  document.getElementById('metricDuration').textContent = trek.duration_label
+    || (trek.duration_hours ? `${trek.duration_hours}h` : '—');
+  document.getElementById('metricDistance').textContent = trek.distance_km
+    ? `${trek.distance_km} km` : '—';
+  document.getElementById('metricRating').textContent   = trek.rating
+    ? `★ ${parseFloat(trek.rating).toFixed(1)}` : 'Unrated';
+  document.getElementById('metricSeason').textContent   = trek.best_time || '—';
 
   // Description
   const descEl = document.getElementById('trekDescription');
@@ -59,17 +116,17 @@ function renderTrekDetails(trek) {
   }
 
   // Route Details
-  document.getElementById('startingPoint').textContent   = trek.starting_point || '—';
-  document.getElementById('endingPoint').textContent     = trek.ending_point || '—';
-  document.getElementById('permitRequired').textContent   = trek.permit_required ? 'Yes (Permit required)' : 'No permit required';
-  document.getElementById('entryFee').textContent         = trek.entry_fee ? `₹${trek.entry_fee}` : 'Free';
+  document.getElementById('startingPoint').textContent  = trek.starting_point || '—';
+  document.getElementById('endingPoint').textContent    = trek.ending_point   || '—';
+  document.getElementById('permitRequired').textContent = trek.permit_required ? 'Yes (Permit required)' : 'No permit required';
+  document.getElementById('entryFee').textContent       = trek.entry_fee ? `₹${trek.entry_fee}` : 'Free';
 
   // Map & Coordinates
   const lat = parseFloat(trek.latitude);
   const lng = parseFloat(trek.longitude);
 
-  document.getElementById('latCoord').textContent   = !isNaN(lat) ? `${lat.toFixed(4)}° N` : 'N/A';
-  document.getElementById('lngCoord').textContent   = !isNaN(lng) ? `${lng.toFixed(4)}° E` : 'N/A';
+  document.getElementById('latCoord').textContent    = !isNaN(lat) ? `${lat.toFixed(4)}° N` : 'N/A';
+  document.getElementById('lngCoord').textContent    = !isNaN(lng) ? `${lng.toFixed(4)}° E` : 'N/A';
   document.getElementById('districtText').textContent = trek.district || '—';
   document.getElementById('stateText').textContent    = trek.state;
 
@@ -87,7 +144,7 @@ function renderTrekDetails(trek) {
 
     const icon = L.divIcon({
       html: `<div style="background:#9caf88;width:24px;height:24px;border-radius:50%;border:3px solid #0b0f0b;box-shadow:0 0 12px rgba(156,175,136,0.6);"></div>`,
-      iconSize: [24, 24],
+      iconSize:   [24, 24],
       iconAnchor: [12, 12],
     });
 
@@ -101,18 +158,20 @@ function renderTrekDetails(trek) {
   initUserActions(trek);
 }
 
+/* ─── 6. DIFFICULTY CLASS ────────────────────────────────── */
 function diffClass(diff) {
   if (!diff) return 'moderate';
   const d = diff.toLowerCase();
-  if (d.includes('easy')) return 'easy';
-  if (d.includes('diff')) return 'difficult';
+  if (d.includes('easy'))  return 'easy';
+  if (d.includes('diff'))  return 'difficult';
   return 'moderate';
 }
 
+/* ─── 7. USER ACTIONS ────────────────────────────────────── */
 function initUserActions(trek) {
-  const saveBtn = document.getElementById('saveTrekBtn');
+  const saveBtn     = document.getElementById('saveTrekBtn');
   const completeBtn = document.getElementById('completeTrekBtn');
-  let saved = false;
+  let saved     = false;
   let completed = false;
 
   saveBtn?.addEventListener('click', () => {
@@ -147,8 +206,8 @@ function initUserActions(trek) {
       return;
     }
     const reviewsList = document.getElementById('reviewsList');
-    const newRev = document.createElement('div');
-    newRev.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid rgba(156,175,136,0.15);border-radius:12px;padding:16px;margin-top:12px;';
+    const newRev      = document.createElement('div');
+    newRev.style.cssText = 'background:var(--detail-card-bg);border:1px solid var(--detail-border);border-radius:12px;padding:16px;margin-top:12px;';
     newRev.innerHTML = `
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
         <span style="font-weight:600;color:var(--detail-text);">You (Verified Trekker)</span>
@@ -160,4 +219,104 @@ function initUserActions(trek) {
     document.getElementById('reviewText').value = '';
     alert('Thank you! Your review has been recorded.');
   });
+}
+
+/* ─── 8. TREKKING COMPANIES ──────────────────────────────── */
+
+/**
+ * Fetch companies for the given slug, then render cards.
+ * Fully isolated — if this fails, the rest of the page is unaffected.
+ */
+async function loadTrekCompanies(slug) {
+  const skeleton = document.getElementById('companiesSkeleton');
+  const grid     = document.getElementById('companiesGrid');
+  const empty    = document.getElementById('companiesEmpty');
+  const error    = document.getElementById('companiesError');
+
+  // Show skeleton while fetching
+  skeleton.style.display = '';
+  grid.style.display     = 'none';
+  empty.style.display    = 'none';
+  error.style.display    = 'none';
+
+  try {
+    const res  = await fetch(`/api/treks/slug/${encodeURIComponent(slug)}/companies`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+
+    // Hide skeleton
+    skeleton.style.display = 'none';
+
+    if (!json.success || !Array.isArray(json.companies) || json.companies.length === 0) {
+      empty.style.display = '';
+      return;
+    }
+
+    // Render company cards
+    grid.innerHTML = json.companies.map(c => buildCompanyCard(c)).join('');
+    grid.style.display = '';
+
+  } catch (err) {
+    console.warn('Companies API error (non-critical):', err.message);
+    showCompaniesError();
+  }
+}
+
+/**
+ * Build a single company card HTML string.
+ * No icons — clean text only.
+ */
+function buildCompanyCard(company) {
+  const name    = escapeHtml(company.company_name || '');
+  const rawUrl  = (company.website_url || '').trim();
+  const safeUrl = sanitizeUrl(rawUrl);
+
+  // Show clean domain only (no https://, no trailing slash)
+  const displayUrl = rawUrl
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/$/, '');
+
+  return `
+    <div class="company-card" role="article" aria-label="${name}">
+      <div class="company-name">${name}</div>
+      <div class="company-tag">Trek Operator</div>
+      ${displayUrl ? `<div class="company-url">${escapeHtml(displayUrl)}</div>` : ''}
+      ${safeUrl ? `
+      <a href="${safeUrl}" target="_blank" rel="noopener noreferrer"
+         class="company-cta"
+         aria-label="Visit ${name} website (opens in new tab)">
+        Visit Website
+      </a>` : ''}
+    </div>
+  `;
+}
+
+/** Show the error state for the companies section */
+function showCompaniesError() {
+  const skeleton = document.getElementById('companiesSkeleton');
+  const error    = document.getElementById('companiesError');
+  if (skeleton) skeleton.style.display = 'none';
+  if (error)    error.style.display    = '';
+}
+
+/** Sanitize URL — only allow http/https to prevent XSS */
+function sanitizeUrl(url) {
+  if (!url) return '';
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'http:' || u.protocol === 'https:') ? u.href : '';
+  } catch {
+    return '';
+  }
+}
+
+/** Minimal HTML escaping for user-sourced strings */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

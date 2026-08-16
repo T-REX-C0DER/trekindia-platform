@@ -226,3 +226,34 @@ export async function getTrekBySlug(slug) {
   );
   return result.rows[0] || null;
 }
+
+/**
+ * Query trekking companies associated with a specific trek name
+ * Uses PostgreSQL JSONB array elements matching with normalized fallbacks
+ */
+export async function getCompaniesForTrek(trekName) {
+  if (!trekName) return [];
+  const sql = `
+    SELECT
+      company_id,
+      company_name,
+      website_url,
+      created_at
+    FROM trek_companies
+    WHERE EXISTS (
+      SELECT 1
+      FROM jsonb_array_elements(treks) AS t(elem)
+      WHERE
+        LOWER(TRIM(elem->>'trek_name')) = LOWER(TRIM($1))
+        OR (
+          LENGTH(REGEXP_REPLACE(LOWER(TRIM(elem->>'trek_name')), '[^a-z0-9]', '', 'g')) > 3 AND
+          REGEXP_REPLACE(REGEXP_REPLACE(LOWER(TRIM(elem->>'trek_name')), '\\s*(trek|peak|trail|hikes|hills)s?\\b', '', 'g'), '[^a-z0-9]', '', 'g') =
+          REGEXP_REPLACE(REGEXP_REPLACE(LOWER(TRIM($1)), '\\s*(trek|peak|trail|hikes|hills)s?\\b', '', 'g'), '[^a-z0-9]', '', 'g')
+        )
+    )
+    ORDER BY company_name ASC;
+  `;
+  const result = await query(sql, [trekName]);
+  return result.rows;
+}
+

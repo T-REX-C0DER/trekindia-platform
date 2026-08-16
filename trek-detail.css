@@ -1,25 +1,88 @@
-/* TrekIndia — Trek Detail Page Styles */
+/* ============================================================
+   TrekIndia — Trek Detail Page Styles
+   Supports global light/dark theme via body.dark class.
+   All detail-specific tokens are defined here as CSS vars.
+   ============================================================ */
 
+/* ─── Detail-page design tokens (light mode = default) ──── */
 :root {
-  --detail-bg: #0b0f0b;
-  --detail-card-bg: rgba(18, 24, 18, 0.7);
-  --detail-border: rgba(156, 175, 136, 0.15);
-  --detail-accent: #9caf88;
-  --detail-text: #e8f0e4;
-  --detail-text-muted: #889982;
+  --detail-bg:           #f2f5f0;
+  --detail-card-bg:      #ffffff;
+  --detail-card-bg-alt:  rgba(255,255,255,0.92);
+  --detail-border:       rgba(85,107,47,0.14);
+  --detail-accent:       #556B2F;
+  --detail-accent-light: #9caf88;
+  --detail-text:         #1a1a1a;
+  --detail-text-muted:   #606b55;
+  --detail-shadow:       0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+  --detail-shadow-hover: 0 12px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  --detail-header-grad:  radial-gradient(circle at 50% 0%, rgba(156,175,136,0.18), transparent 70%);
+  --detail-skeleton-bg:  rgba(0,0,0,0.07);
+  --detail-skeleton-shi: rgba(255,255,255,0.6);
+  --detail-cta-text:     #ffffff;
+  --detail-transition:   0.3s ease;
+
+  /* Brand wordmark – must match style.css light-mode values */
+  --brand-trek:  #0F172A;
+  --brand-india: #15803D;
+}
+
+/* ─── Dark mode overrides ─────────────────────────────────── */
+body.dark {
+  --detail-bg:           #070a07;
+  --detail-card-bg:      rgba(18,24,18,0.7);
+  --detail-card-bg-alt:  rgba(18,24,18,0.85);
+  --detail-border:       rgba(156,175,136,0.15);
+  --detail-accent:       #9caf88;
+  --detail-accent-light: #9caf88;
+  --detail-text:         #e8f0e4;
+  --detail-text-muted:   #889982;
+  --detail-shadow:       0 4px 28px rgba(0,0,0,0.3);
+  --detail-shadow-hover: 0 16px 48px rgba(0,0,0,0.45);
+  --detail-header-grad:  radial-gradient(circle at 50% 0%, rgba(156,175,136,0.15), transparent 70%);
+  --detail-skeleton-bg:  rgba(255,255,255,0.06);
+  --detail-skeleton-shi: rgba(255,255,255,0.1);
+  --detail-cta-text:     #0b0f0b;
+
+  /* Brand wordmark – must match style.css dark-mode values */
+  --brand-trek:  #FFFFFF;
+  --brand-india: #22C55E;
+}
+
+/* ─── Page background ─────────────────────────────────────── */
+body {
+  background-color: var(--detail-bg);
+  transition: background-color var(--detail-transition), color var(--detail-transition);
 }
 
 body.dark {
   background-color: #070a07;
 }
 
+/* ─── Transition for all themed elements ──────────────────── */
+.detail-card,
+.detail-metric-card,
+.detail-hero-placeholder,
+.action-btn,
+.review-form textarea,
+.company-card,
+.detail-header-section {
+  transition:
+    background var(--detail-transition),
+    border-color var(--detail-transition),
+    box-shadow var(--detail-transition),
+    color var(--detail-transition);
+}
+
+/* ─── Header section ──────────────────────────────────────── */
 .detail-header-section {
   position: relative;
   padding: 140px 0 60px;
-  background: radial-gradient(circle at 50% 0%, rgba(156, 175, 136, 0.15), transparent 70%);
+  background: var(--detail-header-grad);
   border-bottom: 1px solid var(--detail-border);
 }
 
+/* ─── Breadcrumb ──────────────────────────────────────────── */
 .detail-breadcrumb {
   display: flex;
   align-items: center;
@@ -34,10 +97,9 @@ body.dark {
   text-decoration: none;
 }
 
-.detail-breadcrumb a:hover {
-  text-decoration: underline;
-}
+.detail-breadcrumb a:hover { text-decoration: underline; }
 
+/* ─── Title wrap ──────────────────────────────────────────── */
 .detail-title-wrap {
   display: flex;
   justify-content: space-between;
@@ -55,6 +117,7 @@ body.dark {
   line-height: 1.1;
 }
 
+/* ─── Difficulty badges ───────────────────────────────────── */
 .detail-badges {
   display: flex;
   align-items: center;
@@ -71,14 +134,16 @@ body.dark {
   letter-spacing: 0.5px;
 }
 
-.detail-badge.easy { background: rgba(74, 124, 89, 0.25); color: #78c08f; border: 1px solid rgba(74, 124, 89, 0.4); }
-.detail-badge.moderate { background: rgba(85, 107, 47, 0.25); color: #b0d878; border: 1px solid rgba(85, 107, 47, 0.4); }
-.detail-badge.difficult { background: rgba(123, 94, 58, 0.25); color: #e6b078; border: 1px solid rgba(123, 94, 58, 0.4); }
+body.dark .detail-badge.easy     { background: rgba(74,124,89,0.25);  color:#78c08f; border:1px solid rgba(74,124,89,0.4); }
+body.dark .detail-badge.moderate { background: rgba(85,107,47,0.25);  color:#b0d878; border:1px solid rgba(85,107,47,0.4); }
+body.dark .detail-badge.difficult{ background: rgba(123,94,58,0.25);  color:#e6b078; border:1px solid rgba(123,94,58,0.4); }
 
-.detail-actions {
-  display: flex;
-  gap: 12px;
-}
+body:not(.dark) .detail-badge.easy     { background: rgba(74,124,89,0.12);  color:#2d7a4a; border:1px solid rgba(74,124,89,0.3); }
+body:not(.dark) .detail-badge.moderate { background: rgba(85,107,47,0.12);  color:#556B2F; border:1px solid rgba(85,107,47,0.3); }
+body:not(.dark) .detail-badge.difficult{ background: rgba(180,90,40,0.12);  color:#b45a28; border:1px solid rgba(180,90,40,0.3); }
+
+/* ─── Action buttons ──────────────────────────────────────── */
+.detail-actions { display:flex; gap:12px; }
 
 .action-btn {
   display: inline-flex;
@@ -89,24 +154,25 @@ body.dark {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
   border: 1px solid var(--detail-border);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--detail-card-bg);
   color: var(--detail-text);
 }
 
 .action-btn:hover {
   background: var(--detail-accent);
-  color: #0b0f0b;
+  color: var(--detail-cta-text);
   border-color: var(--detail-accent);
+  box-shadow: 0 4px 16px rgba(85,107,47,0.3);
 }
 
 .action-btn.active {
   background: var(--detail-accent);
-  color: #0b0f0b;
+  color: var(--detail-cta-text);
+  border-color: var(--detail-accent);
 }
 
-/* Key Metrics Grid */
+/* ─── Metrics grid ────────────────────────────────────────── */
 .detail-metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -121,12 +187,10 @@ body.dark {
   padding: 20px;
   backdrop-filter: blur(12px);
   text-align: center;
+  box-shadow: var(--detail-shadow);
 }
 
-.detail-metric-icon {
-  font-size: 24px;
-  margin-bottom: 8px;
-}
+.detail-metric-icon  { font-size:24px; margin-bottom:8px; }
 
 .detail-metric-label {
   font-size: 12px;
@@ -142,7 +206,7 @@ body.dark {
   color: var(--detail-text);
 }
 
-/* Content Grid */
+/* ─── Main 2-column grid ──────────────────────────────────── */
 .detail-main-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -150,12 +214,22 @@ body.dark {
   padding: 60px 0;
 }
 
+.detail-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
 @media (max-width: 992px) {
   .detail-main-grid {
     grid-template-columns: 1fr;
   }
+  .detail-right-col {
+    order: -1; /* map above left col on mobile */
+  }
 }
 
+/* ─── Cards ───────────────────────────────────────────────── */
 .detail-card {
   background: var(--detail-card-bg);
   border: 1px solid var(--detail-border);
@@ -163,6 +237,18 @@ body.dark {
   padding: 32px;
   backdrop-filter: blur(12px);
   margin-bottom: 32px;
+  box-shadow: var(--detail-shadow);
+}
+
+/* Sidebar cards stack without margin-bottom gap between them */
+.detail-sidebar-card {
+  position: sticky;
+  top: 100px;
+  margin-bottom: 24px;
+}
+
+.detail-companies-card {
+  margin-bottom: 0;
 }
 
 .detail-card-title {
@@ -181,12 +267,12 @@ body.dark {
   color: var(--detail-text-muted);
 }
 
-/* Placeholder image container on detail page */
+/* ─── Hero placeholder ────────────────────────────────────── */
 .detail-hero-placeholder {
   width: 100%;
   height: 320px;
   border-radius: 20px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+  background: var(--detail-card-bg);
   border: 1px solid var(--detail-border);
   display: flex;
   flex-direction: column;
@@ -194,19 +280,13 @@ body.dark {
   justify-content: center;
   gap: 12px;
   margin-bottom: 32px;
+  box-shadow: var(--detail-shadow);
 }
 
-.detail-hero-placeholder svg {
-  opacity: 0.3;
-  color: var(--detail-accent);
-}
+.detail-hero-placeholder svg { opacity:0.3; color:var(--detail-accent); }
+.detail-hero-placeholder p   { font-size:13px; color:var(--detail-text-muted); }
 
-.detail-hero-placeholder p {
-  font-size: 13px;
-  color: var(--detail-text-muted);
-}
-
-/* Detail Map */
+/* ─── Detail Map ──────────────────────────────────────────── */
 #detailMap {
   width: 100%;
   height: 300px;
@@ -214,7 +294,7 @@ body.dark {
   border: 1px solid var(--detail-border);
 }
 
-/* Reviews section */
+/* ─── Reviews ─────────────────────────────────────────────── */
 .review-form {
   display: flex;
   flex-direction: column;
@@ -226,7 +306,7 @@ body.dark {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.05);
+  background: var(--detail-card-bg);
   border: 1px solid var(--detail-border);
   color: var(--detail-text);
   font-family: inherit;
@@ -238,21 +318,242 @@ body.dark {
 .review-form textarea:focus {
   outline: none;
   border-color: var(--detail-accent);
+  box-shadow: 0 0 0 3px rgba(85,107,47,0.12);
 }
 
-.star-rating-select {
-  display: flex;
-  gap: 6px;
-  font-size: 24px;
-  cursor: pointer;
-}
+.star-rating-select { display:flex; gap:6px; font-size:24px; cursor:pointer; }
 
-.star-rating-select span {
-  color: rgba(255,255,255,0.2);
-  transition: color 0.15s;
-}
+body.dark  .star-rating-select span { color:rgba(255,255,255,0.2); transition:color 0.15s; }
+body:not(.dark) .star-rating-select span { color:rgba(0,0,0,0.15); transition:color 0.15s; }
 
 .star-rating-select span.selected,
-.star-rating-select span:hover {
-  color: #F59E0B;
+.star-rating-select span:hover { color:#F59E0B; }
+
+/* ─── Theme toggle icons ──────────────────────────────────── */
+/* In dark mode → show sun; in light mode → show moon */
+body.dark  .theme-icon-moon { display:none; }
+body.dark  .theme-icon-sun  { display:block; }
+body:not(.dark) .theme-icon-moon { display:block; }
+body:not(.dark) .theme-icon-sun  { display:none; }
+
+.detail-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--detail-border);
+  background: var(--detail-card-bg);
+  color: var(--detail-text);
+  cursor: pointer;
+  transition: background var(--detail-transition), border-color var(--detail-transition), color var(--detail-transition), box-shadow 0.2s;
+}
+
+.detail-theme-btn:hover {
+  background: var(--detail-accent);
+  border-color: var(--detail-accent);
+  color: var(--detail-cta-text);
+  box-shadow: 0 4px 12px rgba(85,107,47,0.3);
+}
+
+/* ─── Company grid ────────────────────────────────────────── */
+.companies-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px; /* space for scrollbar */
+
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--detail-accent) transparent;
+}
+
+/* Webkit scrollbar (Chrome / Safari / Edge) */
+.companies-grid::-webkit-scrollbar {
+  width: 5px;
+}
+
+.companies-grid::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.companies-grid::-webkit-scrollbar-thumb {
+  background: var(--detail-accent);
+  border-radius: 10px;
+  opacity: 0.7;
+}
+
+.companies-grid::-webkit-scrollbar-thumb:hover {
+  opacity: 1;
+}
+
+
+/* ─── Individual company card ─────────────────────────────── */
+.company-card {
+  background: var(--detail-card-bg);
+  border: 1px solid var(--detail-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: var(--detail-shadow);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.company-card:hover {
+  border-color: var(--detail-accent-light);
+  box-shadow: var(--detail-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* Company name */
+.company-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--detail-text);
+  line-height: 1.35;
+}
+
+/* "Trek Operator" label */
+.company-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--detail-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 4px;
+}
+
+/* Website domain */
+.company-url {
+  font-size: 12px;
+  color: var(--detail-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 8px;
+  border-top: 1px solid var(--detail-border);
+  margin-top: 6px;
+}
+
+/* Visit Website CTA */
+.company-cta {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 18px;
+  background: var(--detail-accent);
+  color: var(--detail-cta-text);
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  align-self: flex-start;
+  transition: opacity 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.company-cta:hover {
+  opacity: 0.88;
+  box-shadow: 0 4px 14px rgba(85,107,47,0.35);
+  transform: translateY(-1px);
+}
+
+.company-cta:focus-visible {
+  outline: 3px solid var(--detail-accent);
+  outline-offset: 3px;
+}
+
+/* ─── Skeleton loading ────────────────────────────────────── */
+.companies-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.company-skeleton-card {
+  background: var(--detail-card-bg);
+  border: 1px solid var(--detail-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skel {
+  border-radius: 8px;
+  background: var(--detail-skeleton-bg);
+  animation: skelShimmer 1.5s ease-in-out infinite;
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    90deg,
+    var(--detail-skeleton-bg) 25%,
+    var(--detail-skeleton-shi) 50%,
+    var(--detail-skeleton-bg) 75%
+  );
+}
+
+@keyframes skelShimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.skel-name { height: 16px; width: 75%; }
+.skel-tag  { height: 11px; width: 40%; }
+.skel-url  { height: 11px; width: 60%; }
+.skel-btn  { height: 30px; width: 40%; align-self: flex-end; border-radius: 30px; }
+
+/* ─── Empty / Error states ────────────────────────────────── */
+.companies-empty,
+.companies-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.companies-empty-icon { font-size: 32px; opacity: 0.45; }
+
+.companies-empty p,
+.companies-error p {
+  font-size: 13px;
+  color: var(--detail-text-muted);
+  line-height: 1.6;
+}
+
+/* ─── Theme toggle button (detail page only) ─────────────── */
+/* nav-icon-btn base styles come from style.css;
+   only override the hover colour to use detail-accent tokens */
+.detail-theme-btn:hover {
+  background: var(--detail-accent);
+  border-color: var(--detail-accent);
+  color: var(--detail-cta-text);
+}
+
+/* Force brand wordmark to use correct colour tokens
+   (ensures the Trek/India text renders perfectly on the
+   trek-detail page regardless of cascade order) */
+.brand-wordmark .brand-trek  { color: var(--brand-trek);  }
+.brand-wordmark .brand-india { color: var(--brand-india); }
+
+/* ─── Responsive: Mobile ────────────────────────────── */
+@media (max-width: 600px) {
+  .detail-main-grid     { padding: 32px 0; gap: 24px; }
+  .detail-card          { padding: 20px; }
+  .companies-grid       { max-height: 320px; } /* slightly shorter on mobile */
+  .detail-title-wrap    { flex-direction: column; align-items: flex-start; }
+  .detail-actions       { flex-wrap: wrap; }
+  .action-btn           { font-size: 13px; padding: 8px 14px; }
 }
