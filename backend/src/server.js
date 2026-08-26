@@ -1,3 +1,4 @@
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -15,6 +16,12 @@ import communityRoutes from './routes/communityRoutes.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 import { runMigrations }  from './config/initDb.js';
 
+// Kafka KRaft & WebSocket Modules
+import { initializeKafkaTopics } from './kafka/admin.js';
+import messageProducer from './kafka/producer.js';
+import messageConsumer from './kafka/consumer.js';
+import wsManager from './websocket/wsServer.js';
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,6 +30,9 @@ const rootDir = path.resolve(__dirname, '../../');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Create standard Node.js HTTP server to support both Express & WebSockets
+const server = http.createServer(app);
 
 // Run DB migrations automatically
 runMigrations();
@@ -76,12 +86,19 @@ app.use(express.static(rootDir));
 app.get('/api/health', (req, res) => {
   return res.status(200).json({
     success: true,
-    message: 'TrekIndia API is running.'
+    message: 'TrekIndia API & Kafka KRaft Services are active.',
+    kafka: {
+      producer_connected: messageProducer.isConnected,
+      consumer_running: messageConsumer.isRunning
+    },
+    websocket: {
+      online_users_count: wsManager.getOnlineUserIds().length
+    }
   });
 });
 
-// Protected Test Route (Demonstrating requireAuth usage)
-import { requireAuth, requireRole } from './middleware/authMiddleware.js';
+// Protected Test Route
+import { requireAuth } from './middleware/authMiddleware.js';
 app.get('/api/users/me', requireAuth, (req, res) => {
   return res.status(200).json({
     success: true,
@@ -113,11 +130,48 @@ app.use('/api/community', communityRoutes);
 // Centralized Error Handling Middleware
 app.use(errorMiddleware);
 
-// Start Express Server
-app.listen(PORT, () => {
+// Initialize WebSocket Manager on HTTP Server
+wsManager.init(server);
+
+// Initialize Kafka KRaft Services (Topics, Producer, Consumer)
+async function startKafkaServices() {
+  try {
+    console.log('[Server Startup] Initializing Kafka KRaft architecture...');
+    await initializeKafkaTopics();
+    await messageProducer.connect();
+    await messageConsumer.start();
+  } catch (err) {
+    console.warn('⚠️ [Server Startup] Notice on Kafka initialization:', err.message);
+  }
+}
+
+startKafkaServices();
+
+// Graceful Shutdown handling
+async function gracefulShutdown(signal) {
+  console.log(`\n[Server] Received ${signal}. Starting graceful shutdown...`);
+  try {
+    await messageConsumer.disconnect();
+    await messageProducer.disconnect();
+    server.close(() => {
+      console.log('✅ [Server] HTTP and WebSocket servers closed.');
+      process.exit(0);
+    });
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
+}
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+// Start Server
+server.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(`🚀 TrekIndia Server running on http://localhost:${PORT}`);
   console.log(`   Community Hub:     http://localhost:${PORT}/community`);
+  console.log(`   WebSocket Server:  ws://localhost:${PORT}/ws/messages`);
   console.log(`   Profile Dashboard: http://localhost:${PORT}/profile`);
   console.log(`   Healthcheck:       http://localhost:${PORT}/api/health`);
   console.log(`====================================================`);

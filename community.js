@@ -70,11 +70,15 @@
     // Bind event listeners
     bindEventListeners();
 
+    // Initialize Kafka KRaft real-time WebSocket connection
+    initWebSocket();
+
     // Load initial data
     loadStories();
     loadPosts();
     loadConversations();
     loadNotificationsCount();
+    loadUnreadCount();
   }
 
   async function checkAuthentication() {
@@ -802,8 +806,344 @@
     }
   }
 
-  // ─── 6. DUAL-PANE MESSAGING & CHAT SYSTEM (Screenshot 2) ───────────────────
-  async function loadConversations() {
+  // ─── 6. REALTIME WEBSOCKET & KAFKA STREAMING MESSAGING SYSTEM ─────────────
+  let wsClient = null;
+  let wsReconnectTimer = null;
+  let wsReconnectDelay = 1000;
+  let wsPingTimer = null;
+  let typingTimeout = null;
+  let lastTypingSentAt = 0;
+
+  function initWebSocket() {
+    if (wsClient && (wsClient.readyState === WebSocket.OPEN || wsClient.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/messages`;
+
+    console.log(`[WebSocket Client] Connecting to ${wsUrl}...`);
+    updateWsStatusUI('connecting');
+
+    try {
+      wsClient = new WebSocket(wsUrl);
+    } catch (err) {
+      console.warn('[WebSocket Client] Failed to create socket:', err);
+      scheduleWsReconnect();
+      return;
+    }
+
+    wsClient.onopen = () => {
+      console.log('✅ [WebSocket Client] Connected to TrekIndia streaming gateway.');
+      updateWsStatusUI('connected');
+      wsReconnectDelay = 1000; // reset backoff
+
+      // Start ping interval
+      if (wsPingTimer) clearInterval(wsPingTimer);
+      wsPingTimer = setInterval(() => {
+        if (wsClient && wsClient.readyState === WebSocket.OPEN) {
+          wsClient.send(JSON.stringify({ type: 'ping' }));
+        }
+      }, 25000);
+
+      // Refresh conversations to catch any missed messages while offline
+      loadConversations(false);
+      loadUnreadCount();
+    };
+
+    wsClient.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        handleIncomingWsEvent(data);
+      } catch (err) {
+        console.warn('[WebSocket Client] Malformed event payload:', err);
+      }
+    };
+
+    wsClient.onclose = (e) => {
+      console.warn(`⚠️ [WebSocket Client] Socket closed (code: ${e.code}). Reconnecting...`);
+      updateWsStatusUI('disconnected');
+      if (wsPingTimer) clearInterval(wsPingTimer);
+      scheduleWsReconnect();
+    };
+
+    wsClient.onerror = (err) => {
+      console.warn('[WebSocket Client] Socket error occurred:', err);
+      updateWsStatusUI('disconnected');
+      try { wsClient.close(); } catch (_) {}
+    };
+  }
+
+  function scheduleWsReconnect() {
+    if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
+    wsReconnectTimer = setTimeout(() => {
+      wsReconnectDelay = Math.min(wsReconnectDelay * 1.5, 15000);
+      initWebSocket();
+    }, wsReconnectDelay);
+  }
+
+  function updateWsStatusUI(status) {
+    const dot = document.getElementById('wsStatusDot');
+    const text = document.getElementById('wsStatusText');
+    const banner = document.getElementById('chatReconnectBanner');
+
+    if (status === 'connected') {
+      if (dot) {
+        dot.className = 'conn-dot connected';
+      }
+      if (text) text.textContent = 'Live';
+      if (banner) banner.style.display = 'none';
+    } else if (status === 'connecting') {
+      if (dot) {
+        dot.className = 'conn-dot disconnected';
+      }
+      if (text) text.textContent = 'Connecting...';
+      if (banner) banner.style.display = 'flex';
+    } else {
+      if (dot) {
+        dot.className = 'conn-dot disconnected';
+      }
+      if (text) text.textContent = 'Offline';
+      if (banner) banner.style.display = 'flex';
+    }
+  }
+
+  function handleIncomingWsEvent(data) {
+    switch (data.type) {
+      case 'connection.established':
+        // Initial sync of online user IDs
+        if (Array.isArray(data.online_users)) {
+          state.onlineUsers = new Set(data.online_users.map(String));
+          updatePresenceIndicators();
+        }
+        break;
+
+      case 'message.new':
+        handleIncomingMessage(data.message);
+        break;
+
+      case 'message.status_update':
+        handleMessageStatusUpdate(data);
+        break;
+
+      case 'message.read_receipt':
+        handleReadReceipt(data);
+        break;
+
+      case 'user.presence':
+        handleUserPresenceUpdate(data);
+        break;
+
+      case 'user.typing':
+        handleUserTyping(data);
+        break;
+
+      case 'notification.new':
+        loadNotificationsCount();
+        showToast(`🔔 ${data.notification?.title || 'New notification'}`);
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  function handleIncomingMessage(msg) {
+    const convId = parseInt(msg.conversation_id, 10);
+    const isActiveConv = state.activeConversationId === convId;
+
+    // 1. If this message is for the active conversation, append immediately
+    if (isActiveConv) {
+      const messagesBody = document.getElementById('chatMessagesBody');
+      const emptyCol = document.getElementById('emptyChatColumn');
+      if (emptyCol) emptyCol.style.display = 'none';
+
+      // Check if message already rendered (e.g. optimistic send)
+      const existingMsgEl = document.querySelector(`[data-client-msg-id="${msg.client_message_id}"]`) ||
+                            document.querySelector(`[data-msg-id="${msg.message_id}"]`);
+
+      if (existingMsgEl) {
+        // Update temporary optimistic bubble with server confirmation
+        existingMsgEl.setAttribute('data-msg-id', msg.message_id);
+        const timeEl = existingMsgEl.querySelector('.chat-msg-time');
+        const statusEl = existingMsgEl.querySelector('.chat-status-icon');
+        if (timeEl && msg.created_at) timeEl.textContent = msg.created_at;
+        if (statusEl) {
+          statusEl.className = `chat-status-icon ${msg.status || 'sent'}`;
+          statusEl.innerHTML = getStatusIconHtml(msg.status || 'sent');
+        }
+      } else {
+        // Append new message bubble
+        if (messagesBody) {
+          const rowEl = document.createElement('div');
+          rowEl.innerHTML = renderSingleMessageRow(msg, msg.sender_id === state.currentUser?.user_id);
+          const firstChild = rowEl.firstElementChild;
+          if (firstChild) {
+            messagesBody.appendChild(firstChild);
+            messagesBody.scrollTop = messagesBody.scrollHeight;
+          }
+        }
+      }
+
+      // If incoming from other user while chat is open, immediately mark as read
+      if (msg.sender_id !== state.currentUser?.user_id) {
+        fetch(`/api/community/messages/conversations/${convId}/read`, {
+          method: 'POST',
+          credentials: 'include'
+        }).catch(() => {});
+      }
+    }
+
+    // 2. Update conversation snippet and unread count in conversations store
+    let conv = state.conversations.find(c => c.conversation_id === convId);
+    let snippet = msg.content || (msg.message_type === 'trek_card' ? `Shared Trek: ${msg.trek_data?.name || 'Trek'}` : '📷 Photo');
+
+    if (conv) {
+      conv.last_message = snippet;
+      conv.last_message_time = 'Just now';
+      if (!isActiveConv && msg.sender_id !== state.currentUser?.user_id) {
+        conv.unread_count = (conv.unread_count || 0) + 1;
+      }
+    } else {
+      // Reload conversations if new conversation arrived
+      loadConversations(false);
+    }
+
+    renderConversationsList(state.conversations);
+    loadUnreadCount();
+  }
+
+  function handleMessageStatusUpdate(data) {
+    const { conversation_id, message_id, status, client_message_id } = data;
+    if (state.activeConversationId !== parseInt(conversation_id, 10)) return;
+
+    const msgEl = document.querySelector(`[data-msg-id="${message_id}"]`) ||
+                  (client_message_id ? document.querySelector(`[data-client-msg-id="${client_message_id}"]`) : null);
+
+    if (msgEl) {
+      const statusIconEl = msgEl.querySelector('.chat-status-icon');
+      if (statusIconEl) {
+        statusIconEl.className = `chat-status-icon ${status}`;
+        statusIconEl.innerHTML = getStatusIconHtml(status);
+      }
+    }
+  }
+
+  function handleReadReceipt(data) {
+    const { conversation_id } = data;
+    if (state.activeConversationId !== parseInt(conversation_id, 10)) return;
+
+    // Mark all outgoing messages in active chat as read
+    document.querySelectorAll('.chat-msg-row.self .chat-status-icon').forEach(icon => {
+      icon.className = 'chat-status-icon read';
+      icon.innerHTML = getStatusIconHtml('read');
+    });
+  }
+
+  function handleUserPresenceUpdate(data) {
+    const { user_id, status } = data;
+    const uid = String(user_id);
+
+    if (!state.onlineUsers) state.onlineUsers = new Set();
+    if (status === 'online') {
+      state.onlineUsers.add(uid);
+    } else {
+      state.onlineUsers.delete(uid);
+    }
+
+    // Update conversation list item dots
+    document.querySelectorAll(`.conversation-item[data-participant-id="${uid}"] .conv-online-dot`).forEach(dot => {
+      dot.style.display = status === 'online' ? 'block' : 'none';
+    });
+
+    // Update active chat header if this user is active
+    const activeConv = state.conversations.find(c => c.conversation_id === state.activeConversationId);
+    if (activeConv && String(activeConv.participant?.user_id) === uid) {
+      const onlineDot = document.getElementById('chatHeadOnlineDot');
+      const statusText = document.getElementById('chatHeadStatus');
+      if (onlineDot) {
+        onlineDot.className = `chat-online-indicator ${status === 'online' ? 'online' : ''}`;
+      }
+      if (statusText) {
+        statusText.className = `chat-active-status ${status === 'online' ? 'online' : ''}`;
+        statusText.textContent = status === 'online' ? '● Active now' : 'Offline';
+      }
+    }
+  }
+
+  function handleUserTyping(data) {
+    const { conversation_id, user_id, is_typing } = data;
+    if (state.activeConversationId !== parseInt(conversation_id, 10)) return;
+    if (String(user_id) === String(state.currentUser?.user_id)) return;
+
+    const typingIndicator = document.getElementById('chatTypingIndicator');
+    const typingName = document.getElementById('typingName');
+
+    if (!typingIndicator) return;
+
+    if (is_typing) {
+      const activeConv = state.conversations.find(c => c.conversation_id === state.activeConversationId);
+      if (typingName) typingName.textContent = activeConv?.participant?.full_name?.split(' ')[0] || 'Trekker';
+      typingIndicator.style.display = 'flex';
+
+      if (typingTimeout) clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        typingIndicator.style.display = 'none';
+      }, 3500);
+    } else {
+      typingIndicator.style.display = 'none';
+    }
+  }
+
+  function updatePresenceIndicators() {
+    if (!state.onlineUsers) return;
+    document.querySelectorAll('.conversation-item').forEach(item => {
+      const participantId = item.getAttribute('data-participant-id');
+      const isOnline = participantId && state.onlineUsers.has(String(participantId));
+      const dot = item.querySelector('.conv-online-dot');
+      if (dot) dot.style.display = isOnline ? 'block' : 'none';
+    });
+  }
+
+  function getStatusIconHtml(status) {
+    if (status === 'read') {
+      // Double checkmark (green/blue)
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L7 17l-5-5"/><path d="M22 10l-7.5 7.5L13 16"/></svg>`;
+    } else if (status === 'delivered') {
+      // Double checkmark (gray)
+      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L7 17l-5-5"/><path d="M22 10l-7.5 7.5L13 16"/></svg>`;
+    } else {
+      // Single checkmark (sent)
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    }
+  }
+
+  async function loadUnreadCount() {
+    try {
+      const res = await fetch('/api/community/messages/unread-count', { credentials: 'include' });
+      const data = await res.json();
+      if (data.success) {
+        const count = data.count || 0;
+        const sidebarBadge = document.getElementById('sidebarMsgBadge');
+        const floatingDot = document.getElementById('floatingMsgDot');
+        const tabBadge = document.getElementById('convUnreadBadgeCount');
+
+        if (sidebarBadge) {
+          sidebarBadge.textContent = count;
+          sidebarBadge.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+        if (floatingDot) {
+          floatingDot.style.display = count > 0 ? 'block' : 'none';
+        }
+        if (tabBadge) {
+          tabBadge.textContent = count;
+          tabBadge.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+      }
+    } catch (_) {}
+  }
+
+  async function loadConversations(autoSelectFirst = true) {
     try {
       const res = await fetch('/api/community/messages/conversations', {
         credentials: 'include'
@@ -813,13 +1153,14 @@
         state.conversations = data.conversations;
         renderConversationsList(data.conversations);
 
-        // Auto select first conversation
-        if (data.conversations.length > 0 && !state.activeConversationId) {
+        if (autoSelectFirst && data.conversations.length > 0 && !state.activeConversationId) {
           selectConversation(data.conversations[0].conversation_id);
+        } else if (data.conversations.length === 0) {
+          showEmptyChatView();
         }
       }
     } catch (err) {
-      console.error('Failed to load conversations:', err);
+      console.error('[Messaging Client] Failed to load conversations:', err);
     }
   }
 
@@ -827,24 +1168,40 @@
     const container = document.getElementById('conversationsList');
     if (!container) return;
 
-    container.innerHTML = conversations.map(conv => `
-      <div class="conversation-item ${conv.conversation_id === state.activeConversationId ? 'active' : ''}" data-conv-id="${conv.conversation_id}">
-        <div class="conv-avatar-wrap">
-          <img src="${escapeHtml(conv.participant.avatar)}" alt="${escapeHtml(conv.participant.full_name)}" />
-          ${conv.participant.online_status === 'online' ? '<span class="conv-online-dot"></span>' : ''}
+    if (!conversations || conversations.length === 0) {
+      container.innerHTML = `
+        <div style="padding: 30px 20px; text-align: center; color: var(--comm-text-muted);">
+          <div style="font-size: 1.8rem; margin-bottom: 8px;">💬</div>
+          <strong style="color: var(--comm-text-primary); font-size: 0.9rem;">No Conversations Yet</strong>
+          <p style="font-size: 0.78rem; margin-top: 4px;">Click the + button above to connect with fellow trekkers.</p>
         </div>
-        <div class="conv-meta">
-          <div class="conv-name-row">
-            <span class="conv-name">${escapeHtml(conv.participant.full_name)}</span>
-            <span class="conv-time">${escapeHtml(conv.last_message_time || '')}</span>
+      `;
+      return;
+    }
+
+    container.innerHTML = conversations.map(conv => {
+      const isOnline = conv.participant?.online_status === 'online' || (state.onlineUsers && state.onlineUsers.has(String(conv.participant?.user_id)));
+      const isActive = conv.conversation_id === state.activeConversationId;
+
+      return `
+        <div class="conversation-item ${isActive ? 'active' : ''}" data-conv-id="${conv.conversation_id}" data-participant-id="${conv.participant?.user_id || ''}">
+          <div class="conv-avatar-wrap">
+            <img src="${escapeHtml(conv.participant?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" alt="${escapeHtml(conv.participant?.full_name || 'Trekker')}" />
+            <span class="conv-online-dot" style="display: ${isOnline ? 'block' : 'none'};"></span>
           </div>
-          <div class="conv-snippet-row">
-            <span class="conv-snippet">${escapeHtml(conv.last_message || '')}</span>
-            ${conv.unread_count > 0 ? `<span class="conv-unread-pill">${conv.unread_count}</span>` : ''}
+          <div class="conv-meta">
+            <div class="conv-name-row">
+              <span class="conv-name">${escapeHtml(conv.participant?.full_name || 'Trekker')}</span>
+              <span class="conv-time">${escapeHtml(conv.last_message_time || '')}</span>
+            </div>
+            <div class="conv-snippet-row">
+              <span class="conv-snippet">${escapeHtml(conv.last_message || 'Start conversation...')}</span>
+              ${conv.unread_count > 0 ? `<span class="conv-unread-pill">${conv.unread_count}</span>` : ''}
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     container.querySelectorAll('.conversation-item').forEach(el => {
       el.addEventListener('click', () => {
@@ -855,109 +1212,224 @@
   }
 
   async function selectConversation(conversationId) {
-    state.activeConversationId = conversationId;
+    const convId = parseInt(conversationId, 10);
+    state.activeConversationId = convId;
 
-    // Mobile UI state switch
+    // Mobile slide view
     const drawerShell = document.getElementById('messagesDrawerShell');
     if (drawerShell) drawerShell.classList.add('chat-open');
 
-    // Update active highlight in conversation list
+    const emptyCol = document.getElementById('emptyChatColumn');
+    const activeCol = document.getElementById('activeChatColumn');
+    if (emptyCol) emptyCol.style.display = 'none';
+    if (activeCol) activeCol.style.display = 'flex';
+
+    // Highlight in list
     document.querySelectorAll('.conversation-item').forEach(el => {
       const id = parseInt(el.getAttribute('data-conv-id'), 10);
-      el.classList.toggle('active', id === conversationId);
+      el.classList.toggle('active', id === convId);
     });
 
+    // Clear unread pill locally
+    const targetConv = state.conversations.find(c => c.conversation_id === convId);
+    if (targetConv) {
+      targetConv.unread_count = 0;
+      renderConversationsList(state.conversations);
+    }
+
     try {
-      const res = await fetch(`/api/community/messages/conversations/${conversationId}`, {
+      const res = await fetch(`/api/community/messages/conversations/${convId}`, {
         credentials: 'include'
       });
       const data = await res.json();
       if (data.success && data.conversation) {
         renderActiveChat(data.conversation);
+        loadUnreadCount();
       }
     } catch (err) {
-      console.error('Failed to load chat:', err);
+      console.error('[Messaging Client] Failed to load chat:', err);
     }
+  }
+
+  function showEmptyChatView() {
+    const emptyCol = document.getElementById('emptyChatColumn');
+    const activeCol = document.getElementById('activeChatColumn');
+    if (emptyCol) emptyCol.style.display = 'flex';
+    if (activeCol) activeCol.style.display = 'none';
   }
 
   function renderActiveChat(conv) {
     const avatar = document.getElementById('chatHeadAvatar');
     const name = document.getElementById('chatHeadName');
-    const status = document.getElementById('chatHeadStatus');
+    const onlineDot = document.getElementById('chatHeadOnlineDot');
+    const statusText = document.getElementById('chatHeadStatus');
     const trekBadge = document.getElementById('chatHeadActiveTrek');
+    const trekText = document.getElementById('chatHeadActiveTrekText');
     const messagesBody = document.getElementById('chatMessagesBody');
-    const requestBanner = document.getElementById('chatRequestBanner');
 
-    if (avatar) avatar.src = conv.participant.avatar;
-    if (name) name.textContent = conv.participant.full_name;
-    if (status) status.textContent = conv.participant.online_status === 'online' ? '● Active now' : (conv.participant.last_active || 'Offline');
+    const isOnline = conv.participant?.online_status === 'online' || (state.onlineUsers && state.onlineUsers.has(String(conv.participant?.user_id)));
 
-    if (trekBadge) {
-      if (conv.participant.active_trek) {
+    if (avatar) avatar.src = conv.participant?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
+    if (name) name.textContent = conv.participant?.full_name || 'Trekker';
+
+    if (onlineDot) {
+      onlineDot.className = `chat-online-indicator ${isOnline ? 'online' : ''}`;
+    }
+    if (statusText) {
+      statusText.className = `chat-active-status ${isOnline ? 'online' : ''}`;
+      statusText.textContent = isOnline ? '● Active now' : (conv.participant?.last_active || 'Offline');
+    }
+
+    if (trekBadge && trekText) {
+      if (conv.participant?.active_trek) {
         trekBadge.style.display = 'flex';
-        trekBadge.innerHTML = `<span class="dot-green"></span><span>Active Trek: ${escapeHtml(conv.participant.active_trek)}</span>`;
+        trekText.textContent = `Active Trek: ${conv.participant.active_trek}`;
       } else {
         trekBadge.style.display = 'none';
       }
     }
 
-    if (requestBanner) {
-      requestBanner.style.display = conv.is_request ? 'flex' : 'none';
+    const viewProfileBtn = document.getElementById('chatViewProfileBtn');
+    if (viewProfileBtn && conv.participant?.user_id) {
+      viewProfileBtn.onclick = () => openTrekkerProfile(conv.participant.user_id);
     }
 
     if (messagesBody) {
-      messagesBody.innerHTML = (conv.messages || []).map(msg => {
-        if (msg.message_type === 'trek_card' && msg.trek_data) {
-          return `
-            <div class="chat-msg-row ${msg.is_self ? 'self' : 'other'}">
-              ${!msg.is_self ? `<img src="${escapeHtml(msg.avatar || conv.participant.avatar)}" class="chat-msg-avatar" />` : ''}
-              <div class="chat-trek-card">
-                <div class="chat-trek-card-img-wrap">
-                  <img src="${escapeHtml(msg.trek_data.image)}" alt="${escapeHtml(msg.trek_data.name)}" />
-                  <span class="chat-trek-diff-badge">${escapeHtml(msg.trek_data.difficulty || 'MODERATE')}</span>
-                </div>
-                <div class="chat-trek-card-content">
-                  <div class="chat-trek-title">${escapeHtml(msg.trek_data.name)}</div>
-                  <div class="chat-trek-stats-row">
-                    <span>⛰️ ${escapeHtml(msg.trek_data.elevation || '')}</span>
-                    <span>📏 ${escapeHtml(msg.trek_data.distance || '')}</span>
-                  </div>
-                  <button class="btn-chat-view-trek" onclick="window.TrekIndiaCommunity.viewTrekDetails('${msg.trek_data.slug || 'kedarkantha'}')">
-                    View Route Details
-                  </button>
-                </div>
-              </div>
-            </div>
-          `;
-        }
-
-        return `
-          <div class="chat-msg-row ${msg.is_self ? 'self' : 'other'}">
-            ${!msg.is_self ? `<img src="${escapeHtml(msg.avatar || conv.participant.avatar)}" class="chat-msg-avatar" />` : ''}
-            <div class="chat-msg-bubble">
-              ${escapeHtml(msg.content)}
-            </div>
+      if (!conv.messages || conv.messages.length === 0) {
+        messagesBody.innerHTML = `
+          <div style="padding: 40px 20px; text-align: center; color: var(--comm-text-muted); margin: auto;">
+            <div style="font-size: 2.2rem; margin-bottom: 8px;">🏔️</div>
+            <strong style="color: var(--comm-text-primary); font-size: 0.95rem;">Beginning of Trail Conversation</strong>
+            <p style="font-size: 0.82rem; margin-top: 4px;">Say hello or share a TrekIndia route to start planning your next hike together!</p>
           </div>
         `;
-      }).join('');
-
-      messagesBody.scrollTop = messagesBody.scrollHeight;
+      } else {
+        messagesBody.innerHTML = `
+          <div class="chat-date-separator"><span>Today</span></div>
+          ${conv.messages.map(msg => renderSingleMessageRow(msg, msg.is_self)).join('')}
+        `;
+        messagesBody.scrollTop = messagesBody.scrollHeight;
+      }
     }
+  }
+
+  function renderSingleMessageRow(msg, isSelf) {
+    const status = msg.status || 'sent';
+
+    if (msg.message_type === 'trek_card' && msg.trek_data) {
+      const trek = msg.trek_data;
+      return `
+        <div class="chat-msg-row ${isSelf ? 'self' : 'other'}" data-msg-id="${msg.message_id || ''}" data-client-msg-id="${msg.client_message_id || ''}">
+          ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="chat-msg-avatar" alt="" />` : ''}
+          <div class="chat-msg-content-wrap">
+            <div class="chat-trek-card">
+              <div class="chat-trek-card-img-wrap">
+                <img src="${escapeHtml(trek.image || 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=600')}" alt="${escapeHtml(trek.name)}" />
+                <span class="chat-trek-diff-badge">${escapeHtml(trek.difficulty || 'MODERATE')}</span>
+              </div>
+              <div class="chat-trek-card-content">
+                <div class="chat-trek-title">${escapeHtml(trek.name)}</div>
+                <div class="chat-trek-stats-row">
+                  <span>⛰️ ${escapeHtml(trek.elevation || trek.altitude || '3,800m')}</span>
+                  <span>📏 ${escapeHtml(trek.distance || trek.duration || '6 Days')}</span>
+                </div>
+                <button class="btn-chat-view-trek" onclick="window.TrekIndiaCommunity.viewTrekDetails('${trek.slug || 'kedarkantha'}')">
+                  <span>View Route Details</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="chat-msg-footer">
+              <span class="chat-msg-time">${escapeHtml(msg.created_at || 'Just now')}</span>
+              ${isSelf ? `<span class="chat-status-icon ${status}">${getStatusIconHtml(status)}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (msg.message_type === 'image' && msg.attachment_url) {
+      return `
+        <div class="chat-msg-row ${isSelf ? 'self' : 'other'}" data-msg-id="${msg.message_id || ''}" data-client-msg-id="${msg.client_message_id || ''}">
+          ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="chat-msg-avatar" alt="" />` : ''}
+          <div class="chat-msg-content-wrap">
+            <div class="chat-photo-bubble">
+              <img src="${escapeHtml(msg.attachment_url)}" alt="Photo Attachment" />
+            </div>
+            <div class="chat-msg-footer">
+              <span class="chat-msg-time">${escapeHtml(msg.created_at || 'Just now')}</span>
+              ${isSelf ? `<span class="chat-status-icon ${status}">${getStatusIconHtml(status)}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="chat-msg-row ${isSelf ? 'self' : 'other'}" data-msg-id="${msg.message_id || ''}" data-client-msg-id="${msg.client_message_id || ''}">
+        ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="chat-msg-avatar" alt="" />` : ''}
+        <div class="chat-msg-content-wrap">
+          <div class="chat-msg-bubble">
+            ${escapeHtml(msg.content || '')}
+          </div>
+          <div class="chat-msg-footer">
+            <span class="chat-msg-time">${escapeHtml(msg.created_at || 'Just now')}</span>
+            ${isSelf ? `<span class="chat-status-icon ${status}">${getStatusIconHtml(status)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   async function sendChatMessage(customPayload = null) {
     if (!state.activeConversationId) return;
 
     let payload = customPayload;
+    const clientMessageId = `cmsg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
     if (!payload) {
       const textInput = document.getElementById('chatTextInput');
       if (!textInput || !textInput.value.trim()) return;
 
+      const content = textInput.value.trim();
       payload = {
         message_type: 'text',
-        content: textInput.value.trim()
+        content,
+        client_message_id: clientMessageId
       };
       textInput.value = '';
+      textInput.style.height = 'auto'; // Reset auto-expanded height
+    } else {
+      payload.client_message_id = clientMessageId;
+    }
+
+    // Disable send button temporarily
+    const sendBtn = document.getElementById('chatSendBtn');
+    if (sendBtn) sendBtn.disabled = true;
+
+    // Render Optimistic Message Bubble Immediately
+    const messagesBody = document.getElementById('chatMessagesBody');
+    if (messagesBody) {
+      const optimisticMsg = {
+        message_id: 'temp_' + Date.now(),
+        client_message_id: clientMessageId,
+        sender_id: state.currentUser?.user_id,
+        avatar: state.currentUser?.profile_image,
+        message_type: payload.message_type,
+        content: payload.content,
+        trek_data: payload.trek_data,
+        attachment_url: payload.attachment_url,
+        status: 'sent',
+        created_at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        is_self: true
+      };
+
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = renderSingleMessageRow(optimisticMsg, true);
+      if (tempDiv.firstElementChild) {
+        messagesBody.appendChild(tempDiv.firstElementChild);
+        messagesBody.scrollTop = messagesBody.scrollHeight;
+      }
     }
 
     try {
@@ -969,53 +1441,214 @@
       });
 
       const data = await res.json();
-      if (data.success) {
-        // Refresh active chat
-        selectConversation(state.activeConversationId);
-
-        // Simulate interactive trekker reply after 2.5 seconds
-        simulateTrekkerReply();
+      if (data.success && data.message) {
+        // Reconcile optimistic element with confirmed server data
+        const msgEl = document.querySelector(`[data-client-msg-id="${clientMessageId}"]`);
+        if (msgEl) {
+          msgEl.setAttribute('data-msg-id', data.message.message_id);
+          const timeEl = msgEl.querySelector('.chat-msg-time');
+          const statusIcon = msgEl.querySelector('.chat-status-icon');
+          if (timeEl && data.message.created_at) timeEl.textContent = data.message.created_at;
+          if (statusIcon) {
+            statusIcon.className = 'chat-status-icon sent';
+            statusIcon.innerHTML = getStatusIconHtml('sent');
+          }
+        }
       }
     } catch (err) {
-      console.error('Failed to send message:', err);
+      console.error('[Messaging Client] Failed to send message:', err);
+      showToast('Unable to deliver message. Check connection.');
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
     }
   }
 
-  function simulateTrekkerReply() {
-    const typingIndicator = document.getElementById('chatTypingIndicator');
-    if (typingIndicator) {
-      typingIndicator.style.display = 'flex';
+  function emitTypingIndicator() {
+    if (!wsClient || wsClient.readyState !== WebSocket.OPEN || !state.activeConversationId) return;
+
+    const now = Date.now();
+    if (now - lastTypingSentAt > 2000) {
+      lastTypingSentAt = now;
+      wsClient.send(JSON.stringify({
+        type: 'user.typing',
+        conversation_id: state.activeConversationId,
+        is_typing: true
+      }));
+    }
+  }
+
+  async function openNewChatModal() {
+    const modal = document.getElementById('newChatModalOverlay');
+    const list = document.getElementById('newChatTrekkersList');
+    const searchInput = document.getElementById('newChatSearchInput');
+
+    if (!modal || !list) return;
+    modal.style.display = 'flex';
+    if (searchInput) searchInput.value = '';
+
+    list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--comm-text-muted);">Loading trekkers...</div>';
+
+    try {
+      const res = await fetch('/api/community/trekkers');
+      const data = await res.json();
+      if (data.success && data.trekkers) {
+        renderNewChatTrekkers(data.trekkers);
+
+        if (searchInput) {
+          searchInput.oninput = () => {
+            const q = searchInput.value.trim().toLowerCase();
+            const filtered = data.trekkers.filter(t =>
+              t.full_name.toLowerCase().includes(q) ||
+              t.username.toLowerCase().includes(q) ||
+              t.location.toLowerCase().includes(q)
+            );
+            renderNewChatTrekkers(filtered);
+          };
+        }
+      }
+    } catch (err) {
+      list.innerHTML = '<div style="padding: 20px; text-align: center; color: #ef4444;">Failed to load trekkers.</div>';
+    }
+  }
+
+  function renderNewChatTrekkers(trekkers) {
+    const list = document.getElementById('newChatTrekkersList');
+    if (!list) return;
+
+    if (!trekkers || trekkers.length === 0) {
+      list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--comm-text-muted);">No trekkers found.</div>';
+      return;
     }
 
-    setTimeout(async () => {
-      if (typingIndicator) typingIndicator.style.display = 'none';
+    list.innerHTML = trekkers.map(t => `
+      <div class="new-chat-trekker-row" data-user-id="${t.user_id}">
+        <div class="new-chat-user-info">
+          <img src="${escapeHtml(t.avatar)}" class="new-chat-avatar" alt="${escapeHtml(t.full_name)}" />
+          <div class="new-chat-meta">
+            <strong>${escapeHtml(t.full_name)} ${t.is_verified ? '<span class="badge-verified-mini">✓</span>' : ''}</strong>
+            <span>@${escapeHtml(t.username)} • 📍 ${escapeHtml(t.location || 'India')}</span>
+          </div>
+        </div>
+        <button class="btn-select-share-trek" style="padding: 6px 14px; background: var(--comm-forest); color: #fff; border: none; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+          Message
+        </button>
+      </div>
+    `).join('');
 
-      const replies = [
-        "Sounds like an incredible plan! Are you carrying camping gear or staying at the basecamp homestays?",
-        "I checked the Himalayan weather forecast this morning — sunny skies expected all week!",
-        "Definitely carry microspikes and windproof layers for the summit pass.",
-        "I'll share my offline GPS route file before we start the trail!"
-      ];
-      const randomReply = replies[Math.floor(Math.random() * replies.length)];
+    list.querySelectorAll('.new-chat-trekker-row').forEach(row => {
+      row.addEventListener('click', async () => {
+        const targetUserId = row.getAttribute('data-user-id');
+        document.getElementById('newChatModalOverlay').style.display = 'none';
+        const drawer = document.getElementById('messagesDrawerOverlay');
+        if (drawer) drawer.style.display = 'flex';
 
-      const conv = state.conversations.find(c => c.conversation_id === state.activeConversationId);
-      if (conv) {
-        conv.messages.push({
-          message_id: Date.now(),
-          sender_id: conv.participant.user_id,
-          sender_name: conv.participant.full_name,
-          avatar: conv.participant.avatar,
-          message_type: 'text',
-          content: randomReply,
-          created_at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          is_self: false
-        });
-        conv.last_message = randomReply;
-        conv.last_message_time = 'Just now';
+        try {
+          const res = await fetch('/api/community/messages/conversations/direct', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ participant_id: targetUserId })
+          });
+          const d = await res.json();
+          if (d.success && d.conversation_id) {
+            await loadConversations(false);
+            selectConversation(d.conversation_id);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+  }
 
-        renderActiveChat(conv);
+  async function openShareTrekPickerModal() {
+    const modal = document.getElementById('shareTrekModalOverlay');
+    const list = document.getElementById('shareTrekList');
+    const searchInput = document.getElementById('shareTrekSearchInput');
+
+    if (!modal || !list) return;
+    modal.style.display = 'flex';
+    if (searchInput) searchInput.value = '';
+
+    list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--comm-text-muted);">Loading TrekIndia routes...</div>';
+
+    try {
+      const res = await fetch('/api/treks');
+      const data = await res.json();
+      const treks = data.treks || data.data || [];
+      renderShareTrekList(treks);
+
+      if (searchInput) {
+        searchInput.oninput = () => {
+          const q = searchInput.value.trim().toLowerCase();
+          const filtered = treks.filter(t =>
+            (t.name || '').toLowerCase().includes(q) ||
+            (t.state || '').toLowerCase().includes(q)
+          );
+          renderShareTrekList(filtered);
+        };
       }
-    }, 2200);
+    } catch (err) {
+      list.innerHTML = '<div style="padding: 20px; text-align: center; color: #ef4444;">Failed to load treks.</div>';
+    }
+  }
+
+  function renderShareTrekList(treks) {
+    const list = document.getElementById('shareTrekList');
+    if (!list) return;
+
+    if (!treks || treks.length === 0) {
+      list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--comm-text-muted);">No routes matched.</div>';
+      return;
+    }
+
+    list.innerHTML = treks.map(t => `
+      <div class="new-chat-trekker-row" data-trek-id="${t.id}" style="gap: 12px;">
+        <img src="${escapeHtml(t.image || 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=300')}" style="width: 52px; height: 52px; border-radius: 8px; object-fit: cover;" alt="" />
+        <div style="flex: 1; min-width: 0;">
+          <strong style="display: block; font-size: 0.92rem; color: var(--comm-text-primary);">${escapeHtml(t.name)}</strong>
+          <span style="font-size: 0.78rem; color: var(--comm-text-muted);">⛰️ ${escapeHtml(t.altitude || t.elevation || '3,800m')} • ⏱️ ${escapeHtml(t.duration || '6 Days')}</span>
+        </div>
+        <button class="btn-select-share-trek" style="padding: 6px 14px; background: var(--comm-forest); color: #fff; border: none; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">
+          Share in Chat
+        </button>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.new-chat-trekker-row').forEach((row, idx) => {
+      row.addEventListener('click', () => {
+        const trek = treks[idx];
+        document.getElementById('shareTrekModalOverlay').style.display = 'none';
+
+        sendChatMessage({
+          message_type: 'trek_card',
+          content: `Shared trek: ${trek.name}`,
+          trek_data: {
+            id: trek.id,
+            name: trek.name,
+            slug: trek.slug || trek.name.toLowerCase().replace(/\s+/g, '-'),
+            image: trek.image,
+            elevation: trek.altitude || trek.elevation || '3,800m',
+            distance: trek.duration || '6 Days',
+            difficulty: trek.difficulty || 'MODERATE'
+          }
+        });
+      });
+    });
+  }
+
+  function handleChatPhotoUpload(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result;
+      sendChatMessage({
+        message_type: 'image',
+        attachment_url: base64
+      });
+    };
+    reader.readAsDataURL(file);
   }
 
   // ─── 7. CREATE POST MULTI-STEP WORKFLOW ─────────────────────────────────────
@@ -1458,15 +2091,16 @@
     document.getElementById('emptyCreateBtn')?.addEventListener('click', openCreatePostModal);
     document.getElementById('addStoryTriggerBtn')?.addEventListener('click', openCreatePostModal);
 
-    // Floating Message Button
-    document.getElementById('floatingMessageBtn')?.addEventListener('click', () => {
+    // Messaging Drawer Controls
+    const openMessagesDrawer = () => {
       const drawer = document.getElementById('messagesDrawerOverlay');
       if (drawer) drawer.style.display = 'flex';
-    });
-    document.getElementById('sidebarMessagesBtn')?.addEventListener('click', () => {
-      const drawer = document.getElementById('messagesDrawerOverlay');
-      if (drawer) drawer.style.display = 'flex';
-    });
+      loadConversations(false);
+      loadUnreadCount();
+    };
+
+    document.getElementById('floatingMessageBtn')?.addEventListener('click', openMessagesDrawer);
+    document.getElementById('sidebarMessagesBtn')?.addEventListener('click', openMessagesDrawer);
     document.getElementById('closeMessagesDrawerBtn')?.addEventListener('click', () => {
       const drawer = document.getElementById('messagesDrawerOverlay');
       if (drawer) drawer.style.display = 'none';
@@ -1480,16 +2114,89 @@
       if (drawerShell) drawerShell.classList.remove('chat-open');
     });
 
-    // Chat Sending
-    document.getElementById('chatSendBtn')?.addEventListener('click', () => sendChatMessage());
-    document.getElementById('chatTextInput')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendChatMessage();
-      }
+    // Start New Chat Prompts
+    document.getElementById('btnNewChatPrompt')?.addEventListener('click', openNewChatModal);
+    document.getElementById('btnEmptyStartChat')?.addEventListener('click', openNewChatModal);
+    document.getElementById('closeNewChatModalBtn')?.addEventListener('click', () => {
+      const modal = document.getElementById('newChatModalOverlay');
+      if (modal) modal.style.display = 'none';
+    });
+    document.getElementById('closeShareTrekModalBtn')?.addEventListener('click', () => {
+      const modal = document.getElementById('shareTrekModalOverlay');
+      if (modal) modal.style.display = 'none';
     });
 
-    // Chat Attachment Trigger
+    // Conversation Search Filter
+    document.getElementById('convSearchInput')?.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      if (!state.conversations) return;
+      const filtered = state.conversations.filter(c =>
+        (c.participant?.full_name || '').toLowerCase().includes(q) ||
+        (c.last_message || '').toLowerCase().includes(q)
+      );
+      renderConversationsList(filtered);
+    });
+
+    // Conversation Tabs Filter (All vs Unread)
+    document.getElementById('tabAllChats')?.addEventListener('click', (e) => {
+      document.querySelectorAll('.conv-tab-btn').forEach(btn => btn.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      renderConversationsList(state.conversations);
+    });
+    document.getElementById('tabUnreadChats')?.addEventListener('click', (e) => {
+      document.querySelectorAll('.conv-tab-btn').forEach(btn => btn.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      const unreadList = (state.conversations || []).filter(c => (c.unread_count || 0) > 0);
+      renderConversationsList(unreadList);
+    });
+
+    // Chat Sending & Typing Indicators
+    const chatInput = document.getElementById('chatTextInput');
+    if (chatInput) {
+      chatInput.addEventListener('input', () => {
+        emitTypingIndicator();
+        // Auto-expand textarea
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
+      });
+
+      chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendChatMessage();
+        }
+      });
+    }
+
+    document.getElementById('chatSendBtn')?.addEventListener('click', () => sendChatMessage());
+
+    // Emoji Popover Trigger
+    const emojiBtn = document.getElementById('chatEmojiTrigger');
+    const emojiPopover = document.getElementById('chatEmojiPopover');
+    if (emojiBtn && emojiPopover) {
+      emojiBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        emojiPopover.style.display = emojiPopover.style.display === 'none' ? 'block' : 'none';
+      });
+
+      emojiPopover.querySelectorAll('.emoji-item').forEach(item => {
+        item.addEventListener('click', () => {
+          if (chatInput) {
+            chatInput.value += item.textContent;
+            chatInput.focus();
+          }
+          emojiPopover.style.display = 'none';
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!emojiPopover.contains(e.target) && e.target !== emojiBtn) {
+          emojiPopover.style.display = 'none';
+        }
+      });
+    }
+
+    // Chat Attachment Menu Trigger
     const attachTrigger = document.getElementById('chatAttachTrigger');
     const attachMenu = document.getElementById('chatAttachMenu');
     if (attachTrigger && attachMenu) {
@@ -1504,8 +2211,24 @@
 
     // Attach Trek Card Trigger
     document.getElementById('attachShareTrekBtn')?.addEventListener('click', () => {
+      if (attachMenu) attachMenu.style.display = 'none';
       openShareTrekPickerModal();
     });
+
+    // Attach Photo Trigger
+    const photoInput = document.getElementById('chatPhotoInput');
+    document.getElementById('attachSharePhotoBtn')?.addEventListener('click', () => {
+      if (attachMenu) attachMenu.style.display = 'none';
+      if (photoInput) photoInput.click();
+    });
+    if (photoInput) {
+      photoInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleChatPhotoUpload(e.target.files[0]);
+          photoInput.value = '';
+        }
+      });
+    }
 
     // Story Viewer Controls
     document.getElementById('closeStoryViewerBtn')?.addEventListener('click', closeStoryViewer);

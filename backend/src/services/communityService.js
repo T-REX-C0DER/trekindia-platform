@@ -7,6 +7,9 @@
  */
 
 import { query, getClient } from '../config/database.js';
+import messageProducer from '../kafka/producer.js';
+import { createMessageSentEvent, createMessageReadEvent, createNotificationEvent } from '../kafka/schemas.js';
+import wsManager from '../websocket/wsServer.js';
 
 // ─── Initial Curated Trekkers ────────────────────────────────────────────────
 const INITIAL_TREKKERS = [
@@ -1093,123 +1096,650 @@ export async function toggleFollow(targetUserId, currentUser) {
 }
 
 /**
- * Get Conversations
+ * Helper: Ensure test trekkers exist in the database users table so conversations reference valid foreign keys
+ */
+async function ensureSeedTrekkersInDb() {
+  try {
+    for (const t of INITIAL_TREKKERS) {
+      await query(
+        `INSERT INTO users (user_id, username, email, password_hash, full_name, profile_image, bio, city, state, is_verified, role, online_status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'user', $11)
+         ON CONFLICT (user_id) DO UPDATE SET
+           full_name = EXCLUDED.full_name,
+           profile_image = EXCLUDED.profile_image,
+           bio = EXCLUDED.bio,
+           online_status = EXCLUDED.online_status`,
+        [
+          t.user_id,
+          t.username,
+          `${t.username}@trekindia.com`,
+          '$argon2id$v=19$m=65536,t=3,p=4$dummyhashforseedusers1234567890',
+          t.full_name,
+          t.avatar,
+          t.bio,
+          t.location.split(',')[0]?.trim() || 'Pune',
+          t.location.split(',')[1]?.trim() || 'Maharashtra',
+          t.is_verified,
+          t.online_status || 'offline'
+        ]
+      ).catch(() => {});
+    }
+  } catch (err) {
+    console.warn('[Community Service] Seed users notice:', err.message);
+  }
+}
+
+/**
+ * Helper: Ensure starter conversations exist for a user in DB
+ */
+async function ensureUserStarterConversations(userId) {
+  try {
+    await ensureSeedTrekkersInDb();
+
+    // Check if user has any conversations
+    const existing = await query(
+      `SELECT cp.conversation_id FROM conversation_participants cp WHERE cp.user_id = $1 LIMIT 1`,
+      [userId]
+    );
+
+    if (existing.rows.length === 0) {
+      // Seed default conversation with Rahul Sharma (user_id: 101)
+      const convRes = await query(
+        `INSERT INTO conversations (is_group, last_message_text, last_message_at)
+         VALUES (FALSE, 'That route looks intense! Let''s do it.', CURRENT_TIMESTAMP)
+         RETURNING conversation_id`
+      );
+
+      const convId = convRes.rows[0].conversation_id;
+
+      // Add user and Rahul Sharma
+      await query(
+        `INSERT INTO conversation_participants (conversation_id, user_id, status)
+         VALUES ($1, $2, 'accepted'), ($1, 101, 'accepted')
+         ON CONFLICT DO NOTHING`,
+        [convId, userId]
+      );
+
+      // Add starter messages
+      await query(
+        `INSERT INTO messages (conversation_id, sender_id, message_type, content, trek_data, status, created_at)
+         VALUES
+         ($1, 101, 'text', 'Hey! Thinking about doing the Sandakphu trek next month. Have you seen this route?', NULL, 'read', CURRENT_TIMESTAMP - INTERVAL '15 minutes'),
+         ($1, 101, 'trek_card', NULL, $2, 'read', CURRENT_TIMESTAMP - INTERVAL '12 minutes'),
+         ($1, $3, 'text', 'That route looks intense! Let''s do it.', NULL, 'read', CURRENT_TIMESTAMP - INTERVAL '5 minutes')`,
+        [
+          convId,
+          JSON.stringify({
+            name: 'Sandakphu Phalut Peak',
+            slug: 'sandakphu-phalut',
+            difficulty: 'HARD',
+            elevation: '3,636m',
+            distance: '46 km',
+            duration: '6 Days',
+            state: 'West Bengal',
+            image: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=600&q=80'
+          }),
+          userId
+        ]
+      );
+    }
+  } catch (err) {
+    console.warn('[Community Service] Seed conversation notice:', err.message);
+  }
+}
+
+/**
+ * Get Conversations for Current User
+ * Retrieves real conversations from PostgreSQL database, calculates unread counts,
+ * and attaches real-time presence indicators.
  */
 export async function getConversations(currentUser) {
-  return conversationsStore;
+  if (!currentUser?.user_id) return [];
+
+  const userId = currentUser.user_id;
+  await ensureUserStarterConversations(userId);
+
+  try {
+    const convSql = `
+      SELECT
+        c.conversation_id,
+        c.is_group,
+        c.group_name,
+        c.group_avatar,
+        c.last_message_at,
+        c.last_message_text,
+        cp.last_read_at,
+        cp.status AS membership_status,
+        -- Other participant details (for 1-on-1 direct conversations)
+        other_u.user_id AS participant_id,
+        other_u.full_name AS participant_name,
+        other_u.username AS participant_username,
+        other_u.profile_image AS participant_avatar,
+        other_u.online_status AS participant_db_online,
+        other_u.last_seen_at AS participant_last_seen,
+        -- Calculate unread messages count
+        COALESCE(
+          (SELECT COUNT(*) FROM messages m
+           WHERE m.conversation_id = c.conversation_id
+             AND m.sender_id != $1
+             AND m.created_at > cp.last_read_at
+             AND m.is_deleted = FALSE), 0
+        ) AS unread_count,
+        -- Get latest message details
+        latest_m.content AS latest_message_content,
+        latest_m.message_type AS latest_message_type,
+        latest_m.trek_data AS latest_message_trek_data,
+        latest_m.created_at AS latest_message_created_at
+      FROM conversation_participants cp
+      JOIN conversations c ON cp.conversation_id = c.conversation_id
+      -- Join to find other participant in direct conversation
+      LEFT JOIN conversation_participants other_cp
+        ON other_cp.conversation_id = c.conversation_id AND other_cp.user_id != $1
+      LEFT JOIN users other_u
+        ON other_cp.user_id = other_u.user_id
+      -- Join latest message
+      LEFT JOIN LATERAL (
+        SELECT content, message_type, trek_data, created_at
+        FROM messages
+        WHERE conversation_id = c.conversation_id AND is_deleted = FALSE
+        ORDER BY created_at DESC LIMIT 1
+      ) latest_m ON TRUE
+      WHERE cp.user_id = $1
+      ORDER BY COALESCE(latest_m.created_at, c.last_message_at, c.created_at) DESC;
+    `;
+
+    const res = await query(convSql, [userId]);
+
+    return res.rows.map(row => {
+      const isOnline = row.participant_id ? wsManager.isUserOnline(row.participant_id) : false;
+      const initialTrekker = INITIAL_TREKKERS.find(t => String(t.user_id) === String(row.participant_id));
+
+      let lastMessagePreview = row.latest_message_content || row.last_message_text || '';
+      if (!lastMessagePreview && row.latest_message_type === 'trek_card') {
+        lastMessagePreview = `Shared Trek: ${row.latest_message_trek_data?.name || 'Trek'}`;
+      } else if (!lastMessagePreview && row.latest_message_type === 'image') {
+        lastMessagePreview = '📷 Photo';
+      }
+
+      // Format last message time
+      let lastMsgTime = '';
+      const msgDate = row.latest_message_created_at || row.last_message_at;
+      if (msgDate) {
+        const d = new Date(msgDate);
+        const now = new Date();
+        if (d.toDateString() === now.toDateString()) {
+          lastMsgTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else {
+          lastMsgTime = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+      }
+
+      return {
+        conversation_id: parseInt(row.conversation_id, 10),
+        is_group: row.is_group,
+        is_request: row.membership_status === 'pending',
+        unread_count: parseInt(row.unread_count, 10),
+        last_message: lastMessagePreview,
+        last_message_time: lastMsgTime,
+        last_message_at: msgDate,
+        participant: {
+          user_id: row.participant_id ? parseInt(row.participant_id, 10) : null,
+          full_name: row.participant_name || initialTrekker?.full_name || 'Trekker',
+          username: row.participant_username || initialTrekker?.username || 'trekker',
+          avatar: row.participant_avatar || initialTrekker?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          online_status: isOnline ? 'online' : (row.participant_db_online || 'offline'),
+          active_trek: initialTrekker?.active_trek || null,
+          last_active: isOnline ? 'Active now' : 'Offline'
+        }
+      };
+    });
+  } catch (err) {
+    console.error('[Community Service] getConversations error:', err);
+    return [];
+  }
 }
 
 /**
- * Get Conversation by ID
+ * Get Conversation by ID with Full Message History
+ * Automatically marks unread messages as read and publishes Kafka read event.
  */
-export async function getConversation(conversationId) {
-  const conv = conversationsStore.find(c => c.conversation_id === parseInt(conversationId, 10));
-  if (!conv) {
-    const err = new Error('Conversation not found');
-    err.statusCode = 404;
+export async function getConversation(conversationId, currentUser) {
+  const convId = parseInt(conversationId, 10);
+  const userId = currentUser?.user_id;
+
+  try {
+    // 1. Check conversation exists and user is participant
+    const partRes = await query(
+      `SELECT cp.status, cp.last_read_at
+       FROM conversation_participants cp
+       WHERE cp.conversation_id = $1 AND cp.user_id = $2`,
+      [convId, userId]
+    );
+
+    if (partRes.rows.length === 0) {
+      // Check if user is trying to open chat with a trekker ID directly
+      const directConv = await getOrCreateDirectConversation(userId, convId);
+      if (directConv) {
+        return getConversation(directConv.conversation_id, currentUser);
+      }
+
+      const err = new Error('Conversation not found or unauthorized');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    // 2. Fetch other participant details
+    const otherUserRes = await query(
+      `SELECT u.user_id, u.full_name, u.username, u.profile_image, u.online_status, u.last_seen_at
+       FROM conversation_participants cp
+       JOIN users u ON cp.user_id = u.user_id
+       WHERE cp.conversation_id = $1 AND cp.user_id != $2
+       LIMIT 1`,
+      [convId, userId]
+    );
+
+    const otherUser = otherUserRes.rows[0] || {};
+    const isOnline = otherUser.user_id ? wsManager.isUserOnline(otherUser.user_id) : false;
+    const initialTrekker = INITIAL_TREKKERS.find(t => String(t.user_id) === String(otherUser.user_id));
+
+    // 3. Fetch messages ordered by created_at ASC
+    const msgRes = await query(
+      `SELECT m.message_id, m.conversation_id, m.sender_id, m.message_type,
+              m.content, m.trek_data, m.attachment_url, m.status, m.client_message_id,
+              m.created_at, u.full_name AS sender_name, u.profile_image AS sender_avatar
+       FROM messages m
+       JOIN users u ON m.sender_id = u.user_id
+       WHERE m.conversation_id = $1 AND m.is_deleted = FALSE
+       ORDER BY m.created_at ASC`,
+      [convId]
+    );
+
+    const messages = msgRes.rows.map(m => {
+      const isSelf = String(m.sender_id) === String(userId);
+      const createdDate = new Date(m.created_at);
+      return {
+        message_id: parseInt(m.message_id, 10),
+        conversation_id: convId,
+        sender_id: parseInt(m.sender_id, 10),
+        sender_name: m.sender_name,
+        avatar: m.sender_avatar || (isSelf ? currentUser?.profile_image : initialTrekker?.avatar),
+        message_type: m.message_type,
+        content: m.content,
+        trek_data: m.trek_data,
+        attachment_url: m.attachment_url,
+        status: m.status || 'sent',
+        created_at: createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        raw_created_at: m.created_at,
+        is_self: isSelf,
+        client_message_id: m.client_message_id
+      };
+    });
+
+    // 4. Mark unread messages as read in DB
+    const unreadMessageIds = messages
+      .filter(m => !m.is_self && m.status !== 'read')
+      .map(m => m.message_id);
+
+    if (unreadMessageIds.length > 0) {
+      await query(
+        `UPDATE messages SET status = 'read', read_at = CURRENT_TIMESTAMP
+         WHERE conversation_id = $1 AND sender_id != $2 AND status != 'read'`,
+        [convId, userId]
+      ).catch(() => {});
+
+      await query(
+        `UPDATE conversation_participants SET last_read_at = CURRENT_TIMESTAMP
+         WHERE conversation_id = $1 AND user_id = $2`,
+        [convId, userId]
+      ).catch(() => {});
+
+      // Publish message.read event to Kafka
+      const readEvent = createMessageReadEvent({
+        conversation_id: convId,
+        reader_id: userId,
+        message_ids: unreadMessageIds
+      });
+      await messageProducer.publishMessageEvent(readEvent);
+    }
+
+    return {
+      conversation_id: convId,
+      unread_count: 0,
+      is_request: partRes.rows[0].status === 'pending',
+      participant: {
+        user_id: otherUser.user_id ? parseInt(otherUser.user_id, 10) : null,
+        full_name: otherUser.full_name || initialTrekker?.full_name || 'Trekker',
+        username: otherUser.username || initialTrekker?.username || 'trekker',
+        avatar: otherUser.profile_image || initialTrekker?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        online_status: isOnline ? 'online' : (otherUser.online_status || 'offline'),
+        active_trek: initialTrekker?.active_trek || null,
+        last_active: isOnline ? 'Active now' : 'Offline'
+      },
+      messages
+    };
+  } catch (err) {
+    console.error('[Community Service] getConversation error:', err);
     throw err;
   }
-  // Clear unread count on open
-  conv.unread_count = 0;
-  return conv;
 }
 
 /**
- * Send Message in Conversation (supports text, trek cards, attachments)
+ * Get or Create a 1-on-1 Direct Conversation Between Two Users
  */
-export async function sendMessage(conversationId, { user, content, message_type = 'text', trek_data, attachment_url }) {
-  let conv = conversationsStore.find(c => c.conversation_id === parseInt(conversationId, 10));
-  if (!conv) {
-    // If starting a new conversation with a trekker
-    const participant = INITIAL_TREKKERS.find(t => String(t.user_id) === String(conversationId)) || INITIAL_TREKKERS[0];
-    conv = {
-      conversation_id: Date.now(),
-      participant,
-      last_message: content || (trek_data ? `Shared Trek: ${trek_data.name}` : 'Sent an attachment'),
-      last_message_time: 'Just now',
-      unread_count: 0,
-      is_request: false,
-      messages: []
-    };
-    conversationsStore.unshift(conv);
+export async function getOrCreateDirectConversation(userIdA, userIdB) {
+  const uidA = parseInt(userIdA, 10);
+  const uidB = parseInt(userIdB, 10);
+
+  if (uidA === uidB) {
+    throw new Error('Cannot start conversation with yourself');
   }
 
-  const newMessage = {
-    message_id: Date.now(),
-    sender_id: user.user_id,
-    sender_name: user.full_name || 'You',
-    message_type,
-    content: content || null,
-    trek_data: trek_data || null,
-    attachment_url: attachment_url || null,
-    created_at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    is_self: true,
-    read: true
-  };
+  await ensureSeedTrekkersInDb();
 
-  conv.messages.push(newMessage);
-  conv.last_message = content || (trek_data ? `Shared Trek: ${trek_data.name}` : 'Sent an attachment');
-  conv.last_message_time = 'Just now';
+  // Find existing 1-on-1 conversation
+  const existingSql = `
+    SELECT cp1.conversation_id
+    FROM conversation_participants cp1
+    JOIN conversation_participants cp2 ON cp1.conversation_id = cp2.conversation_id
+    JOIN conversations c ON cp1.conversation_id = c.conversation_id
+    WHERE cp1.user_id = $1 AND cp2.user_id = $2 AND c.is_group = FALSE
+    LIMIT 1;
+  `;
+
+  const existingRes = await query(existingSql, [uidA, uidB]);
+  if (existingRes.rows.length > 0) {
+    return { conversation_id: parseInt(existingRes.rows[0].conversation_id, 10) };
+  }
+
+  // Create new conversation
+  const convRes = await query(
+    `INSERT INTO conversations (is_group, last_message_at)
+     VALUES (FALSE, CURRENT_TIMESTAMP)
+     RETURNING conversation_id`
+  );
+
+  const newConvId = parseInt(convRes.rows[0].conversation_id, 10);
+
+  await query(
+    `INSERT INTO conversation_participants (conversation_id, user_id, status)
+     VALUES ($1, $2, 'accepted'), ($1, $3, 'accepted')`,
+    [newConvId, uidA, uidB]
+  );
+
+  return { conversation_id: newConvId };
+}
+
+/**
+ * Send Message in Conversation (POST / messaging API)
+ * Flow: Validate -> Save to DB -> Publish Kafka message.sent event -> Return persisted message
+ */
+export async function sendMessage(conversationId, { user, content, message_type = 'text', trek_data, attachment_url, client_message_id }) {
+  let convId = parseInt(conversationId, 10);
+  const userId = user?.user_id;
+
+  if (!userId) {
+    const err = new Error('Authentication required');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  // Check if conversation exists
+  let partRes = await query(
+    `SELECT conversation_id FROM conversation_participants WHERE conversation_id = $1 AND user_id = $2`,
+    [convId, userId]
+  );
+
+  // If not found, perhaps client passed a trekker user_id to start a new chat
+  if (partRes.rows.length === 0) {
+    const direct = await getOrCreateDirectConversation(userId, convId);
+    convId = direct.conversation_id;
+  }
+
+  // Check for duplicate / idempotent submission
+  if (client_message_id) {
+    const dupRes = await query(
+      `SELECT message_id, conversation_id, sender_id, message_type, content, trek_data, attachment_url, status, created_at
+       FROM messages WHERE client_message_id = $1 LIMIT 1`,
+      [client_message_id]
+    );
+    if (dupRes.rows.length > 0) {
+      return {
+        message: dupRes.rows[0],
+        conversation_id: convId
+      };
+    }
+  }
+
+  // 1. Insert message into PostgreSQL database
+  const insertSql = `
+    INSERT INTO messages (
+      conversation_id, sender_id, message_type, content,
+      trek_data, attachment_url, client_message_id, status
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, 'sent')
+    RETURNING message_id, conversation_id, sender_id, message_type,
+              content, trek_data, attachment_url, status, client_message_id, created_at;
+  `;
+
+  const msgRes = await query(insertSql, [
+    convId,
+    userId,
+    message_type,
+    content || null,
+    trek_data ? JSON.stringify(trek_data) : null,
+    attachment_url || null,
+    client_message_id || null
+  ]);
+
+  const insertedMessage = msgRes.rows[0];
+
+  // 2. Update conversation last message timestamp & snippet
+  const snippet = content || (trek_data ? `Shared Trek: ${trek_data.name}` : 'Sent an attachment');
+  await query(
+    `UPDATE conversations
+     SET last_message_at = CURRENT_TIMESTAMP, last_message_text = $1, last_message_sender_id = $2
+     WHERE conversation_id = $3`,
+    [snippet, userId, convId]
+  );
+
+  // 3. Find receiver id for 1-on-1 chat
+  const receiverRes = await query(
+    `SELECT user_id FROM conversation_participants WHERE conversation_id = $1 AND user_id != $2 LIMIT 1`,
+    [convId, userId]
+  );
+  const receiverId = receiverRes.rows[0]?.user_id || null;
+
+  // 4. Publish message.sent event to Kafka with conversation_id partition key
+  const kafkaEvent = createMessageSentEvent({
+    message_id: insertedMessage.message_id,
+    conversation_id: convId,
+    sender_id: userId,
+    receiver_id: receiverId,
+    sender_name: user.full_name || user.username || 'You',
+    sender_avatar: user.profile_image || null,
+    content: insertedMessage.content,
+    message_type: insertedMessage.message_type,
+    trek_data: insertedMessage.trek_data,
+    attachment_url: insertedMessage.attachment_url,
+    client_message_id: insertedMessage.client_message_id,
+    created_at: insertedMessage.created_at
+  });
+
+  await messageProducer.publishMessageEvent(kafkaEvent);
+
+  const formattedCreated = new Date(insertedMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return {
-    message: newMessage,
-    conversation_id: conv.conversation_id
+    message: {
+      ...insertedMessage,
+      message_id: parseInt(insertedMessage.message_id, 10),
+      conversation_id: convId,
+      sender_id: parseInt(insertedMessage.sender_id, 10),
+      sender_name: user.full_name || 'You',
+      avatar: user.profile_image || null,
+      created_at: formattedCreated,
+      raw_created_at: insertedMessage.created_at,
+      is_self: true,
+      read: true
+    },
+    conversation_id: convId
   };
+}
+
+/**
+ * Mark Conversation as Read
+ */
+export async function markConversationRead(conversationId, currentUser) {
+  const convId = parseInt(conversationId, 10);
+  const userId = currentUser?.user_id;
+  if (!userId) return { success: false };
+
+  await query(
+    `UPDATE messages SET status = 'read', read_at = CURRENT_TIMESTAMP
+     WHERE conversation_id = $1 AND sender_id != $2 AND status != 'read'`,
+    [convId, userId]
+  ).catch(() => {});
+
+  await query(
+    `UPDATE conversation_participants SET last_read_at = CURRENT_TIMESTAMP
+     WHERE conversation_id = $1 AND user_id = $2`,
+    [convId, userId]
+  ).catch(() => {});
+
+  const readEvent = createMessageReadEvent({
+    conversation_id: convId,
+    reader_id: userId
+  });
+  await messageProducer.publishMessageEvent(readEvent);
+
+  return { success: true, conversation_id: convId };
 }
 
 /**
  * Delete Message
  */
-export async function deleteMessage(conversationId, messageId) {
-  const conv = conversationsStore.find(c => c.conversation_id === parseInt(conversationId, 10));
-  if (conv) {
-    conv.messages = conv.messages.filter(m => m.message_id !== parseInt(messageId, 10));
-  }
+export async function deleteMessage(conversationId, messageId, currentUser) {
+  const convId = parseInt(conversationId, 10);
+  const msgId = parseInt(messageId, 10);
+  const userId = currentUser?.user_id;
+
+  await query(
+    `UPDATE messages SET is_deleted = TRUE
+     WHERE message_id = $1 AND conversation_id = $2 AND sender_id = $3`,
+    [msgId, convId, userId]
+  );
+
   return { success: true };
 }
 
 /**
  * Accept / Decline Message Request
  */
-export async function handleMessageRequest(conversationId, action) {
-  const conv = conversationsStore.find(c => c.conversation_id === parseInt(conversationId, 10));
-  if (!conv) {
-    const err = new Error('Conversation not found');
-    err.statusCode = 404;
-    throw err;
-  }
+export async function handleMessageRequest(conversationId, action, currentUser) {
+  const convId = parseInt(conversationId, 10);
+  const userId = currentUser?.user_id;
 
   if (action === 'accept') {
-    conv.is_request = false;
+    await query(
+      `UPDATE conversation_participants SET status = 'accepted'
+       WHERE conversation_id = $1 AND user_id = $2`,
+      [convId, userId]
+    );
   } else if (action === 'decline') {
-    conversationsStore = conversationsStore.filter(c => c.conversation_id !== parseInt(conversationId, 10));
+    await query(
+      `UPDATE conversation_participants SET status = 'declined'
+       WHERE conversation_id = $1 AND user_id = $2`,
+      [convId, userId]
+    );
   }
 
-  return { success: true, conversation: conv };
+  return { success: true, conversation_id: convId };
 }
 
 /**
- * Get Notifications
+ * Get Total Unread Messages Count across all conversations
+ */
+export async function getUnreadMessagesCount(currentUser) {
+  const userId = currentUser?.user_id;
+  if (!userId) return { count: 0 };
+
+  try {
+    const res = await query(
+      `SELECT COUNT(m.message_id) AS unread_count
+       FROM messages m
+       JOIN conversation_participants cp ON m.conversation_id = cp.conversation_id
+       WHERE cp.user_id = $1
+         AND m.sender_id != $1
+         AND m.created_at > cp.last_read_at
+         AND m.is_deleted = FALSE`,
+      [userId]
+    );
+    return { count: parseInt(res.rows[0]?.unread_count || 0, 10) };
+  } catch (err) {
+    return { count: 0 };
+  }
+}
+
+/**
+ * Get Notifications from DB
  */
 export async function getNotifications(currentUser) {
-  const unreadCount = notificationsStore.filter(n => !n.is_read).length;
-  return {
-    notifications: notificationsStore,
-    unread_count: unreadCount
-  };
+  const userId = currentUser?.user_id;
+  if (!userId) return { notifications: [], unread_count: 0 };
+
+  try {
+    const res = await query(
+      `SELECT n.notification_id, n.type, n.title, n.message, n.reference_id,
+              n.reference_type, n.is_read, n.created_at,
+              u.full_name AS actor_name, u.profile_image AS actor_avatar
+       FROM notifications n
+       LEFT JOIN users u ON n.actor_id = u.user_id
+       WHERE n.user_id = $1
+       ORDER BY n.created_at DESC
+       LIMIT 30`,
+      [userId]
+    );
+
+    const notifications = res.rows.map(n => ({
+      notification_id: n.notification_id,
+      type: n.type,
+      title: n.title,
+      message: n.message,
+      reference_id: n.reference_id,
+      reference_type: n.reference_type,
+      is_read: n.is_read,
+      time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      actor: {
+        name: n.actor_name || 'Trekker',
+        avatar: n.actor_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'
+      }
+    }));
+
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+    return { notifications, unread_count: unreadCount };
+  } catch (err) {
+    console.warn('[Community Service] getNotifications error:', err);
+    return { notifications: [], unread_count: 0 };
+  }
 }
 
 /**
  * Mark Notifications as Read
  */
-export async function markNotificationsRead(notificationId) {
-  if (notificationId === 'all') {
-    notificationsStore.forEach(n => { n.is_read = true; });
-  } else if (notificationId) {
-    const n = notificationsStore.find(item => item.notification_id === parseInt(notificationId, 10));
-    if (n) n.is_read = true;
+export async function markNotificationsRead(notificationId, currentUser) {
+  const userId = currentUser?.user_id;
+  if (!userId) return { success: false };
+
+  try {
+    if (notificationId === 'all') {
+      await query(`UPDATE notifications SET is_read = TRUE WHERE user_id = $1`, [userId]);
+    } else if (notificationId) {
+      await query(`UPDATE notifications SET is_read = TRUE WHERE notification_id = $1 AND user_id = $2`, [notificationId, userId]);
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false };
   }
-  return { success: true };
 }
 
 /**

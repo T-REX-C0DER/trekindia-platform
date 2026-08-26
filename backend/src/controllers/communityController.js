@@ -205,8 +205,18 @@ export async function getConversations(req, res, next) {
 export async function getConversation(req, res, next) {
   try {
     const { id } = req.params;
-    const conversation = await communityService.getConversation(id);
+    const conversation = await communityService.getConversation(id, req.user);
     return res.status(200).json({ success: true, conversation });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getOrCreateDirectConversation(req, res, next) {
+  try {
+    const { participant_id } = req.body;
+    const conversation = await communityService.getOrCreateDirectConversation(req.user?.user_id, participant_id);
+    return res.status(200).json({ success: true, ...conversation });
   } catch (err) {
     next(err);
   }
@@ -215,15 +225,35 @@ export async function getConversation(req, res, next) {
 export async function sendMessage(req, res, next) {
   try {
     const { id } = req.params;
-    const { content, message_type, trek_data, attachment_url } = req.body;
+    const { content, message_type, trek_data, attachment_url, client_message_id } = req.body;
     const result = await communityService.sendMessage(id, {
       user: req.user,
       content,
       message_type,
       trek_data,
-      attachment_url
+      attachment_url,
+      client_message_id
     });
     return res.status(201).json({ success: true, ...result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function markConversationRead(req, res, next) {
+  try {
+    const { id } = req.params;
+    const result = await communityService.markConversationRead(id, req.user);
+    return res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getUnreadMessagesCount(req, res, next) {
+  try {
+    const result = await communityService.getUnreadMessagesCount(req.user);
+    return res.status(200).json({ success: true, ...result });
   } catch (err) {
     next(err);
   }
@@ -232,7 +262,7 @@ export async function sendMessage(req, res, next) {
 export async function deleteMessage(req, res, next) {
   try {
     const { id, messageId } = req.params;
-    const result = await communityService.deleteMessage(id, messageId);
+    const result = await communityService.deleteMessage(id, messageId, req.user);
     return res.status(200).json(result);
   } catch (err) {
     next(err);
@@ -243,7 +273,7 @@ export async function handleMessageRequest(req, res, next) {
   try {
     const { id } = req.params;
     const { action } = req.body; // 'accept' or 'decline'
-    const result = await communityService.handleMessageRequest(id, action);
+    const result = await communityService.handleMessageRequest(id, action, req.user);
     return res.status(200).json(result);
   } catch (err) {
     next(err);
@@ -262,7 +292,7 @@ export async function getNotifications(req, res, next) {
 export async function markNotificationsRead(req, res, next) {
   try {
     const { notification_id } = req.body;
-    const result = await communityService.markNotificationsRead(notification_id);
+    const result = await communityService.markNotificationsRead(notification_id, req.user);
     return res.status(200).json(result);
   } catch (err) {
     next(err);

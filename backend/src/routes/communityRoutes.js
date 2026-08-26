@@ -30,9 +30,12 @@ router.get('/trekkers/:identifier', communityController.getTrekkerProfile);
 router.post('/trekkers/:id/follow', requireAuth, communityController.toggleFollow);
 
 // ─── Messaging ───────────────────────────────────────────────────────────────
+router.get('/messages/unread-count', requireAuth, communityController.getUnreadMessagesCount);
 router.get('/messages/conversations', requireAuth, communityController.getConversations);
+router.post('/messages/conversations/direct', requireAuth, communityController.getOrCreateDirectConversation);
 router.get('/messages/conversations/:id', requireAuth, communityController.getConversation);
 router.post('/messages/conversations/:id/messages', requireAuth, communityController.sendMessage);
+router.post('/messages/conversations/:id/read', requireAuth, communityController.markConversationRead);
 router.delete('/messages/conversations/:id/messages/:messageId', requireAuth, communityController.deleteMessage);
 router.post('/messages/conversations/:id/request', requireAuth, communityController.handleMessageRequest);
 
