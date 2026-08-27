@@ -6,7 +6,11 @@
   "type": "module",
   "scripts": {
     "start": "node backend/src/server.js",
-    "dev": "nodemon backend/src/server.js"
+    "dev": "nodemon backend/src/server.js",
+    "kafka:start": "docker compose up -d kafka kafka-ui",
+    "kafka:stop": "docker compose down",
+    "kafka:logs": "docker compose logs -f kafka",
+    "kafka:status": "docker compose ps"
   },
   "keywords": [
     "trekindia",
