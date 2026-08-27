@@ -5,6 +5,7 @@
 
 (function () {
   let currentUser = null;
+  let authCheckPromise = null; // Store the pending auth promise to avoid race conditions
 
   async function checkAuthStatus() {
     try {
@@ -162,25 +163,41 @@
   function initCommunityLinkGuards() {
     document.addEventListener('click', (e) => {
       const commLink = e.target.closest('a[href="/community"], a[href="community.html"], a[href="#community"]');
-      if (commLink) {
-        // If we are already on /community or community.html, allow normal behavior
-        if (window.location.pathname === '/community' || window.location.pathname.endsWith('community.html')) {
-          return;
+      if (!commLink) return;
+
+      // If already on /community, allow normal browser navigation
+      if (window.location.pathname === '/community' || window.location.pathname.endsWith('community.html')) {
+        return;
+      }
+
+      // Intercept the click to await auth resolution before deciding
+      e.preventDefault();
+
+      // Await the auth check promise (may already be resolved if checkAuthStatus() completed)
+      // This eliminates the race condition where currentUser is null on fast first clicks
+      const resolveAndNavigate = async () => {
+        try {
+          if (authCheckPromise) {
+            await authCheckPromise;
+          }
+        } catch (_) {
+          // Auth check failed — treat as logged out
         }
 
         if (!currentUser) {
-          e.preventDefault();
           window.location.href = 'auth.html?redirect=/community&message=community_required';
         } else {
-          e.preventDefault();
           window.location.href = '/community';
         }
-      }
+      };
+
+      resolveAndNavigate();
     });
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    checkAuthStatus();
+    // Store the promise so the click guard can await it if auth hasn't resolved yet
+    authCheckPromise = checkAuthStatus();
     initCommunityLinkGuards();
   });
 

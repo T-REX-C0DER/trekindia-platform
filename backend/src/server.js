@@ -103,14 +103,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Protected Test Route
-import { requireAuth } from './middleware/authMiddleware.js';
+// Protected Test Route & User Search
+import { requireAuth, authMiddleware } from './middleware/authMiddleware.js';
+import * as communityController from './controllers/communityController.js';
+
 app.get('/api/users/me', requireAuth, (req, res) => {
   return res.status(200).json({
     success: true,
     user: req.user
   });
 });
+
+app.get('/api/users/search', authMiddleware, communityController.searchUsers);
 
 // Authentication V1 Routes
 app.use('/api/auth', authRoutes);

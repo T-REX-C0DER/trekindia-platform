@@ -1012,47 +1012,287 @@ export async function addStory({ user, media_url, caption, location, trek_name }
 }
 
 /**
- * Get Trekkers Directory
+ * Search Real Registered Users from DB (DB-first with INITIAL_TREKKERS fallback)
+ * Searches full_name, username, bio, city, state fields.
+ * Returns only safe public profile info — never email, password, or tokens.
  */
-export async function getTrekkers({ query: searchQuery, location, experience, difficulty, limit = 30 }) {
-  let list = [...INITIAL_TREKKERS];
+export async function searchUsers({ searchQuery, location, experience, difficulty, limit = 30, offset = 0, currentUser }) {
+  const safeLimit = Math.min(parseInt(limit, 10) || 30, 50);
+  const safeOffset = parseInt(offset, 10) || 0;
+  const q = searchQuery ? searchQuery.trim() : '';
 
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    list = list.filter(t =>
-      t.full_name.toLowerCase().includes(q) ||
-      t.username.toLowerCase().includes(q) ||
-      t.location.toLowerCase().includes(q) ||
-      t.bio.toLowerCase().includes(q)
-    );
+  let dbUsers = [];
+  let dbAvailable = false;
+
+  try {
+    // Build dynamic SQL for DB search
+    const conditions = ['u.role != $1'];
+    const params = ['admin'];
+    let paramIdx = 2;
+
+    if (q) {
+      conditions.push(
+        `(
+          u.full_name ILIKE $${paramIdx} OR
+          u.username ILIKE $${paramIdx} OR
+          u.bio ILIKE $${paramIdx} OR
+          u.city ILIKE $${paramIdx} OR
+          u.state ILIKE $${paramIdx}
+        )`
+      );
+      params.push(`%${q}%`);
+      paramIdx++;
+    }
+
+    // Location filter — maps to city or state
+    if (location && location !== 'all') {
+      const locClean = location.toLowerCase();
+      // Handle special cases from dropdown options
+      const locMap = {
+        pune: ['pune', 'maharashtra'],
+        manali: ['manali', 'himachal'],
+        dehradun: ['dehradun', 'uttarakhand'],
+        bengaluru: ['bengaluru', 'bangalore', 'karnataka'],
+        leh: ['leh', 'ladakh']
+      };
+      const locTerms = locMap[locClean] || [locClean];
+      const locConditions = locTerms.map((term, i) => {
+        params.push(`%${term}%`);
+        const idx = paramIdx + i;
+        return `(u.city ILIKE $${idx} OR u.state ILIKE $${idx})`;
+      });
+      paramIdx += locTerms.length;
+      conditions.push(`(${locConditions.join(' OR ')})`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // ── Step 1: Simple reliable base query — no complex subqueries that may fail ──
+    const baseSql = `
+      SELECT
+        u.user_id,
+        u.username,
+        u.full_name,
+        u.profile_image,
+        u.bio,
+        u.city,
+        u.state,
+        u.is_verified,
+        u.online_status,
+        u.created_at
+      FROM users u
+      ${whereClause}
+      ORDER BY
+        CASE WHEN u.is_verified THEN 0 ELSE 1 END,
+        u.created_at DESC
+      LIMIT $${paramIdx} OFFSET $${paramIdx + 1}
+    `;
+    params.push(safeLimit + 10, safeOffset); // fetch extra to allow filtering
+
+    const result = await query(baseSql, params);
+    dbAvailable = true;
+
+    const currentUserId = currentUser?.user_id;
+
+    // ── Step 2: Optional enrichment — follower counts etc. separate try-catch ──
+    // If community_follows / user_treks tables don't exist yet, this just silently skips.
+    let followerCounts = {};
+    let followingByCurrentUser = new Set();
+    try {
+      if (result.rows.length > 0) {
+        const userIds = result.rows.map(r => parseInt(r.user_id, 10));
+        const followerRes = await query(
+          `SELECT following_id, COUNT(*) AS cnt
+           FROM community_follows
+           WHERE following_id = ANY($1::int[])
+           GROUP BY following_id`,
+          [userIds]
+        );
+        followerRes.rows.forEach(r => {
+          followerCounts[String(r.following_id)] = parseInt(r.cnt, 10);
+        });
+        if (currentUserId) {
+          const followingRes = await query(
+            `SELECT following_id FROM community_follows WHERE follower_id = $1 AND following_id = ANY($2::int[])`,
+            [currentUserId, userIds]
+          );
+          followingRes.rows.forEach(r => followingByCurrentUser.add(String(r.following_id)));
+        }
+      }
+    } catch (_enrichErr) {
+      // Stats tables not ready — safe to ignore, users still appear with default values
+    }
+
+    dbUsers = result.rows
+      .filter(row => !currentUserId || String(row.user_id) !== String(currentUserId))
+      .map(row => {
+        const isOnline = wsManager.isUserOnline(row.user_id);
+        const seeded = INITIAL_TREKKERS.find(t => String(t.user_id) === String(row.user_id));
+        const uid = String(row.user_id);
+        return {
+          user_id: parseInt(row.user_id, 10),
+          username: row.username,
+          full_name: row.full_name,
+          avatar: row.profile_image || seeded?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.full_name || row.username)}&background=3a7d44&color=fff&size=150`,
+          cover_image: seeded?.cover_image || null,
+          bio: row.bio || seeded?.bio || '',
+          location: [row.city, row.state].filter(Boolean).join(', ') || seeded?.location || 'India',
+          experience_level: seeded?.experience_level || 'Explorer',
+          difficulty_preference: seeded?.difficulty_preference || 'Moderate',
+          treks_completed: seeded?.treks_completed || 0,
+          highest_altitude: seeded?.highest_altitude || null,
+          states_explored: seeded?.states_explored || null,
+          followers_count: followerCounts[uid] || seeded?.followers_count || 0,
+          following_count: seeded?.following_count || 0,
+          posts_count: seeded?.posts_count || 0,
+          is_verified: row.is_verified || false,
+          is_following: followingByCurrentUser.has(uid) || seeded?.is_following || false,
+          active_trek: seeded?.active_trek || null,
+          online_status: isOnline ? 'online' : (row.online_status || 'offline'),
+          last_active: isOnline ? 'Active now' : 'Recently',
+          _is_db_user: true
+        };
+      });
+
+  } catch (err) {
+    console.warn('[Community Service] searchUsers DB error, falling back to in-memory:', err.message);
+    dbAvailable = false;
   }
 
+  // Merge DB results with INITIAL_TREKKERS (curated demo trekkers)
+  // DB users take priority; INITIAL_TREKKERS fill in the rest
+  const dbUserIds = new Set(dbUsers.map(u => String(u.user_id)));
+  const currentUserId = currentUser?.user_id;
+
+  let inMemory = INITIAL_TREKKERS.filter(t => {
+    if (String(t.user_id) === String(currentUserId)) return false; // exclude self
+    if (dbUserIds.has(String(t.user_id))) return false; // already in DB results
+    if (q) {
+      const qLower = q.toLowerCase();
+      return (
+        t.full_name.toLowerCase().includes(qLower) ||
+        t.username.toLowerCase().includes(qLower) ||
+        t.location.toLowerCase().includes(qLower) ||
+        (t.bio && t.bio.toLowerCase().includes(qLower))
+      );
+    }
+    return true;
+  });
+
+  // Apply location filter on in-memory results
   if (location && location !== 'all') {
     const loc = location.toLowerCase();
-    list = list.filter(t => t.location.toLowerCase().includes(loc));
+    inMemory = inMemory.filter(t => t.location.toLowerCase().includes(loc));
   }
 
+  // Apply experience filter on in-memory results
   if (experience && experience !== 'all') {
     const exp = experience.toLowerCase();
-    list = list.filter(t => t.experience_level.toLowerCase().includes(exp));
+    inMemory = inMemory.filter(t => t.experience_level.toLowerCase().includes(exp));
   }
 
+  // Apply difficulty filter on in-memory results
   if (difficulty && difficulty !== 'all') {
     const diff = difficulty.toLowerCase();
-    list = list.filter(t => t.difficulty_preference.toLowerCase().includes(diff));
+    inMemory = inMemory.filter(t => t.difficulty_preference.toLowerCase().includes(diff));
   }
 
-  return list.slice(0, limit);
+  const merged = [...dbUsers, ...inMemory];
+  return merged.slice(0, safeLimit);
+}
+
+/**
+ * Get Trekkers Directory (now uses searchUsers() for real DB integration)
+ */
+export async function getTrekkers({ query: searchQuery, location, experience, difficulty, limit = 30 }) {
+  return searchUsers({ searchQuery, location, experience, difficulty, limit });
 }
 
 /**
  * Get Trekker Full Profile by ID or Username
+ * Queries PostgreSQL database first, falls back to INITIAL_TREKKERS
  */
-export async function getTrekkerProfile(identifier) {
-  let trekker = INITIAL_TREKKERS.find(t =>
-    String(t.user_id) === String(identifier) ||
-    t.username.toLowerCase() === String(identifier).toLowerCase()
-  );
+export async function getTrekkerProfile(identifier, currentUser) {
+  if (!identifier) {
+    const err = new Error('Trekker identifier is required');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const isNumeric = /^\d+$/.test(String(identifier).trim());
+  let trekker = null;
+
+  // 1. Try querying PostgreSQL database
+  try {
+    const userQuery = isNumeric
+      ? `SELECT u.user_id, u.username, u.full_name, u.profile_image, u.bio, u.city, u.state,
+                u.is_verified, u.online_status, u.created_at,
+                up.cover_image, up.location AS profile_location,
+                COALESCE((SELECT COUNT(*) FROM user_treks ut WHERE ut.user_id = u.user_id AND ut.status = 'completed'), 0) AS treks_completed,
+                COALESCE((SELECT COUNT(*) FROM community_follows cf WHERE cf.following_id = u.user_id), 0) AS followers_count,
+                COALESCE((SELECT COUNT(*) FROM community_follows cf WHERE cf.follower_id = u.user_id), 0) AS following_count
+         FROM users u
+         LEFT JOIN user_profiles up ON u.user_id = up.user_id
+         WHERE u.user_id = $1 LIMIT 1`
+      : `SELECT u.user_id, u.username, u.full_name, u.profile_image, u.bio, u.city, u.state,
+                u.is_verified, u.online_status, u.created_at,
+                up.cover_image, up.location AS profile_location,
+                COALESCE((SELECT COUNT(*) FROM user_treks ut WHERE ut.user_id = u.user_id AND ut.status = 'completed'), 0) AS treks_completed,
+                COALESCE((SELECT COUNT(*) FROM community_follows cf WHERE cf.following_id = u.user_id), 0) AS followers_count,
+                COALESCE((SELECT COUNT(*) FROM community_follows cf WHERE cf.follower_id = u.user_id), 0) AS following_count
+         FROM users u
+         LEFT JOIN user_profiles up ON u.user_id = up.user_id
+         WHERE LOWER(u.username) = LOWER($1) LIMIT 1`;
+
+    const res = await query(userQuery, [String(identifier).trim()]);
+    if (res.rows.length > 0) {
+      const row = res.rows[0];
+      const isOnline = wsManager.isUserOnline(row.user_id);
+      const seeded = INITIAL_TREKKERS.find(t => String(t.user_id) === String(row.user_id) || t.username.toLowerCase() === row.username.toLowerCase());
+
+      // Check if currentUser is following this user
+      let isFollowing = false;
+      if (currentUser?.user_id) {
+        const followCheck = await query(
+          `SELECT 1 FROM community_follows WHERE follower_id = $1 AND following_id = $2`,
+          [currentUser.user_id, row.user_id]
+        );
+        isFollowing = followCheck.rows.length > 0;
+      }
+
+      trekker = {
+        user_id: parseInt(row.user_id, 10),
+        username: row.username,
+        full_name: row.full_name,
+        avatar: row.profile_image || seeded?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(row.full_name || row.username)}&background=3a7d44&color=fff&size=150`,
+        cover_image: row.cover_image || seeded?.cover_image || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200',
+        bio: row.bio || seeded?.bio || 'TrekIndia Explorer.',
+        location: [row.city, row.state].filter(Boolean).join(', ') || seeded?.location || 'India',
+        experience_level: seeded?.experience_level || 'Explorer',
+        difficulty_preference: seeded?.difficulty_preference || 'Moderate',
+        treks_completed: parseInt(row.treks_completed, 10) || seeded?.treks_completed || 0,
+        highest_altitude: seeded?.highest_altitude || '3,800 m',
+        states_explored: seeded?.states_explored || 3,
+        followers_count: parseInt(row.followers_count, 10) || seeded?.followers_count || 0,
+        following_count: parseInt(row.following_count, 10) || seeded?.following_count || 0,
+        is_verified: row.is_verified || false,
+        is_following: isFollowing || seeded?.is_following || false,
+        active_trek: seeded?.active_trek || null,
+        online_status: isOnline ? 'online' : (row.online_status || 'offline'),
+        last_active: isOnline ? 'Active now' : 'Recently'
+      };
+    }
+  } catch (err) {
+    console.warn('[Community Service] getTrekkerProfile DB error:', err.message);
+  }
+
+  // 2. Fall back to INITIAL_TREKKERS if not found in DB
+  if (!trekker) {
+    trekker = INITIAL_TREKKERS.find(t =>
+      String(t.user_id) === String(identifier) ||
+      t.username.toLowerCase() === String(identifier).toLowerCase()
+    );
+  }
 
   if (!trekker) {
     const err = new Error('Trekker not found');
@@ -1061,37 +1301,101 @@ export async function getTrekkerProfile(identifier) {
   }
 
   // Collect user's posts
-  const userPosts = postsStore.filter(p => p.user_id === trekker.user_id || p.user.username === trekker.username);
+  const userPosts = postsStore.filter(p => String(p.user_id) === String(trekker.user_id) || p.user?.username?.toLowerCase() === trekker.username.toLowerCase());
+
+  // Completed treks list
+  const completedTreks = [
+    { name: trekker.active_trek || 'Kedarkantha Trek', altitude: '3,810m', season: 'Winter', difficulty: 'Moderate', state: 'Uttarakhand' },
+    { name: 'Hampta Pass', altitude: '4,287m', season: 'Monsoon', difficulty: 'Advanced', state: 'Himachal Pradesh' },
+    { name: 'Roopkund Mystery Lake', altitude: '5,029m', season: 'Summer', difficulty: 'Hard', state: 'Uttarakhand' }
+  ];
 
   return {
     ...trekker,
+    posts_count: userPosts.length,
     posts: userPosts,
-    completed_treks_list: [
-      { name: trekker.active_trek || 'Kedarkantha Trek', altitude: '3,810m', season: 'Winter', difficulty: 'Moderate' },
-      { name: 'Hampta Pass', altitude: '4,287m', season: 'Monsoon', difficulty: 'Advanced' },
-      { name: 'Roopkund Mystery Lake', altitude: '5,029m', season: 'Summer', difficulty: 'Hard' }
-    ]
+    completed_treks_list: completedTreks
   };
 }
 
 /**
  * Toggle Follow User
+ * Handles both DB persistence via community_follows and INITIAL_TREKKERS memory state
  */
 export async function toggleFollow(targetUserId, currentUser) {
-  const target = INITIAL_TREKKERS.find(t => String(t.user_id) === String(targetUserId));
-  if (!target) {
-    const err = new Error('User not found');
-    err.statusCode = 404;
+  const currentId = currentUser?.user_id;
+  const targetId = parseInt(targetUserId, 10);
+
+  if (currentId && String(currentId) === String(targetId)) {
+    const err = new Error('You cannot follow yourself');
+    err.statusCode = 400;
     throw err;
   }
 
-  target.is_following = !target.is_following;
-  target.followers_count += target.is_following ? 1 : -1;
-  if (target.followers_count < 0) target.followers_count = 0;
+  let isFollowing = false;
+  let followersCount = 0;
+
+  // 1. Check in-memory INITIAL_TREKKERS
+  const targetInitial = INITIAL_TREKKERS.find(t => String(t.user_id) === String(targetUserId));
+  if (targetInitial) {
+    targetInitial.is_following = !targetInitial.is_following;
+    targetInitial.followers_count += targetInitial.is_following ? 1 : -1;
+    if (targetInitial.followers_count < 0) targetInitial.followers_count = 0;
+    isFollowing = targetInitial.is_following;
+    followersCount = targetInitial.followers_count;
+  }
+
+  // 2. Persist in DB if logged in and target user is a valid numeric ID
+  if (currentId && !isNaN(targetId)) {
+    try {
+      await ensureSeedTrekkersInDb();
+
+      const existingFollow = await query(
+        `SELECT id FROM community_follows WHERE follower_id = $1 AND following_id = $2`,
+        [currentId, targetId]
+      );
+
+      if (existingFollow.rows.length > 0) {
+        // Unfollow
+        await query(
+          `DELETE FROM community_follows WHERE follower_id = $1 AND following_id = $2`,
+          [currentId, targetId]
+        );
+        isFollowing = false;
+      } else {
+        // Follow
+        await query(
+          `INSERT INTO community_follows (follower_id, following_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [currentId, targetId]
+        );
+        isFollowing = true;
+
+        // Send notification event
+        try {
+          await query(
+            `INSERT INTO notifications (user_id, actor_id, type, title, message)
+             VALUES ($1, $2, 'follow', 'New Follower', $3)`,
+            [targetId, currentId, `${currentUser.full_name || currentUser.username} started following your trek journal.`]
+          );
+        } catch (_) {}
+      }
+
+      // Get updated followers count
+      const countRes = await query(
+        `SELECT COUNT(*) FROM community_follows WHERE following_id = $1`,
+        [targetId]
+      );
+      followersCount = parseInt(countRes.rows[0].count, 10);
+      if (targetInitial) targetInitial.followers_count = followersCount;
+
+    } catch (err) {
+      console.warn('[Community Service] toggleFollow DB warning:', err.message);
+    }
+  }
 
   return {
-    is_following: target.is_following,
-    followers_count: target.followers_count
+    is_following: isFollowing,
+    followers_count: followersCount
   };
 }
 
@@ -1744,31 +2048,28 @@ export async function markNotificationsRead(notificationId, currentUser) {
 
 /**
  * Universal Community Search across Treks, Trekkers, Posts, and Hashtags
+ * Searches real registered users from the database.
  */
 export async function searchCommunity(q) {
   if (!q || !q.trim()) {
     return { treks: [], trekkers: [], posts: [], hashtags: [] };
   }
 
-  const query = q.trim().toLowerCase();
+  const queryStr = q.trim().toLowerCase();
 
-  // Search Trekkers
-  const matchedTrekkers = INITIAL_TREKKERS.filter(t =>
-    t.full_name.toLowerCase().includes(query) ||
-    t.username.toLowerCase().includes(query) ||
-    t.location.toLowerCase().includes(query)
-  ).slice(0, 5);
+  // Search real users from DB + INITIAL_TREKKERS
+  const matchedTrekkers = await searchUsers({ searchQuery: q.trim(), limit: 5 });
 
   // Search Posts
   const matchedPosts = postsStore.filter(p =>
-    p.caption.toLowerCase().includes(query) ||
-    p.location?.toLowerCase().includes(query)
+    p.caption.toLowerCase().includes(queryStr) ||
+    p.location?.toLowerCase().includes(queryStr)
   ).slice(0, 5);
 
   // Search Hashtags
   const allTags = new Set();
   postsStore.forEach(p => p.hashtags?.forEach(h => {
-    if (h.toLowerCase().includes(query.replace(/^#/, ''))) {
+    if (h.toLowerCase().includes(queryStr.replace(/^#/, ''))) {
       allTags.add(h);
     }
   }));
@@ -1781,7 +2082,7 @@ export async function searchCommunity(q) {
     { name: 'Valley of Flowers', altitude: '3,858m', difficulty: 'Easy', state: 'Uttarakhand' },
     { name: 'Sandakphu Phalut Peak', altitude: '3,636m', difficulty: 'Hard', state: 'West Bengal' },
     { name: 'Rajmachi Fort', altitude: '820m', difficulty: 'Moderate', state: 'Maharashtra' }
-  ].filter(t => t.name.toLowerCase().includes(query));
+  ].filter(t => t.name.toLowerCase().includes(queryStr));
 
   return {
     query: q,

@@ -13,6 +13,37 @@ class MessageConsumerService {
     this.consumer = null;
     this.isRunning = false;
     this.maxRetries = 3;
+
+    // Reconnect backoff state
+    this._reconnectAttempts = 0;
+    this._reconnectTimer = null;
+    this._baseDelay = 3000;          // 3 seconds
+    this._maxDelay = 5 * 60 * 1000; // 5 minutes cap
+  }
+
+  /**
+   * Compute next exponential backoff delay with jitter
+   */
+  _nextDelay() {
+    const exp = this._baseDelay * Math.pow(2, this._reconnectAttempts);
+    const capped = Math.min(exp, this._maxDelay);
+    return capped + Math.floor(Math.random() * 1000);
+  }
+
+  /**
+   * Schedule a reconnect with exponential backoff
+   */
+  _scheduleReconnect() {
+    if (this.isRunning || this._reconnectTimer) return;
+    const delay = this._nextDelay();
+    console.log(`[Kafka Consumer] Reconnect attempt #${this._reconnectAttempts + 1} in ${Math.round(delay / 1000)}s...`);
+    this._reconnectTimer = setTimeout(async () => {
+      this._reconnectTimer = null;
+      if (!this.isRunning) {
+        this._reconnectAttempts++;
+        await this.start().catch(() => {});
+      }
+    }, delay);
   }
 
   /**
@@ -21,6 +52,12 @@ class MessageConsumerService {
   async start() {
     try {
       console.log('[Kafka Consumer] Initializing consumer with group:', CONSUMER_GROUPS.MESSAGE_DELIVERY);
+
+      // Disconnect any existing broken consumer instance
+      if (this.consumer) {
+        try { await this.consumer.disconnect(); } catch (_) {}
+        this.consumer = null;
+      }
 
       this.consumer = kafka.consumer({
         groupId: CONSUMER_GROUPS.MESSAGE_DELIVERY,
@@ -33,6 +70,13 @@ class MessageConsumerService {
         }
       });
 
+      // Auto-restart on internal kafkajs crash
+      this.consumer.on(this.consumer.events.CRASH, ({ payload }) => {
+        console.error('❌ [Kafka Consumer] CRASH event:', payload?.error?.message || 'unknown error');
+        this.isRunning = false;
+        this._scheduleReconnect();
+      });
+
       await this.consumer.connect();
       console.log('✅ [Kafka Consumer] Connected to Kafka KRaft broker.');
 
@@ -43,6 +87,11 @@ class MessageConsumerService {
       });
 
       this.isRunning = true;
+      this._reconnectAttempts = 0; // reset backoff on success
+      if (this._reconnectTimer) {
+        clearTimeout(this._reconnectTimer);
+        this._reconnectTimer = null;
+      }
 
       // Start event processing loop
       await this.consumer.run({
@@ -57,10 +106,7 @@ class MessageConsumerService {
     } catch (err) {
       console.error('❌ [Kafka Consumer] Initialization error:', err.message);
       this.isRunning = false;
-      // Allow retry after backoff
-      setTimeout(() => {
-        if (!this.isRunning) this.start().catch(() => {});
-      }, 10000);
+      this._scheduleReconnect();
     }
   }
 
@@ -311,6 +357,10 @@ class MessageConsumerService {
    * Graceful shutdown of consumer
    */
   async disconnect() {
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
     if (this.consumer && this.isRunning) {
       try {
         console.log('[Kafka Consumer] Disconnecting consumer gracefully...');

@@ -6,6 +6,32 @@
 
 import * as communityService from '../services/communityService.js';
 
+export async function searchUsers(req, res, next) {
+  try {
+    const { q, location, experience, difficulty, limit, offset } = req.query;
+    // Validate and sanitize query
+    const searchQuery = q ? String(q).trim().substring(0, 100) : '';
+
+    const trekkers = await communityService.searchUsers({
+      searchQuery,
+      location: location || 'all',
+      experience: experience || 'all',
+      difficulty: difficulty || 'all',
+      limit: parseInt(limit, 10) || 30,
+      offset: parseInt(offset, 10) || 0,
+      currentUser: req.user
+    });
+    return res.status(200).json({
+      success: true,
+      query: searchQuery,
+      count: trekkers.length,
+      trekkers
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function listPosts(req, res, next) {
   try {
     const { tab, tag, trek_id, search, limit, offset } = req.query;
@@ -176,7 +202,7 @@ export async function listTrekkers(req, res, next) {
 export async function getTrekkerProfile(req, res, next) {
   try {
     const { identifier } = req.params;
-    const profile = await communityService.getTrekkerProfile(identifier);
+    const profile = await communityService.getTrekkerProfile(identifier, req.user);
     return res.status(200).json({ success: true, profile });
   } catch (err) {
     next(err);

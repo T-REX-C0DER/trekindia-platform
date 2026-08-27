@@ -46,4 +46,8 @@ router.post('/notifications/read', requireAuth, communityController.markNotifica
 // ─── Search ──────────────────────────────────────────────────────────────────
 router.get('/search', communityController.searchCommunity);
 
+// ─── User Search (searches real registered DB users) ─────────────────────────
+// GET /api/community/users/search?q=rahul&location=all&experience=all&limit=20
+router.get('/users/search', communityController.searchUsers);
+
 export default router;

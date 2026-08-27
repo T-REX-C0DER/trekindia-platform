@@ -387,25 +387,28 @@
         <div class="trekkers-filter-panel">
           <div class="trekkers-search-box">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="trekkerSearchInput" placeholder="Search by name, location, or trek interest..." />
+            <input type="text" id="trekkerSearchInput" placeholder="Search by name or username..." autocomplete="off" aria-label="Search trekkers" />
+            <button class="trekker-search-clear-btn" id="trekkerSearchClearBtn" title="Clear search" style="display: none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
           <div class="trekkers-select-filters">
-            <select id="trekkerLocationFilter" class="filter-select">
+            <select id="trekkerLocationFilter" class="filter-select" aria-label="Filter by location">
               <option value="all">All Locations</option>
-              <option value="pune">Pune & Maharashtra</option>
+              <option value="pune">Pune &amp; Maharashtra</option>
               <option value="manali">Himachal Pradesh</option>
               <option value="dehradun">Uttarakhand</option>
-              <option value="bengaluru">Bengaluru & South</option>
-              <option value="leh">Ladakh & J&K</option>
+              <option value="bengaluru">Bengaluru &amp; South</option>
+              <option value="leh">Ladakh &amp; J&amp;K</option>
             </select>
-            <select id="trekkerExpFilter" class="filter-select">
+            <select id="trekkerExpFilter" class="filter-select" aria-label="Filter by experience">
               <option value="all">All Experience Levels</option>
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
               <option value="advanced">Advanced</option>
               <option value="guide">High Altitude Guide</option>
             </select>
-            <select id="trekkerDiffFilter" class="filter-select">
+            <select id="trekkerDiffFilter" class="filter-select" aria-label="Filter by difficulty">
               <option value="all">All Difficulties</option>
               <option value="easy">Easy</option>
               <option value="moderate">Moderate</option>
@@ -414,6 +417,32 @@
             </select>
           </div>
         </div>
+
+        <!-- Trekker Results Loading State -->
+        <div class="trekkers-loading-state" id="trekkersLoadingState" style="display: none;">
+          <div class="trekkers-skeleton-grid">
+            <div class="trekker-card-skeleton"><div class="sk-avatar-lg"></div><div class="sk-lines"><div class="sk-line w-60"></div><div class="sk-line w-40"></div><div class="sk-line w-80"></div></div></div>
+            <div class="trekker-card-skeleton"><div class="sk-avatar-lg"></div><div class="sk-lines"><div class="sk-line w-60"></div><div class="sk-line w-40"></div><div class="sk-line w-80"></div></div></div>
+            <div class="trekker-card-skeleton"><div class="sk-avatar-lg"></div><div class="sk-lines"><div class="sk-line w-60"></div><div class="sk-line w-40"></div><div class="sk-line w-80"></div></div></div>
+            <div class="trekker-card-skeleton"><div class="sk-avatar-lg"></div><div class="sk-lines"><div class="sk-line w-60"></div><div class="sk-line w-40"></div><div class="sk-line w-80"></div></div></div>
+          </div>
+        </div>
+
+        <!-- Trekker Results Error State -->
+        <div class="trekkers-error-state" id="trekkersErrorState" style="display: none;">
+          <div class="error-icon">⚠️</div>
+          <h3>Unable to load trekkers</h3>
+          <p>There was a problem fetching trekker profiles. Please try again.</p>
+          <button class="btn-trekkers-retry" id="trekkersRetryBtn">Try Again</button>
+        </div>
+
+        <!-- Trekker No Results State -->
+        <div class="trekkers-no-results-state" id="trekkersNoResultsState" style="display: none;">
+          <div class="empty-icon-wrap">🔍</div>
+          <h3 class="empty-title">No trekkers found</h3>
+          <p class="empty-desc">Try searching with a different name or username.</p>
+        </div>
+
         <div class="trekkers-grid" id="trekkersGrid">
           <!-- Dynamic Trekker Cards -->
         </div>
@@ -434,6 +463,17 @@
         <h3 class="empty-title">Your adventure story starts here.</h3>
         <p class="empty-desc">No posts found in this section. Be the first to share an expedition or discover fellow trekkers.</p>
         <button class="btn-banner-create" id="emptyCreateBtn">Create Your First Post</button>
+      </div>
+
+      <!-- Feed Error State View -->
+      <div class="feed-error-state" id="feedErrorState" style="display: none;">
+        <div class="error-icon-wrap">⚠️</div>
+        <h3 class="error-title">Unable to load community posts</h3>
+        <p class="error-desc">We had trouble fetching the latest trail stories. Please check your connection and try again.</p>
+        <button class="btn-feed-retry" id="feedRetryBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          <span>Retry</span>
+        </button>
       </div>
 
     </main>

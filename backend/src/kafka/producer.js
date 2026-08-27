@@ -3,12 +3,48 @@ import { kafka, TOPICS } from './config.js';
 /**
  * TrekIndia — Reusable Singleton Kafka Producer Service
  * Handles event serialization, partition key routing, and resilient delivery.
+ * Features: exponential backoff reconnect, DISCONNECT auto-recovery, graceful degradation.
  */
 class MessageProducerService {
   constructor() {
     this.producer = null;
     this.isConnected = false;
     this.connectingPromise = null;
+
+    // Reconnect backoff state
+    this._reconnectAttempts = 0;
+    this._reconnectTimer = null;
+    this._maxReconnectDelay = 5 * 60 * 1000; // 5 minutes cap
+    this._baseDelay = 3000; // 3 seconds initial
+  }
+
+  /**
+   * Compute next backoff delay with jitter: delay = min(base * 2^attempt, max) + jitter
+   */
+  _nextDelay() {
+    const exponential = this._baseDelay * Math.pow(2, this._reconnectAttempts);
+    const capped = Math.min(exponential, this._maxReconnectDelay);
+    const jitter = Math.floor(Math.random() * 1000);
+    return capped + jitter;
+  }
+
+  /**
+   * Schedule a reconnect with exponential backoff.
+   * Skips if already connected, connecting, or timer is already pending.
+   */
+  _scheduleReconnect() {
+    if (this.isConnected || this.connectingPromise || this._reconnectTimer) return;
+
+    const delay = this._nextDelay();
+    console.log(`[Kafka Producer] Scheduling reconnect attempt #${this._reconnectAttempts + 1} in ${Math.round(delay / 1000)}s...`);
+
+    this._reconnectTimer = setTimeout(async () => {
+      this._reconnectTimer = null;
+      if (!this.isConnected) {
+        this._reconnectAttempts++;
+        await this.connect().catch(() => {});
+      }
+    }, delay);
   }
 
   /**
@@ -21,6 +57,13 @@ class MessageProducerService {
     this.connectingPromise = (async () => {
       try {
         console.log('[Kafka Producer] Connecting to KRaft broker...');
+
+        // Disconnect existing broken producer if any
+        if (this.producer) {
+          try { await this.producer.disconnect(); } catch (_) {}
+          this.producer = null;
+        }
+
         this.producer = kafka.producer({
           allowAutoTopicCreation: true,
           transactionTimeout: 30000,
@@ -29,21 +72,33 @@ class MessageProducerService {
 
         this.producer.on(this.producer.events.CONNECT, () => {
           this.isConnected = true;
+          this._reconnectAttempts = 0; // reset backoff on successful connect
+          if (this._reconnectTimer) {
+            clearTimeout(this._reconnectTimer);
+            this._reconnectTimer = null;
+          }
           console.log('✅ [Kafka Producer] Connected to Kafka KRaft broker.');
         });
 
         this.producer.on(this.producer.events.DISCONNECT, () => {
           this.isConnected = false;
-          console.warn('⚠️ [Kafka Producer] Disconnected from Kafka broker.');
+          console.warn('⚠️ [Kafka Producer] Disconnected from Kafka broker. Auto-reconnect scheduled.');
+          this._scheduleReconnect();
+        });
+
+        this.producer.on(this.producer.events.REQUEST_TIMEOUT, () => {
+          console.warn('⚠️ [Kafka Producer] Request timed out.');
         });
 
         await this.producer.connect();
         this.isConnected = true;
+        this._reconnectAttempts = 0;
         return this.producer;
       } catch (err) {
         console.error('❌ [Kafka Producer] Connection error:', err.message);
         this.isConnected = false;
-        // Don't throw fatal error - allow graceful degradation
+        this._scheduleReconnect();
+        // Don't throw — allow graceful degradation when Kafka is unavailable
         return null;
       } finally {
         this.connectingPromise = null;
@@ -119,7 +174,8 @@ class MessageProducerService {
   }
 
   /**
-   * Generic event sender with auto-reconnect and resilient logging
+   * Generic event sender with auto-reconnect and resilient logging.
+   * If Kafka is offline, logs a warning and returns false (no crash).
    */
   async sendEvent({ topic, key, event }) {
     try {
@@ -128,7 +184,7 @@ class MessageProducerService {
       }
 
       if (!this.producer || !this.isConnected) {
-        console.warn(`⚠️ [Kafka Producer] Broker offline. Event queued/persisted in DB: ${event.event_type || 'event'}`);
+        console.warn(`⚠️ [Kafka Producer] Broker offline — event safely persisted in DB: ${event.event_type || 'event'}`);
         return false;
       }
 
@@ -153,14 +209,23 @@ class MessageProducerService {
       return true;
     } catch (err) {
       console.error(`❌ [Kafka Producer] Delivery failed for topic '${topic}':`, err.message);
+      // If the producer threw a connection error, mark as disconnected and schedule reconnect
+      if (err.type === 'LEADER_NOT_AVAILABLE' || err.message?.includes('ECONNREFUSED') || err.message?.includes('disconnected')) {
+        this.isConnected = false;
+        this._scheduleReconnect();
+      }
       return false;
     }
   }
 
   /**
-   * Graceful shutdown of producer
+   * Graceful shutdown of producer — clears reconnect timer too
    */
   async disconnect() {
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
     if (this.producer && this.isConnected) {
       try {
         console.log('[Kafka Producer] Disconnecting producer gracefully...');

@@ -3405,3 +3405,148 @@ body.dark .chat-reconnect-banner {
     display: flex;
   }
 }
+
+/* ─── 18. FEED & TREKKER SEARCH ENHANCED STATES ────────────────────────────── */
+.feed-error-state,
+.trekkers-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--comm-card-bg);
+  border: 1px solid var(--comm-border);
+  border-radius: var(--comm-radius-lg);
+  box-shadow: var(--comm-shadow-sm);
+  margin: 20px 0;
+}
+
+.error-icon-wrap,
+.trekkers-error-state .error-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.error-title,
+.trekkers-error-state h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--comm-text-primary);
+  margin-bottom: 6px;
+}
+
+.error-desc,
+.trekkers-error-state p {
+  font-size: 0.88rem;
+  color: var(--comm-text-muted);
+  max-width: 420px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.btn-feed-retry,
+.btn-trekkers-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--comm-forest);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--comm-radius-md);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all var(--comm-transition);
+}
+
+.btn-feed-retry:hover,
+.btn-trekkers-retry:hover {
+  background: var(--comm-forest-hover);
+  transform: translateY(-1px);
+}
+
+.trekkers-no-results-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 50px 24px;
+  background: var(--comm-card-bg);
+  border: 1px dashed var(--comm-border);
+  border-radius: var(--comm-radius-lg);
+  margin: 20px 0;
+}
+
+.trekkers-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.trekker-search-clear-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--comm-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.trekker-search-clear-btn:hover {
+  color: var(--comm-text-primary);
+  background: var(--comm-surface-secondary);
+}
+
+.trekkers-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.trekker-card-skeleton {
+  padding: 20px;
+  background: var(--comm-card-bg);
+  border: 1px solid var(--comm-border);
+  border-radius: var(--comm-radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sk-avatar-lg {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--comm-border);
+  animation: shimmer 1.5s infinite;
+}
+
+.trekker-card-self-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--comm-surface-secondary);
+  color: var(--comm-forest);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid var(--comm-border);
+}
+
+.trekker-card-handle {
+  font-size: 0.78rem;
+  color: var(--comm-text-muted);
+  margin-top: 1px;
+}

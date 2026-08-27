@@ -20,6 +20,8 @@
     activeSlideIndex: 0,
     storyTimer: null,
     storyProgressInterval: null,
+    trekkerSearchAbortController: null,
+    trekkerSearchTimeout: null,
     conversations: [],
     activeConversationId: null,
     selectedPostForComments: null,
@@ -73,12 +75,32 @@
     // Initialize Kafka KRaft real-time WebSocket connection
     initWebSocket();
 
+    // Handle URL hash / tab parameter routing
+    const hashTab = window.location.hash.replace(/^#/, '');
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTab = urlParams.get('tab') || hashTab;
+    const validTabs = ['feed', 'explore', 'trending', 'following', 'my-treks', 'saved', 'trekkers'];
+
     // Load initial data
     loadStories();
-    loadPosts();
-    loadConversations();
     loadNotificationsCount();
     loadUnreadCount();
+
+    if (initialTab && validTabs.includes(initialTab)) {
+      const targetBtn = document.querySelector(`.comm-nav-item[data-tab="${initialTab}"]`);
+      switchCommunityTab(initialTab, targetBtn);
+    } else {
+      loadPosts();
+    }
+
+    // Listen for hash changes (e.g. back/forward navigation or anchor links)
+    window.addEventListener('hashchange', () => {
+      const newHash = window.location.hash.replace(/^#/, '');
+      if (newHash && validTabs.includes(newHash) && newHash !== state.currentTab) {
+        const targetBtn = document.querySelector(`.comm-nav-item[data-tab="${newHash}"]`);
+        switchCommunityTab(newHash, targetBtn);
+      }
+    });
   }
 
   async function checkAuthentication() {
@@ -343,20 +365,34 @@
   // ─── 4. POSTS & FEED LOGIC ──────────────────────────────────────────────────
   async function loadPosts() {
     showFeedSkeleton(true);
+    const stream = document.getElementById('postsStream');
+    const emptyState = document.getElementById('feedEmptyState');
+    const errorState = document.getElementById('feedErrorState');
+    if (emptyState) emptyState.style.display = 'none';
+    if (errorState) errorState.style.display = 'none';
+
     try {
       let url = `/api/community/posts?tab=${state.currentTab}`;
       if (state.currentTag) url += `&tag=${encodeURIComponent(state.currentTag)}`;
       if (state.currentTrekId) url += `&trek_id=${state.currentTrekId}`;
 
       const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`HTTP error ${res.status}`);
+      }
       const data = await res.json();
 
-      if (data.success && data.posts) {
+      if (data.success && Array.isArray(data.posts)) {
         state.posts = data.posts;
         renderPosts(data.posts);
+      } else {
+        throw new Error(data.message || 'Failed to load posts');
       }
     } catch (err) {
       console.error('Failed to load posts:', err);
+      if (stream) stream.innerHTML = '';
+      if (emptyState) emptyState.style.display = 'none';
+      if (errorState) errorState.style.display = 'flex';
     } finally {
       showFeedSkeleton(false);
     }
@@ -1766,26 +1802,78 @@
     }
   }
 
-  // ─── 8. TREKKERS DIRECTORY ──────────────────────────────────────────────────
+  // ─── 8. TREKKERS DIRECTORY & SEARCH ────────────────────────────────────────
   async function loadTrekkersDirectory() {
     const grid = document.getElementById('trekkersGrid');
+    const loadingState = document.getElementById('trekkersLoadingState');
+    const errorState = document.getElementById('trekkersErrorState');
+    const noResultsState = document.getElementById('trekkersNoResultsState');
+    const clearBtn = document.getElementById('trekkerSearchClearBtn');
+
     if (!grid) return;
 
-    grid.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 40px; color: var(--comm-text-muted);">Finding fellow mountain lovers...</div>';
+    // Abort previous in-flight search request to prevent race conditions
+    if (state.trekkerSearchAbortController) {
+      state.trekkerSearchAbortController.abort();
+    }
+    state.trekkerSearchAbortController = new AbortController();
+    const { signal } = state.trekkerSearchAbortController;
 
-    const search = document.getElementById('trekkerSearchInput')?.value || '';
+    const searchInput = document.getElementById('trekkerSearchInput');
+    const search = searchInput?.value || '';
     const loc = document.getElementById('trekkerLocationFilter')?.value || 'all';
     const exp = document.getElementById('trekkerExpFilter')?.value || 'all';
     const diff = document.getElementById('trekkerDiffFilter')?.value || 'all';
 
+    // Show/hide clear search button
+    if (clearBtn) {
+      clearBtn.style.display = search.trim() ? 'flex' : 'none';
+    }
+
+    // Show loading skeleton, hide other states
+    if (loadingState) loadingState.style.display = 'block';
+    if (errorState) errorState.style.display = 'none';
+    if (noResultsState) noResultsState.style.display = 'none';
+    grid.style.display = 'none';
+
     try {
-      const res = await fetch(`/api/community/trekkers?query=${encodeURIComponent(search)}&location=${loc}&experience=${exp}&difficulty=${diff}`);
+      const res = await fetch(
+        `/api/community/users/search?q=${encodeURIComponent(search.trim())}&location=${encodeURIComponent(loc)}&experience=${encodeURIComponent(exp)}&difficulty=${encodeURIComponent(diff)}`,
+        {
+          signal,
+          credentials: 'include'
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error ${res.status}`);
+      }
+
       const data = await res.json();
-      if (data.success && data.trekkers) {
-        renderTrekkersGrid(data.trekkers);
+      if (data.success && Array.isArray(data.trekkers)) {
+        if (loadingState) loadingState.style.display = 'none';
+        if (data.trekkers.length === 0) {
+          if (noResultsState) noResultsState.style.display = 'flex';
+          grid.innerHTML = '';
+          grid.style.display = 'none';
+        } else {
+          if (noResultsState) noResultsState.style.display = 'none';
+          grid.style.display = 'grid';
+          renderTrekkersGrid(data.trekkers);
+        }
+      } else {
+        throw new Error(data.message || 'Failed to fetch trekkers');
       }
     } catch (err) {
-      grid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: #ef4444;">Failed to load trekkers.</div>';
+      if (err.name === 'AbortError') {
+        // Search query changed rapidly, ignore aborted request
+        return;
+      }
+      console.error('Failed to load trekkers:', err);
+      if (loadingState) loadingState.style.display = 'none';
+      if (noResultsState) noResultsState.style.display = 'none';
+      if (errorState) errorState.style.display = 'flex';
+      grid.style.display = 'none';
     }
   }
 
@@ -1794,37 +1882,48 @@
     if (!grid) return;
 
     if (!trekkers || trekkers.length === 0) {
-      grid.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 40px; color: var(--comm-text-muted);">No trekkers match your filter.</div>';
+      grid.innerHTML = '';
       return;
     }
 
-    grid.innerHTML = trekkers.map(t => `
-      <div class="trekker-card" data-trekker-id="${t.user_id}">
-        <div class="trekker-card-top">
-          <img src="${escapeHtml(t.avatar)}" alt="${escapeHtml(t.full_name)}" class="trekker-card-avatar" />
-          <div class="trekker-card-meta">
-            <div class="trekker-card-name">
-              <span>${escapeHtml(t.full_name)}</span>
-              ${t.is_verified ? '<span class="badge-verified-mini">✓</span>' : ''}
+    const currentUserId = state.currentUser?.user_id;
+
+    grid.innerHTML = trekkers.map(t => {
+      const isSelf = currentUserId && String(currentUserId) === String(t.user_id);
+
+      return `
+        <div class="trekker-card" data-trekker-id="${t.user_id}">
+          <div class="trekker-card-top">
+            <img src="${escapeHtml(t.avatar)}" alt="${escapeHtml(t.full_name || t.username)}" class="trekker-card-avatar" />
+            <div class="trekker-card-meta">
+              <div class="trekker-card-name">
+                <span>${escapeHtml(t.full_name || t.username)}</span>
+                ${t.is_verified ? '<span class="badge-verified-mini" title="Verified Trekker">✓</span>' : ''}
+              </div>
+              <div class="trekker-card-handle">@${escapeHtml(t.username)}</div>
+              <div class="trekker-card-level">${escapeHtml(t.experience_level || 'Explorer')}</div>
+              <div class="trekker-card-location">📍 ${escapeHtml(t.location || 'India')}</div>
             </div>
-            <div class="trekker-card-level">${escapeHtml(t.experience_level)}</div>
-            <div class="trekker-card-location">📍 ${escapeHtml(t.location)}</div>
+          </div>
+          <p class="trekker-card-bio">${escapeHtml(t.bio || 'Mountain enthusiast on TrekIndia.')}</p>
+          <div class="trekker-card-stats">
+            <div><strong>${t.treks_completed || 0}</strong> Treks</div> •
+            <div><strong>${t.highest_altitude || '—'}</strong> Max Alt</div> •
+            <div><strong>${t.followers_count || 0}</strong> Followers</div>
+          </div>
+          <div class="trekker-card-actions">
+            ${isSelf ? `
+              <span class="trekker-card-self-badge">You</span>
+            ` : `
+              <button class="btn-trekker-connect ${t.is_following ? 'following' : ''}" data-id="${t.user_id}">
+                ${t.is_following ? 'Following' : 'Connect'}
+              </button>
+              <button class="btn-trekker-msg" data-id="${t.user_id}">Message</button>
+            `}
           </div>
         </div>
-        <p class="trekker-card-bio">${escapeHtml(t.bio)}</p>
-        <div class="trekker-card-stats">
-          <div><strong>${t.treks_completed}</strong> Treks</div> •
-          <div><strong>${t.highest_altitude}</strong> Max Alt</div> •
-          <div><strong>${t.states_explored}</strong> States</div>
-        </div>
-        <div class="trekker-card-actions">
-          <button class="btn-trekker-connect ${t.is_following ? 'following' : ''}" data-id="${t.user_id}">
-            ${t.is_following ? 'Following' : 'Connect'}
-          </button>
-          <button class="btn-trekker-msg" data-id="${t.user_id}">Message</button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     // Attach click handlers
     grid.querySelectorAll('.btn-trekker-connect').forEach(btn => {
@@ -1868,25 +1967,65 @@
     window.location.href = `messages.html?user=${encodeURIComponent(trekkerId)}`;
   }
 
-  // ─── 9. USER PROFILE MODAL ──────────────────────────────────────────────────
+  // ─── 9. USER PROFILE MODAL & DISCOVERY ─────────────────────────────────────
   async function openTrekkerProfile(identifier) {
     const modal = document.getElementById('trekkerProfileModalOverlay');
     if (!modal) return;
 
     modal.style.display = 'flex';
 
+    // Show clean loading state while fetching profile
+    const nameEl = document.getElementById('modalProfileName');
+    const handleEl = document.getElementById('modalProfileHandle');
+    const bioEl = document.getElementById('modalProfileBio');
+    const tabContent = document.getElementById('profileModalTabContent');
+    const followBtn = document.getElementById('modalFollowBtn');
+    const msgBtn = document.getElementById('modalMessageBtn');
+    const verifiedBadge = document.getElementById('modalProfileVerified');
+
+    if (nameEl) nameEl.textContent = 'Loading Trekker...';
+    if (handleEl) handleEl.textContent = '@...';
+    if (bioEl) bioEl.textContent = 'Fetching trail journal and summits...';
+    if (verifiedBadge) verifiedBadge.style.display = 'none';
+    if (tabContent) {
+      tabContent.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--comm-text-muted);">Loading trekker details...</div>';
+    }
+
     try {
-      const res = await fetch(`/api/community/trekkers/${identifier}`);
+      const res = await fetch(`/api/community/trekkers/${encodeURIComponent(identifier)}`, {
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
       const data = await res.json();
       if (data.success && data.profile) {
         renderProfileModal(data.profile);
+      } else {
+        throw new Error(data.message || 'Trekker profile not found');
       }
     } catch (err) {
       console.error('Failed to load profile:', err);
+      if (nameEl) nameEl.textContent = 'Trekker Profile';
+      if (handleEl) handleEl.textContent = '';
+      if (bioEl) bioEl.textContent = 'Unable to fetch this trekker profile. The user may have updated their account or the connection timed out.';
+      if (followBtn) followBtn.style.display = 'none';
+      if (msgBtn) msgBtn.style.display = 'none';
+      if (tabContent) {
+        tabContent.innerHTML = `
+          <div style="padding: 30px; text-align: center; color: #ef4444;">
+            <p style="margin-bottom: 12px;">Failed to load profile.</p>
+            <button onclick="window.TrekIndiaCommunity.openProfile('${escapeHtml(String(identifier))}')" style="padding: 8px 16px; background: var(--comm-forest); color: #fff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">Retry</button>
+          </div>
+        `;
+      }
     }
   }
 
   function renderProfileModal(profile) {
+    const modal = document.getElementById('trekkerProfileModalOverlay');
     const cover = document.getElementById('modalProfileCover');
     const avatar = document.getElementById('modalProfileAvatar');
     const name = document.getElementById('modalProfileName');
@@ -1901,53 +2040,175 @@
     const tabContent = document.getElementById('profileModalTabContent');
     const followBtn = document.getElementById('modalFollowBtn');
     const msgBtn = document.getElementById('modalMessageBtn');
+    const verifiedBadge = document.getElementById('modalProfileVerified');
+
+    const isSelf = state.currentUser && (String(state.currentUser.user_id) === String(profile.user_id) || state.currentUser.username?.toLowerCase() === profile.username?.toLowerCase());
 
     if (cover) cover.src = profile.cover_image || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200';
-    if (avatar) avatar.src = profile.avatar;
-    if (name) name.textContent = profile.full_name;
+    if (avatar) avatar.src = profile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.username)}&background=3a7d44&color=fff&size=150`;
+    if (name) name.textContent = profile.full_name || profile.username;
     if (handle) handle.textContent = `@${profile.username}`;
+    if (verifiedBadge) verifiedBadge.style.display = profile.is_verified ? 'inline-flex' : 'none';
     if (loc) loc.textContent = `📍 ${profile.location || 'India'}`;
-    if (bio) bio.textContent = profile.bio;
-    if (treksCount) treksCount.textContent = profile.treks_completed;
-    if (summits) summits.textContent = profile.highest_altitude;
-    if (followers) followers.textContent = profile.followers_count;
-    if (following) following.textContent = profile.following_count;
+    if (bio) bio.textContent = profile.bio || 'Mountain enthusiast & TrekIndia community member.';
+    if (treksCount) treksCount.textContent = profile.treks_completed || (profile.completed_treks_list ? profile.completed_treks_list.length : 0);
+    if (summits) summits.textContent = profile.highest_altitude || '—';
+    if (followers) followers.textContent = profile.followers_count || 0;
+    if (following) following.textContent = profile.following_count || 0;
     if (postsCountTab) postsCountTab.textContent = profile.posts ? profile.posts.length : 0;
 
-    if (followBtn) {
-      followBtn.textContent = profile.is_following ? 'Following' : 'Follow';
-      followBtn.onclick = async () => {
-        const res = await fetch(`/api/community/trekkers/${profile.user_id}/follow`, { method: 'POST', credentials: 'include' });
-        const d = await res.json();
-        if (d.success) {
-          followBtn.textContent = d.is_following ? 'Following' : 'Follow';
-        }
-      };
-    }
+    // Follow & Message Actions
+    if (isSelf) {
+      if (followBtn) {
+        followBtn.style.display = 'inline-flex';
+        followBtn.textContent = 'Your Profile';
+        followBtn.className = 'btn-profile-follow following';
+        followBtn.onclick = () => {
+          window.location.href = 'profile.html';
+        };
+      }
+      if (msgBtn) msgBtn.style.display = 'none';
+    } else {
+      if (followBtn) {
+        followBtn.style.display = 'inline-flex';
+        followBtn.textContent = profile.is_following ? 'Following' : 'Follow';
+        followBtn.className = `btn-profile-follow ${profile.is_following ? 'following' : ''}`;
+        followBtn.onclick = async (e) => {
+          e.stopPropagation();
+          followBtn.disabled = true;
+          try {
+            const res = await fetch(`/api/community/trekkers/${profile.user_id}/follow`, {
+              method: 'POST',
+              credentials: 'include'
+            });
+            const d = await res.json();
+            if (d.success) {
+              profile.is_following = d.is_following;
+              profile.followers_count = d.followers_count;
+              followBtn.textContent = d.is_following ? 'Following' : 'Follow';
+              followBtn.classList.toggle('following', !!d.is_following);
+              if (followers) followers.textContent = d.followers_count;
+              showToast(d.is_following ? `Following @${profile.username}! 🤝` : `Unfollowed @${profile.username}.`);
+            }
+          } catch (err) {
+            console.error('Follow error:', err);
+          } finally {
+            followBtn.disabled = false;
+          }
+        };
+      }
 
-    if (msgBtn) {
-      msgBtn.onclick = () => {
-        modal.style.display = 'none';
-        openChatWithTrekker(profile.user_id);
-      };
-    }
-
-    // Render Posts tab default
-    if (tabContent) {
-      if (profile.posts && profile.posts.length > 0) {
-        tabContent.innerHTML = `
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px;">
-            ${profile.posts.map(p => `
-              <div style="height: 120px; border-radius: 8px; overflow: hidden; background: #000;">
-                <img src="${escapeHtml(p.images[0] || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600')}" style="width: 100%; height: 100%; object-fit: cover;" />
-              </div>
-            `).join('')}
-          </div>
-        `;
-      } else {
-        tabContent.innerHTML = '<div style="padding: 30px; text-align: center; color: var(--comm-text-muted);">No posts shared yet.</div>';
+      if (msgBtn) {
+        msgBtn.style.display = 'inline-flex';
+        msgBtn.onclick = () => {
+          if (modal) modal.style.display = 'none';
+          openChatWithTrekker(profile.user_id);
+        };
       }
     }
+
+    // Modal Tabs Navigation (Posts, Completed Treks, Photos)
+    const renderModalTabContent = (tabKey) => {
+      if (!tabContent) return;
+
+      // Update active tab buttons
+      document.querySelectorAll('.pmodal-tab').forEach(tBtn => {
+        tBtn.classList.toggle('active', tBtn.getAttribute('data-ptab') === tabKey);
+      });
+
+      if (tabKey === 'posts') {
+        if (profile.posts && profile.posts.length > 0) {
+          tabContent.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 14px;">
+              ${profile.posts.map(p => {
+                const img = (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600';
+                return `
+                  <div class="pmodal-post-thumb" style="height: 120px; border-radius: 8px; overflow: hidden; background: #17231A; position: relative; cursor: pointer;" title="${escapeHtml(p.caption || 'Post')}">
+                    <img src="${escapeHtml(img)}" style="width: 100%; height: 100%; object-fit: cover;" />
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 4px 6px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); font-size: 0.72rem; color: #fff; display: flex; justify-content: space-between;">
+                      <span>❤️ ${p.likes_count || 0}</span>
+                      <span>💬 ${p.comments_count || 0}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        } else {
+          tabContent.innerHTML = `
+            <div style="padding: 36px 16px; text-align: center; color: var(--comm-text-muted);">
+              <div style="font-size: 1.8rem; margin-bottom: 6px;">🏔️</div>
+              <strong style="color: var(--comm-text-primary); font-size: 0.95rem;">No posts shared yet</strong>
+              <p style="font-size: 0.82rem; margin-top: 4px;">This trekker hasn't published trail stories yet.</p>
+            </div>
+          `;
+        }
+      } else if (tabKey === 'treks') {
+        const treksList = profile.completed_treks_list || [];
+        if (treksList.length > 0) {
+          tabContent.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
+              ${treksList.map(t => `
+                <div style="padding: 12px 14px; background: var(--comm-surface-secondary); border: 1px solid var(--comm-border); border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
+                  <div>
+                    <strong style="color: var(--comm-text-primary); font-size: 0.92rem;">${escapeHtml(t.name)}</strong>
+                    <div style="font-size: 0.78rem; color: var(--comm-text-muted); margin-top: 2px;">⛰️ ${escapeHtml(t.altitude || 'Summit')} • ${escapeHtml(t.season || 'All Season')}</div>
+                  </div>
+                  <span style="padding: 4px 8px; background: var(--comm-card-bg); border: 1px solid var(--comm-border); border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: var(--comm-forest);">
+                    ${escapeHtml(t.difficulty || 'Moderate')}
+                  </span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          tabContent.innerHTML = `
+            <div style="padding: 36px 16px; text-align: center; color: var(--comm-text-muted);">
+              <div style="font-size: 1.8rem; margin-bottom: 6px;">🥾</div>
+              <strong style="color: var(--comm-text-primary); font-size: 0.95rem;">No completed treks listed</strong>
+            </div>
+          `;
+        }
+      } else if (tabKey === 'photos') {
+        const allPhotos = [];
+        (profile.posts || []).forEach(p => {
+          if (Array.isArray(p.images)) {
+            p.images.forEach(img => allPhotos.push(img));
+          }
+        });
+
+        if (allPhotos.length > 0) {
+          tabContent.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px;">
+              ${allPhotos.map(img => `
+                <div style="height: 100px; border-radius: 8px; overflow: hidden; background: #000;">
+                  <img src="${escapeHtml(img)}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" />
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          tabContent.innerHTML = `
+            <div style="padding: 36px 16px; text-align: center; color: var(--comm-text-muted);">
+              <div style="font-size: 1.8rem; margin-bottom: 6px;">📸</div>
+              <strong style="color: var(--comm-text-primary); font-size: 0.95rem;">No photos in gallery</strong>
+            </div>
+          `;
+        }
+      }
+    };
+
+    // Attach click listeners to profile modal tab buttons
+    document.querySelectorAll('.pmodal-tab').forEach(tabBtn => {
+      tabBtn.onclick = (e) => {
+        e.preventDefault();
+        const tabKey = tabBtn.getAttribute('data-ptab');
+        renderModalTabContent(tabKey);
+      };
+    });
+
+    // Default to Posts tab
+    renderModalTabContent('posts');
   }
 
   // ─── 10. NOTIFICATIONS CENTER & UNIVERSAL SEARCH ───────────────────────────
@@ -2091,6 +2352,8 @@
 
     // Messaging Navigation is handled via <a href="messages.html"> in sidebar and floating button
 
+    // Photo upload for chat (element lives in messages.html, not community.html — safe null check)
+    const photoInput = document.getElementById('chatPhotoInput');
     if (photoInput) {
       photoInput.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -2279,13 +2542,37 @@
       });
     });
 
-    // Trekker Filters in Directory
-    ['trekkerSearchInput', 'trekkerLocationFilter', 'trekkerExpFilter', 'trekkerDiffFilter'].forEach(id => {
+    // Debounced Trekker Search Input
+    const trekkerSearchInput = document.getElementById('trekkerSearchInput');
+    if (trekkerSearchInput) {
+      trekkerSearchInput.addEventListener('input', () => {
+        clearTimeout(state.trekkerSearchTimeout);
+        state.trekkerSearchTimeout = setTimeout(() => {
+          loadTrekkersDirectory();
+        }, 300); // 300ms debounce
+      });
+
+      // Clear search button
+      document.getElementById('trekkerSearchClearBtn')?.addEventListener('click', () => {
+        trekkerSearchInput.value = '';
+        trekkerSearchInput.focus();
+        loadTrekkersDirectory();
+      });
+    }
+
+    // Trekker Select Filters (Location, Experience, Difficulty)
+    ['trekkerLocationFilter', 'trekkerExpFilter', 'trekkerDiffFilter'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', loadTrekkersDirectory);
+        el.addEventListener('change', () => {
+          loadTrekkersDirectory();
+        });
       }
     });
+
+    // Retry Buttons
+    document.getElementById('feedRetryBtn')?.addEventListener('click', loadPosts);
+    document.getElementById('trekkersRetryBtn')?.addEventListener('click', loadTrekkersDirectory);
 
     // Share Modal
     document.getElementById('closeShareModalBtn')?.addEventListener('click', () => {
@@ -2361,6 +2648,9 @@
     const postsStream = document.getElementById('postsStream');
     const trekkersView = document.getElementById('trekkersView');
     const filterBar = document.getElementById('feedFilterBar');
+    const feedSkeleton = document.getElementById('feedSkeleton');
+    const feedEmptyState = document.getElementById('feedEmptyState');
+    const feedErrorState = document.getElementById('feedErrorState');
 
     const titles = {
       'feed': 'Trail Feed',
@@ -2377,10 +2667,14 @@
     if (tab === 'trekkers') {
       if (postsStream) postsStream.style.display = 'none';
       if (filterBar) filterBar.style.display = 'none';
+      if (feedSkeleton) feedSkeleton.style.display = 'none';
+      if (feedEmptyState) feedEmptyState.style.display = 'none';
+      if (feedErrorState) feedErrorState.style.display = 'none';
       if (trekkersView) trekkersView.style.display = 'flex';
       loadTrekkersDirectory();
     } else {
       if (trekkersView) trekkersView.style.display = 'none';
+      // Always ensure postsStream and filterBar are visible before loading
       if (postsStream) postsStream.style.display = 'flex';
       if (filterBar) filterBar.style.display = 'flex';
       loadPosts();
@@ -2428,6 +2722,9 @@
     let menu = document.getElementById('post-floating-menu');
     if (menu) menu.remove();
 
+    const post = state.posts.find(p => String(p.post_id) === String(postId));
+    const isOwner = post && state.currentUser && (String(post.user_id) === String(state.currentUser.user_id) || String(post.user?.user_id) === String(state.currentUser.user_id));
+
     menu = document.createElement('div');
     menu.id = 'post-floating-menu';
     menu.style.cssText = `
@@ -2440,16 +2737,20 @@
       box-shadow: var(--comm-shadow-md);
       padding: 6px;
       z-index: 1000;
-      width: 160px;
+      width: 170px;
       display: flex;
       flex-direction: column;
       gap: 2px;
     `;
 
     menu.innerHTML = `
-      <button style="padding: 8px 12px; text-align: left; font-size: 0.85rem; font-weight: 600; color: var(--comm-text-primary); border-radius: 6px; cursor: pointer;" onmouseover="this.style.background='var(--comm-surface-secondary)'" onmouseout="this.style.background='transparent'" id="menuOptionCopy">🔗 Copy Link</button>
-      <button style="padding: 8px 12px; text-align: left; font-size: 0.85rem; font-weight: 600; color: var(--comm-text-primary); border-radius: 6px; cursor: pointer;" onmouseover="this.style.background='var(--comm-surface-secondary)'" onmouseout="this.style.background='transparent'" id="menuOptionShare">↗️ Share</button>
-      <button style="padding: 8px 12px; text-align: left; font-size: 0.85rem; font-weight: 600; color: #ef4444; border-radius: 6px; cursor: pointer;" onmouseover="this.style.background='rgba(239, 68, 68, 0.08)'" onmouseout="this.style.background='transparent'" id="menuOptionReport">⚠️ Report</button>
+      <button style="padding: 8px 12px; text-align: left; font-size: 0.85rem; font-weight: 600; color: var(--comm-text-primary); border-radius: 6px; cursor: pointer; border: none; background: transparent;" onmouseover="this.style.background='var(--comm-surface-secondary)'" onmouseout="this.style.background='transparent'" id="menuOptionCopy">🔗 Copy Link</button>
+      <button style="padding: 8px 12px; text-align: left; font-size: 0.85rem; font-weight: 600; color: var(--comm-text-primary); border-radius: 6px; cursor: pointer; border: none; background: transparent;" onmouseover="this.style.background='var(--comm-surface-secondary)'" onmouseout="this.style.background='transparent'" id="menuOptionShare">↗️ Share</button>
+      ${isOwner ? `
+        <button style="padding: 8px 12px; text-align: left; font-size: 0.85rem; font-weight: 600; color: #ef4444; border-radius: 6px; cursor: pointer; border: none; background: transparent;" onmouseover="this.style.background='rgba(239, 68, 68, 0.08)'" onmouseout="this.style.background='transparent'" id="menuOptionDelete">🗑️ Delete Post</button>
+      ` : `
+        <button style="padding: 8px 12px; text-align: left; font-size: 0.85rem; font-weight: 600; color: #ef4444; border-radius: 6px; cursor: pointer; border: none; background: transparent;" onmouseover="this.style.background='rgba(239, 68, 68, 0.08)'" onmouseout="this.style.background='transparent'" id="menuOptionReport">⚠️ Report</button>
+      `}
     `;
 
     document.body.appendChild(menu);
@@ -2468,6 +2769,34 @@
     document.getElementById('menuOptionReport')?.addEventListener('click', () => {
       showToast('Thank you. Our safety team will review this report.');
       menu.remove();
+    });
+
+    document.getElementById('menuOptionDelete')?.addEventListener('click', async () => {
+      menu.remove();
+      if (!confirm('Are you sure you want to delete this expedition post?')) return;
+
+      try {
+        const res = await fetch(`/api/community/posts/${postId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          state.posts = state.posts.filter(p => String(p.post_id) !== String(postId));
+          const card = document.getElementById(`post-${postId}`);
+          if (card) card.remove();
+          if (state.posts.length === 0) {
+            const emptyState = document.getElementById('feedEmptyState');
+            if (emptyState) emptyState.style.display = 'flex';
+          }
+          showToast('Post deleted successfully.');
+        } else {
+          showToast(data.message || 'Failed to delete post.');
+        }
+      } catch (err) {
+        console.error('Delete post error:', err);
+        showToast('Failed to delete post.');
+      }
     });
 
     setTimeout(() => {
@@ -2515,6 +2844,8 @@
       window.location.href = `trek-detail.html?slug=${slug}`;
     },
     openProfile: (userId) => {
+      const searchModal = document.getElementById('communitySearchModalOverlay');
+      if (searchModal) searchModal.style.display = 'none';
       openTrekkerProfile(userId);
     },
     filterTag: (tag) => {
