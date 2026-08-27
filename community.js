@@ -1865,9 +1865,7 @@
   }
 
   function openChatWithTrekker(trekkerId) {
-    const drawer = document.getElementById('messagesDrawerOverlay');
-    if (drawer) drawer.style.display = 'flex';
-    selectConversation(trekkerId);
+    window.location.href = `messages.html?user=${encodeURIComponent(trekkerId)}`;
   }
 
   // ─── 9. USER PROFILE MODAL ──────────────────────────────────────────────────
@@ -2091,136 +2089,8 @@
     document.getElementById('emptyCreateBtn')?.addEventListener('click', openCreatePostModal);
     document.getElementById('addStoryTriggerBtn')?.addEventListener('click', openCreatePostModal);
 
-    // Messaging Drawer Controls
-    const openMessagesDrawer = () => {
-      const drawer = document.getElementById('messagesDrawerOverlay');
-      if (drawer) drawer.style.display = 'flex';
-      loadConversations(false);
-      loadUnreadCount();
-    };
+    // Messaging Navigation is handled via <a href="messages.html"> in sidebar and floating button
 
-    document.getElementById('floatingMessageBtn')?.addEventListener('click', openMessagesDrawer);
-    document.getElementById('sidebarMessagesBtn')?.addEventListener('click', openMessagesDrawer);
-    document.getElementById('closeMessagesDrawerBtn')?.addEventListener('click', () => {
-      const drawer = document.getElementById('messagesDrawerOverlay');
-      if (drawer) drawer.style.display = 'none';
-    });
-    document.getElementById('chatCloseBtn')?.addEventListener('click', () => {
-      const drawer = document.getElementById('messagesDrawerOverlay');
-      if (drawer) drawer.style.display = 'none';
-    });
-    document.getElementById('chatBackToListBtn')?.addEventListener('click', () => {
-      const drawerShell = document.getElementById('messagesDrawerShell');
-      if (drawerShell) drawerShell.classList.remove('chat-open');
-    });
-
-    // Start New Chat Prompts
-    document.getElementById('btnNewChatPrompt')?.addEventListener('click', openNewChatModal);
-    document.getElementById('btnEmptyStartChat')?.addEventListener('click', openNewChatModal);
-    document.getElementById('closeNewChatModalBtn')?.addEventListener('click', () => {
-      const modal = document.getElementById('newChatModalOverlay');
-      if (modal) modal.style.display = 'none';
-    });
-    document.getElementById('closeShareTrekModalBtn')?.addEventListener('click', () => {
-      const modal = document.getElementById('shareTrekModalOverlay');
-      if (modal) modal.style.display = 'none';
-    });
-
-    // Conversation Search Filter
-    document.getElementById('convSearchInput')?.addEventListener('input', (e) => {
-      const q = e.target.value.trim().toLowerCase();
-      if (!state.conversations) return;
-      const filtered = state.conversations.filter(c =>
-        (c.participant?.full_name || '').toLowerCase().includes(q) ||
-        (c.last_message || '').toLowerCase().includes(q)
-      );
-      renderConversationsList(filtered);
-    });
-
-    // Conversation Tabs Filter (All vs Unread)
-    document.getElementById('tabAllChats')?.addEventListener('click', (e) => {
-      document.querySelectorAll('.conv-tab-btn').forEach(btn => btn.classList.remove('active'));
-      e.currentTarget.classList.add('active');
-      renderConversationsList(state.conversations);
-    });
-    document.getElementById('tabUnreadChats')?.addEventListener('click', (e) => {
-      document.querySelectorAll('.conv-tab-btn').forEach(btn => btn.classList.remove('active'));
-      e.currentTarget.classList.add('active');
-      const unreadList = (state.conversations || []).filter(c => (c.unread_count || 0) > 0);
-      renderConversationsList(unreadList);
-    });
-
-    // Chat Sending & Typing Indicators
-    const chatInput = document.getElementById('chatTextInput');
-    if (chatInput) {
-      chatInput.addEventListener('input', () => {
-        emitTypingIndicator();
-        // Auto-expand textarea
-        chatInput.style.height = 'auto';
-        chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
-      });
-
-      chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendChatMessage();
-        }
-      });
-    }
-
-    document.getElementById('chatSendBtn')?.addEventListener('click', () => sendChatMessage());
-
-    // Emoji Popover Trigger
-    const emojiBtn = document.getElementById('chatEmojiTrigger');
-    const emojiPopover = document.getElementById('chatEmojiPopover');
-    if (emojiBtn && emojiPopover) {
-      emojiBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        emojiPopover.style.display = emojiPopover.style.display === 'none' ? 'block' : 'none';
-      });
-
-      emojiPopover.querySelectorAll('.emoji-item').forEach(item => {
-        item.addEventListener('click', () => {
-          if (chatInput) {
-            chatInput.value += item.textContent;
-            chatInput.focus();
-          }
-          emojiPopover.style.display = 'none';
-        });
-      });
-
-      document.addEventListener('click', (e) => {
-        if (!emojiPopover.contains(e.target) && e.target !== emojiBtn) {
-          emojiPopover.style.display = 'none';
-        }
-      });
-    }
-
-    // Chat Attachment Menu Trigger
-    const attachTrigger = document.getElementById('chatAttachTrigger');
-    const attachMenu = document.getElementById('chatAttachMenu');
-    if (attachTrigger && attachMenu) {
-      attachTrigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        attachMenu.style.display = attachMenu.style.display === 'none' ? 'flex' : 'none';
-      });
-      document.addEventListener('click', () => {
-        attachMenu.style.display = 'none';
-      });
-    }
-
-    // Attach Trek Card Trigger
-    document.getElementById('attachShareTrekBtn')?.addEventListener('click', () => {
-      if (attachMenu) attachMenu.style.display = 'none';
-      openShareTrekPickerModal();
-    });
-
-    // Attach Photo Trigger
-    const photoInput = document.getElementById('chatPhotoInput');
-    document.getElementById('attachSharePhotoBtn')?.addEventListener('click', () => {
-      if (attachMenu) attachMenu.style.display = 'none';
-      if (photoInput) photoInput.click();
-    });
     if (photoInput) {
       photoInput.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {

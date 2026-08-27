@@ -79,6 +79,12 @@ app.get('/community', (req, res) => {
   res.sendFile(path.join(rootDir, 'community.html'));
 });
 
+// Serve /messages to dedicated full-screen messaging page
+app.get('/messages', (req, res) => {
+  res.sendFile(path.join(rootDir, 'messages.html'));
+});
+
+
 // Static File Server (serves existing TrekIndia UI)
 app.use(express.static(rootDir));
 

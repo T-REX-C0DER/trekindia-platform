@@ -271,11 +271,11 @@
           <span>Find Trekkers</span>
         </button>
 
-        <button class="comm-nav-item" id="sidebarMessagesBtn" role="tab" aria-selected="false">
+        <a href="messages.html" class="comm-nav-item" id="sidebarMessagesBtn" role="tab" aria-selected="false">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span>Messages</span>
-          <span class="badge-unread-count" id="sidebarMsgBadge">2</span>
-        </button>
+          <span class="badge-unread-count" id="sidebarMsgBadge" style="display: none;">0</span>
+        </a>
 
         <button class="comm-nav-item" id="sidebarNotifBtn" role="tab" aria-selected="false">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -440,219 +440,14 @@
 
   </div>
 
-  <!-- ===== FLOATING MESSAGE BUTTON (MATCHES SCREENSHOT 1) ===== -->
-  <button class="floating-message-btn" id="floatingMessageBtn" aria-label="Open messages drawer" title="Open Trekker Messages">
+  <!-- ===== FLOATING MESSAGE BUTTON ===== -->
+  <a href="messages.html" class="floating-message-btn" id="floatingMessageBtn" aria-label="Open messages" title="Open Trekker Messages">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </svg>
     <span class="floating-unread-dot" id="floatingMsgDot"></span>
-  </button>
+  </a>
 
-  <!-- ===== DUAL-PANE MESSAGING DRAWER / SCREEN ===== -->
-  <div class="messages-drawer-overlay" id="messagesDrawerOverlay" style="display: none;">
-    <div class="messages-drawer-shell" id="messagesDrawerShell">
-
-      <!-- Column 1: Conversations List -->
-      <aside class="conversations-column">
-        <div class="conversations-header">
-          <div class="conv-head-title">
-            <div class="conv-title-left">
-              <h2>Messages</h2>
-              <div class="conv-conn-status" id="convWsStatus" title="WebSocket KRaft Delivery Status">
-                <span class="conn-dot connected" id="wsStatusDot"></span>
-                <span class="conn-text" id="wsStatusText">Live</span>
-              </div>
-            </div>
-            <div class="conv-head-actions">
-              <button class="btn-conv-new" id="btnNewChatPrompt" title="Start New Conversation" aria-label="New chat">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-              </button>
-              <button class="btn-conv-close-mobile" id="closeMessagesDrawerBtn" aria-label="Close messages">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-            </div>
-          </div>
-          <div class="conv-search-box">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="convSearchInput" placeholder="Search chats by trekker or message..." />
-          </div>
-          <div class="conv-tabs">
-            <button class="conv-tab-btn active" data-conv-tab="all" id="tabAllChats">All Chats</button>
-            <button class="conv-tab-btn" data-conv-tab="unread" id="tabUnreadChats">
-              Unread <span class="conv-req-badge" id="convUnreadBadgeCount" style="display: none;">0</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="conversations-list" id="conversationsList">
-          <!-- Dynamic conversation items -->
-        </div>
-      </aside>
-
-      <!-- Column 2: Main Active Chat Area -->
-      <section class="active-chat-column" id="activeChatColumn">
-        <!-- Chat Header -->
-        <header class="chat-main-header" id="chatMainHeader">
-          <div class="chat-header-user">
-            <button class="chat-back-to-list-btn" id="chatBackToListBtn" aria-label="Back to conversations">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            </button>
-            <div class="chat-head-avatar-wrap" id="chatHeadAvatarWrap">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Avatar" class="chat-head-avatar" id="chatHeadAvatar" />
-              <span class="chat-online-indicator" id="chatHeadOnlineDot"></span>
-            </div>
-            <div class="chat-head-meta">
-              <div class="chat-head-name-row">
-                <h3 class="chat-head-name" id="chatHeadName">Rahul Sharma</h3>
-                <span class="chat-active-status" id="chatHeadStatus">● Active now</span>
-              </div>
-              <div class="chat-active-trek-badge" id="chatHeadActiveTrek">
-                <span class="dot-green"></span>
-                <span id="chatHeadActiveTrekText">Active Trek: Sandakphu Phalut Peak</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="chat-header-actions">
-            <button class="chat-action-btn" title="View Trekker Profile" id="chatViewProfileBtn" aria-label="View Profile">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
-            </button>
-            <button class="chat-action-btn" id="chatCloseBtn" title="Close Drawer" aria-label="Close">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-          </div>
-        </header>
-
-        <!-- Offline / Reconnection Banner -->
-        <div class="chat-reconnect-banner" id="chatReconnectBanner" style="display: none;">
-          <span class="banner-pulse"></span>
-          <span>Connecting to TrekIndia Kafka streaming node...</span>
-        </div>
-
-        <!-- Chat History Stream -->
-        <div class="chat-messages-body" id="chatMessagesBody">
-          <!-- Rendered messages + shared trek cards -->
-        </div>
-
-        <!-- Chat Typing Indicator -->
-        <div class="chat-typing-indicator" id="chatTypingIndicator" style="display: none;">
-          <span class="typing-name" id="typingName">Trekker</span> is typing
-          <span class="dot-flashing"></span>
-        </div>
-
-        <!-- Chat Composer Bar -->
-        <footer class="chat-composer-bar">
-          <!-- Attachment Menu Trigger -->
-          <div class="composer-attach-wrap">
-            <button type="button" class="btn-composer-plus" id="chatAttachTrigger" title="Share Trek, Route, Photo">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </button>
-
-            <!-- Floating Attachment Dropdown Menu -->
-            <div class="chat-attach-menu" id="chatAttachMenu" style="display: none;">
-              <button type="button" class="attach-item" id="attachShareTrekBtn">
-                <span class="attach-icon">🏔️</span>
-                <div>
-                  <strong>Share Trek</strong>
-                  <span>Send route card from catalog</span>
-                </div>
-              </button>
-              <button type="button" class="attach-item" id="attachSharePhotoBtn">
-                <span class="attach-icon">📷</span>
-                <div>
-                  <strong>Send Photo</strong>
-                  <span>Share trail photograph</span>
-                </div>
-              </button>
-            </div>
-            <input type="file" id="chatPhotoInput" accept="image/*" style="display: none;" />
-          </div>
-
-          <div class="composer-input-wrap">
-            <textarea id="chatTextInput" rows="1" placeholder="Write a message to fellow trekker... (Press Enter to send)" aria-label="Type message"></textarea>
-            
-            <!-- Emoji Trigger -->
-            <button type="button" class="composer-emoji-btn" id="chatEmojiTrigger" title="Insert Emoji" aria-label="Emoji">
-              😊
-            </button>
-
-            <!-- Lightweight Emoji Popover -->
-            <div class="chat-emoji-popover" id="chatEmojiPopover" style="display: none;">
-              <div class="emoji-popover-grid">
-                <span class="emoji-item">🏔️</span>
-                <span class="emoji-item">🌲</span>
-                <span class="emoji-item">🧭</span>
-                <span class="emoji-item">🥾</span>
-                <span class="emoji-item">⛺</span>
-                <span class="emoji-item">🔥</span>
-                <span class="emoji-item">❄️</span>
-                <span class="emoji-item">🎒</span>
-                <span class="emoji-item">🌅</span>
-                <span class="emoji-item">☀️</span>
-                <span class="emoji-item">☕</span>
-                <span class="emoji-item">👏</span>
-                <span class="emoji-item">👍</span>
-                <span class="emoji-item">💪</span>
-                <span class="emoji-item">🙌</span>
-                <span class="emoji-item">✨</span>
-                <span class="emoji-item">❤️</span>
-                <span class="emoji-item">🤩</span>
-                <span class="emoji-item">😎</span>
-                <span class="emoji-item">🤝</span>
-              </div>
-            </div>
-          </div>
-
-          <button type="button" class="btn-composer-send" id="chatSendBtn" aria-label="Send Message" title="Send">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-          </button>
-        </footer>
-      </section>
-
-      <!-- Empty Selected Conversation Placeholder -->
-      <section class="empty-chat-column" id="emptyChatColumn" style="display: none;">
-        <div class="empty-chat-inner">
-          <div class="empty-chat-icon">💬</div>
-          <h3>Select a Conversation</h3>
-          <p>Choose a trekker from the list or start a new conversation to coordinate routes, gear, and upcoming Himalayan expeditions.</p>
-          <button class="btn-start-chat-cta" id="btnEmptyStartChat">Start New Conversation</button>
-        </div>
-      </section>
-
-    </div>
-  </div>
-
-  <!-- ===== MODAL: START NEW CONVERSATION ===== -->
-  <div class="comm-modal-overlay" id="newChatModalOverlay" style="display: none;">
-    <div class="comm-modal-card new-chat-modal-card">
-      <header class="modal-card-header">
-        <h3 class="modal-title">New Conversation</h3>
-        <button class="modal-close-btn" id="closeNewChatModalBtn" aria-label="Close">&times;</button>
-      </header>
-      <div class="new-chat-search-wrap">
-        <input type="text" id="newChatSearchInput" placeholder="Search trekkers by name, handle, or location..." />
-      </div>
-      <div class="new-chat-trekkers-list" id="newChatTrekkersList">
-        <!-- Rendered Trekkers to start chat with -->
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== MODAL: SHARE TREK PICKER ===== -->
-  <div class="comm-modal-overlay" id="shareTrekModalOverlay" style="display: none;">
-    <div class="comm-modal-card" style="width: 520px; max-width: 95vw;">
-      <header class="modal-card-header">
-        <h3 class="modal-title">Share Trek Route</h3>
-        <button class="modal-close-btn" id="closeShareTrekModalBtn" aria-label="Close">&times;</button>
-      </header>
-      <div style="padding: 12px 20px; border-bottom: 1px solid var(--comm-border);">
-        <input type="text" id="shareTrekSearchInput" placeholder="Search Himalayan routes & peaks..." style="width: 100%; padding: 10px 14px; background: var(--comm-surface-secondary); border: 1px solid var(--comm-border); border-radius: 10px; color: var(--comm-text-primary); font-family: inherit; font-size: 0.9rem; outline: none;" />
-      </div>
-      <div id="shareTrekList" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column;">
-        <!-- Treks to pick from -->
-      </div>
-    </div>
-  </div>
 
   <!-- ===== MODAL: 4-STEP CREATE POST ===== -->
   <div class="comm-modal-overlay" id="createPostModalOverlay" style="display: none;">
