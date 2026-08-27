@@ -1,7 +1,7 @@
 /**
- * TrekIndia — Full-Screen Messaging System Engine
+ * TrekIndia — Full-Screen Messaging System Engine (v2.0)
  * Real-time messaging powered by WebSockets, Kafka streaming backbone,
- * dual-pane UI, optimistic updates, trek route card sharing, presence, and typing indicators.
+ * smart message grouping, cohesive integrated composer, trek route sharing, presence, and typing indicators.
  */
 
 (function () {
@@ -87,29 +87,35 @@
   // ─── 3. THEME & BRAND ───────────────────────────────────────────────────────
   function initTheme() {
     const savedTheme = localStorage.getItem('trekindia-theme') || 'dark';
-    if (savedTheme === 'light') {
-      document.body.classList.add('light');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark');
     } else {
-      document.body.classList.remove('light');
+      document.body.classList.remove('dark');
     }
     syncBrandLogo();
 
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     if (themeToggleBtn) {
       themeToggleBtn.addEventListener('click', () => {
-        document.body.classList.toggle('light');
-        const isLight = document.body.classList.contains('light');
-        localStorage.setItem('trekindia-theme', isLight ? 'light' : 'dark');
+        document.body.classList.toggle('dark');
+        const isDark = document.body.classList.contains('dark');
+        localStorage.setItem('trekindia-theme', isDark ? 'dark' : 'light');
         syncBrandLogo();
       });
     }
   }
 
   function syncBrandLogo() {
-    const isLight = document.body.classList.contains('light');
-    const logo = document.getElementById('navbarBrandLogo');
-    if (logo) {
-      logo.src = isLight ? 'whitebg_logo_processed.png' : 'darkbg_logo_processed.png';
+    const isDark = document.body.classList.contains('dark');
+    const lightIcons = document.querySelectorAll('.brand-icon-img.light-icon');
+    const darkIcons = document.querySelectorAll('.brand-icon-img.dark-icon');
+
+    if (isDark) {
+      lightIcons.forEach(el => el.style.display = 'none');
+      darkIcons.forEach(el => el.style.display = 'block');
+    } else {
+      lightIcons.forEach(el => el.style.display = 'block');
+      darkIcons.forEach(el => el.style.display = 'none');
     }
   }
 
@@ -192,15 +198,15 @@
     const banner = document.getElementById('chatReconnectBanner');
 
     if (status === 'connected') {
-      if (dot) dot.className = 'msg-ws-dot live';
+      if (dot) dot.className = 'msg-status-dot live';
       if (text) text.textContent = 'Live';
       if (banner) banner.classList.remove('visible');
     } else if (status === 'connecting') {
-      if (dot) dot.className = 'msg-ws-dot connecting';
+      if (dot) dot.className = 'msg-status-dot connecting';
       if (text) text.textContent = 'Connecting...';
       if (banner) banner.classList.add('visible');
     } else {
-      if (dot) dot.className = 'msg-ws-dot';
+      if (dot) dot.className = 'msg-status-dot';
       if (text) text.textContent = 'Offline';
       if (banner) banner.classList.add('visible');
     }
@@ -264,8 +270,9 @@
         }
       } else {
         if (messagesBody) {
+          const isSelf = msg.sender_id === state.currentUser?.user_id;
           const rowEl = document.createElement('div');
-          rowEl.innerHTML = renderSingleMessageRow(msg, msg.sender_id === state.currentUser?.user_id);
+          rowEl.innerHTML = renderSingleMessageRow(msg, isSelf, false, true);
           if (rowEl.firstElementChild) {
             messagesBody.appendChild(rowEl.firstElementChild);
             messagesBody.scrollTop = messagesBody.scrollHeight;
@@ -346,10 +353,10 @@
       const isOnline = status === 'online';
 
       if (onlineDot) {
-        onlineDot.className = `msg-chat-online-indicator ${isOnline ? 'online' : ''}`;
+        onlineDot.className = `msg-chat-head-status-dot ${isOnline ? 'online' : ''}`;
       }
       if (statusText) {
-        statusText.className = `msg-chat-head-status ${isOnline ? 'online' : ''}`;
+        statusText.className = `msg-chat-head-sub ${isOnline ? 'online' : ''}`;
         statusText.textContent = isOnline ? '● Active now' : 'Offline';
       }
     }
@@ -394,14 +401,14 @@
 
   function getStatusIconHtml(status) {
     if (status === 'read') {
-      // Double checkmark (forest/blue)
-      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L7 17l-5-5"/><path d="M22 10l-7.5 7.5L13 16"/></svg>`;
+      // Double checkmark (emerald)
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L7 17l-5-5"/><path d="M22 10l-7.5 7.5L13 16"/></svg>`;
     } else if (status === 'delivered') {
       // Double checkmark (gray)
-      return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L7 17l-5-5"/><path d="M22 10l-7.5 7.5L13 16"/></svg>`;
+      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L7 17l-5-5"/><path d="M22 10l-7.5 7.5L13 16"/></svg>`;
     } else {
       // Single checkmark (sent)
-      return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
     }
   }
 
@@ -415,7 +422,6 @@
         renderConversationsList();
         updateUnreadBadgeCount();
 
-        // If URL doesn't specify a conversation and none is selected, auto-select first
         const urlParams = new URLSearchParams(window.location.search);
         const hasUrlConv = urlParams.has('conv') || urlParams.has('user');
 
@@ -509,7 +515,7 @@
     }
   }
 
-  // ─── 6. ACTIVE CHAT AREA ───────────────────────────────────────────────────
+  // ─── 6. ACTIVE CHAT AREA & SMART GROUPING ──────────────────────────────────
   async function selectConversation(conversationId) {
     const convId = parseInt(conversationId, 10);
     state.activeConversationId = convId;
@@ -574,11 +580,19 @@
     const messagesBody = document.getElementById('chatMessagesBody');
     const composer = document.getElementById('chatComposer');
     const emptyState = document.getElementById('emptyChatState');
+    const chatInput = document.getElementById('chatTextInput');
 
     if (emptyState) emptyState.style.display = 'none';
     if (header) header.style.display = 'flex';
     if (messagesBody) messagesBody.style.display = 'flex';
-    if (composer) composer.style.display = 'flex';
+    if (composer) composer.style.display = 'block';
+
+    // Set Dynamic Placeholder
+    const firstName = conv.participant?.full_name?.split(' ')[0] || 'Trekker';
+    if (chatInput) {
+      chatInput.placeholder = `Message ${firstName}...`;
+      chatInput.focus();
+    }
 
     // Populate Header
     const avatar = document.getElementById('chatHeadAvatar');
@@ -593,16 +607,16 @@
     if (avatar) avatar.src = conv.participant?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
     if (name) name.textContent = conv.participant?.full_name || 'Trekker';
 
-    if (onlineDot) onlineDot.className = `msg-chat-online-indicator ${isOnline ? 'online' : ''}`;
+    if (onlineDot) onlineDot.className = `msg-chat-head-status-dot ${isOnline ? 'online' : ''}`;
     if (statusText) {
-      statusText.className = `msg-chat-head-status ${isOnline ? 'online' : ''}`;
+      statusText.className = `msg-chat-head-sub ${isOnline ? 'online' : ''}`;
       statusText.textContent = isOnline ? '● Active now' : (conv.participant?.last_active || 'Offline');
     }
 
     if (trekBadge && trekText) {
       if (conv.participant?.active_trek) {
         trekBadge.classList.add('visible');
-        trekText.textContent = `Active Trek: ${conv.participant.active_trek}`;
+        trekText.textContent = `Active Trek · ${conv.participant.active_trek}`;
       } else {
         trekBadge.classList.remove('visible');
       }
@@ -615,35 +629,51 @@
       };
     }
 
-    // Populate Messages Body
+    // Populate Messages Body with Smart Grouping
     if (messagesBody) {
       if (!conv.messages || conv.messages.length === 0) {
         messagesBody.innerHTML = `
-          <div style="padding: 50px 20px; text-align: center; color: var(--msg-text-muted); margin: auto;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">🏔️</div>
-            <strong style="color: var(--msg-text-primary); font-size: 1rem; display: block;">Beginning of Trail Conversation</strong>
-            <p style="font-size: 0.85rem; margin-top: 6px; max-width: 320px; margin-inline: auto;">Say hello or share a TrekIndia Himalayan route to coordinate your upcoming hike!</p>
+          <div style="padding: 60px 20px; text-align: center; color: var(--msg-text-muted); margin: auto;">
+            <div style="font-size: 2.4rem; margin-bottom: 10px;">🏔️</div>
+            <strong style="color: var(--msg-text-primary); font-size: 0.96rem; display: block;">Beginning of Trail Conversation</strong>
+            <p style="font-size: 0.82rem; margin-top: 5px; max-width: 320px; margin-inline: auto;">Say hello or share a TrekIndia Himalayan route to coordinate your upcoming hike!</p>
           </div>
         `;
       } else {
-        messagesBody.innerHTML = `
-          <div class="msg-date-separator"><span>Today</span></div>
-          ${conv.messages.map(msg => renderSingleMessageRow(msg, msg.is_self || msg.sender_id === state.currentUser?.user_id)).join('')}
-        `;
+        let messagesHtml = '<div class="msg-date-separator"><span>Today</span></div>';
+        
+        let prevSenderId = null;
+        const messages = conv.messages;
+
+        for (let i = 0; i < messages.length; i++) {
+          const msg = messages[i];
+          const isSelf = msg.is_self || msg.sender_id === state.currentUser?.user_id;
+          const nextMsg = messages[i + 1];
+          
+          const isGroupedWithNext = nextMsg && (nextMsg.is_self === msg.is_self || nextMsg.sender_id === msg.sender_id);
+          const isSenderChanged = prevSenderId !== null && prevSenderId !== msg.sender_id;
+          
+          messagesHtml += renderSingleMessageRow(msg, isSelf, isGroupedWithNext, isSenderChanged);
+          prevSenderId = msg.sender_id;
+        }
+
+        messagesBody.innerHTML = messagesHtml;
         messagesBody.scrollTop = messagesBody.scrollHeight;
       }
     }
   }
 
-  function renderSingleMessageRow(msg, isSelf) {
+  function renderSingleMessageRow(msg, isSelf, isGrouped = false, isSenderChanged = false) {
     const status = msg.status || 'sent';
 
     // 1. Trek Card Message
     if (msg.message_type === 'trek_card' && msg.trek_data) {
       const trek = msg.trek_data;
       return `
-        <div class="msg-row ${isSelf ? 'self' : 'other'}" data-msg-id="${msg.message_id || ''}" data-client-msg-id="${msg.client_message_id || ''}">
-          ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="msg-row-avatar" alt="" />` : ''}
+        <div class="msg-row ${isSelf ? 'self' : 'other'} ${isSenderChanged ? 'sender-changed' : ''}" 
+             data-msg-id="${msg.message_id || ''}" 
+             data-client-msg-id="${msg.client_message_id || ''}">
+          ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="msg-row-avatar ${isGrouped ? 'spacer' : ''}" alt="" />` : ''}
           <div class="msg-content-wrap">
             <div class="msg-trek-card">
               <div class="msg-trek-card-img">
@@ -658,7 +688,7 @@
                 </div>
                 <button type="button" class="msg-trek-view-btn" onclick="window.location.href='index.html#treks'">
                   <span>View Route Details</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
               </div>
             </div>
@@ -674,8 +704,10 @@
     // 2. Photo Message
     if (msg.message_type === 'image' && msg.attachment_url) {
       return `
-        <div class="msg-row ${isSelf ? 'self' : 'other'}" data-msg-id="${msg.message_id || ''}" data-client-msg-id="${msg.client_message_id || ''}">
-          ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="msg-row-avatar" alt="" />` : ''}
+        <div class="msg-row ${isSelf ? 'self' : 'other'} ${isSenderChanged ? 'sender-changed' : ''}" 
+             data-msg-id="${msg.message_id || ''}" 
+             data-client-msg-id="${msg.client_message_id || ''}">
+          ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="msg-row-avatar ${isGrouped ? 'spacer' : ''}" alt="" />` : ''}
           <div class="msg-content-wrap">
             <div class="msg-photo-bubble">
               <img src="${escapeHtml(msg.attachment_url)}" alt="Trail attachment" onclick="window.open(this.src, '_blank')" />
@@ -691,8 +723,10 @@
 
     // 3. Regular Text Message
     return `
-      <div class="msg-row ${isSelf ? 'self' : 'other'}" data-msg-id="${msg.message_id || ''}" data-client-msg-id="${msg.client_message_id || ''}">
-        ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="msg-row-avatar" alt="" />` : ''}
+      <div class="msg-row ${isSelf ? 'self' : 'other'} ${isGrouped ? 'is-grouped' : ''} ${isSenderChanged ? 'sender-changed' : ''}" 
+           data-msg-id="${msg.message_id || ''}" 
+           data-client-msg-id="${msg.client_message_id || ''}">
+        ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="msg-row-avatar ${isGrouped ? 'spacer' : ''}" alt="" />` : ''}
         <div class="msg-content-wrap">
           <div class="msg-bubble">
             ${escapeHtml(msg.content || '')}
@@ -706,7 +740,7 @@
     `;
   }
 
-  // ─── 7. SENDING MESSAGES ───────────────────────────────────────────────────
+  // ─── 7. SENDING MESSAGES & AUTO-GROWING COMPOSER ───────────────────────────
   async function sendChatMessage(customPayload = null) {
     if (!state.activeConversationId) return;
 
@@ -725,6 +759,7 @@
       };
       textInput.value = '';
       textInput.style.height = 'auto';
+      updateSendButtonState();
     } else {
       payload.client_message_id = clientMessageId;
     }
@@ -750,7 +785,7 @@
       };
 
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = renderSingleMessageRow(optimisticMsg, true);
+      tempDiv.innerHTML = renderSingleMessageRow(optimisticMsg, true, false, true);
       if (tempDiv.firstElementChild) {
         messagesBody.appendChild(tempDiv.firstElementChild);
         messagesBody.scrollTop = messagesBody.scrollHeight;
@@ -783,7 +818,15 @@
       console.error('[Messaging] Send failed:', err);
       showToast('Unable to deliver message. Check connection.');
     } finally {
-      if (sendBtn) sendBtn.disabled = false;
+      updateSendButtonState();
+    }
+  }
+
+  function updateSendButtonState() {
+    const textInput = document.getElementById('chatTextInput');
+    const sendBtn = document.getElementById('chatSendBtn');
+    if (textInput && sendBtn) {
+      sendBtn.disabled = !textInput.value.trim();
     }
   }
 
@@ -801,7 +844,7 @@
     }
   }
 
-  // ─── 8. NEW CONVERSATION MODAL ─────────────────────────────────────────────
+  // ─── 8. NEW DIRECT CONVERSATION MODAL ──────────────────────────────────────
   async function openNewChatModal() {
     const modal = document.getElementById('newChatModal');
     const list = document.getElementById('newChatTrekkersList');
@@ -820,7 +863,6 @@
       const res = await fetch('/api/community/trekkers');
       const data = await res.json();
       if (data.success && data.trekkers) {
-        // Exclude self from list
         const filteredSelf = data.trekkers.filter(t => t.user_id !== state.currentUser?.user_id);
         renderNewChatTrekkers(filteredSelf);
 
@@ -890,14 +932,13 @@
     }
   }
 
-  // ─── 9. SHARE TREK ROUTE MODAL ─────────────────────────────────────────────
+  // ─── 9. SHARE HIMALAYAN TREK ROUTE MODAL ───────────────────────────────────
   async function loadAvailableTreks() {
     try {
       const res = await fetch('/api/treks');
       const data = await res.json();
       state.availableTreks = data.treks || data.data || [];
     } catch (err) {
-      // Fallback curated list
       state.availableTreks = [
         { id: 1, name: 'Kedarkantha Trek', altitude: '3,810m', difficulty: 'Easy–Moderate', duration: '6 Days', state: 'Uttarakhand', image: 'https://images.unsplash.com/photo-1626015365107-338c45028f39?w=600&q=80' },
         { id: 2, name: 'Hampta Pass', altitude: '4,287m', difficulty: 'Advanced', duration: '5 Days', state: 'Himachal Pradesh', image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80' },
@@ -1028,7 +1069,6 @@
       if (pane) pane.classList.remove('chat-active');
       state.activeConversationId = null;
 
-      // Update URL without query param
       const url = new URL(window.location.href);
       url.searchParams.delete('conv');
       url.searchParams.delete('user');
@@ -1043,23 +1083,33 @@
 
     // Filter Tabs
     document.getElementById('tabAllChats')?.addEventListener('click', (e) => {
-      document.querySelectorAll('.msg-filter-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.msg-filter-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
       e.currentTarget.classList.add('active');
+      e.currentTarget.setAttribute('aria-selected', 'true');
       state.activeFilterTab = 'all';
       renderConversationsList();
     });
+
     document.getElementById('tabUnreadChats')?.addEventListener('click', (e) => {
-      document.querySelectorAll('.msg-filter-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.msg-filter-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
       e.currentTarget.classList.add('active');
+      e.currentTarget.setAttribute('aria-selected', 'true');
       state.activeFilterTab = 'unread';
       renderConversationsList();
     });
 
-    // Chat Composer
+    // Chat Composer Textarea Auto-grow & Send Button state
     const chatInput = document.getElementById('chatTextInput');
     if (chatInput) {
       chatInput.addEventListener('input', () => {
         emitTypingIndicator();
+        updateSendButtonState();
         chatInput.style.height = 'auto';
         chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
       });
@@ -1083,11 +1133,17 @@
         emojiPopover.classList.toggle('open');
       });
 
-      emojiPopover.querySelectorAll('.msg-emoji-item').forEach(item => {
+      emojiPopover.querySelectorAll('.emoji-cell').forEach(item => {
         item.addEventListener('click', () => {
           if (chatInput) {
-            chatInput.value += item.textContent;
+            const start = chatInput.selectionStart || 0;
+            const end = chatInput.selectionEnd || 0;
+            const text = chatInput.value;
+            const emoji = item.textContent;
+            chatInput.value = text.substring(0, start) + emoji + text.substring(end);
+            chatInput.selectionStart = chatInput.selectionEnd = start + emoji.length;
             chatInput.focus();
+            updateSendButtonState();
           }
           emojiPopover.classList.remove('open');
         });
@@ -1156,7 +1212,7 @@
     toast.classList.add('show');
     setTimeout(() => {
       toast.classList.remove('show');
-    }, 3200);
+    }, 3000);
   }
 
   // Run on DOM ready

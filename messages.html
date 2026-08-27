@@ -4,165 +4,207 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Messages — TrekIndia Community</title>
+  <title>Trail Messages — TrekIndia Community</title>
   <meta name="description"
     content="Connect and message with verified trekkers, coordinate Himalayan expeditions, share trail routes, and stay connected in real-time." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
 
   <!-- Base Styles & Dedicated Messaging Styles -->
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="community.css" />
   <link rel="stylesheet" href="messages.css" />
 
   <link rel="preload" as="image" href="whitebg_logo_processed.png" />
   <link rel="preload" as="image" href="darkbg_logo_processed.png" />
 </head>
 
-<body>
+<body class="messages-page dark">
 
-  <div class="msg-app" id="msgApp">
+  <!-- ===== 1. COMPACT INTEGRATED TREKINDIA HEADER ===== -->
+  <header class="msg-top-header" role="banner">
+    <!-- Left: Brand Logo -->
+    <div class="msg-header-left">
+      <a href="index.html" class="msg-brand-link" aria-label="TrekIndia home">
+        <div class="msg-brand-icon-wrap">
+          <img src="whitebg_logo_processed.png" alt="TrekIndia Logo" class="brand-icon-img light-icon" />
+          <img src="darkbg_logo_processed.png" alt="TrekIndia Logo" class="brand-icon-img dark-icon" />
+        </div>
+        <div class="msg-brand-wordmark">
+          <span class="brand-trek">Trek</span><span class="brand-india">India</span>
+        </div>
+      </a>
+    </div>
 
-    <!-- ─── TOP NAVBAR ──────────────────────────────────────────────────────── -->
-    <header class="msg-navbar">
-      <a href="community.html" class="msg-navbar-back" id="backToCommunityBtn" title="Return to Community Feed">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"></polyline>
+    <!-- Center: Clean Breadcrumb & Live Connection Status -->
+    <div class="msg-header-center">
+      <nav class="msg-breadcrumb" aria-label="Breadcrumb">
+        <a href="community.html" class="msg-crumb-link" title="Return to Community Feed">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Community Feed</span>
+        </a>
+        <span class="msg-crumb-sep">/</span>
+        <span class="msg-crumb-current">Trail Messages</span>
+      </nav>
+
+      <div class="msg-connection-pill" id="wsStatusBadge" title="Realtime Kafka KRaft & WebSocket Gateway">
+        <span class="msg-status-dot live" id="wsStatusDot"></span>
+        <span class="msg-status-text" id="wsStatusText">Live</span>
+      </div>
+    </div>
+
+    <!-- Right: Header Controls -->
+    <div class="msg-header-right">
+      <button class="msg-head-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle Dark/Light Theme">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
         </svg>
-        <span>Community Feed</span>
+      </button>
+
+      <a href="community.html" class="msg-head-btn" title="Community Notifications" aria-label="Notifications">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
       </a>
 
-      <a href="index.html" class="msg-navbar-brand" aria-label="TrekIndia Home">
-        <img src="darkbg_logo_processed.png" alt="TrekIndia" class="msg-brand-logo dark-icon" id="navbarBrandLogo" />
-        <div class="msg-brand-text">
-          <span class="msg-brand-trek">Trek</span><span class="msg-brand-india">India</span>
-        </div>
+      <a href="auth.html" class="msg-user-avatar-wrap" id="msgNavUserAvatarLink" title="My Profile">
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" alt="User Profile" class="msg-user-avatar-img" id="msgNavUserAvatar" />
       </a>
+    </div>
+  </header>
 
-      <div class="msg-navbar-title">
-        <h1>Messages</h1>
-        <div class="msg-ws-status" id="wsStatusBadge" title="Realtime Kafka Delivery Connection">
-          <span class="msg-ws-dot connecting" id="wsStatusDot"></span>
-          <span id="wsStatusText">Connecting...</span>
-        </div>
-      </div>
+  <!-- ===== 2. MAIN FULL-SCREEN DUAL PANE ===== -->
+  <div class="msg-main-layout" id="msgPane">
 
-      <div class="msg-navbar-actions">
-        <button class="msg-nav-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle Theme">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-        </button>
-        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" alt="Profile" class="msg-nav-user-avatar" id="msgNavUserAvatar" />
-      </div>
-    </header>
-
-    <!-- ─── MAIN DUAL-PANE CONTAINER ────────────────────────────────────────── -->
-    <div class="msg-pane" id="msgPane">
-
-      <!-- ─── 1. CONVERSATIONS SIDEBAR ──────────────────────────────────────── -->
-      <aside class="msg-sidebar" id="msgSidebar">
-        <div class="msg-sidebar-header">
-          <div class="msg-sidebar-title-row">
-            <h2>Chats</h2>
-            <button class="msg-new-chat-btn" id="btnNewChat" title="Start New Conversation">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-              <span>New Chat</span>
-            </button>
-          </div>
-
-          <div class="msg-search-box">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="convSearchInput" placeholder="Search conversations by trekker or text..." />
-          </div>
-
-          <div class="msg-filter-tabs">
-            <button class="msg-filter-tab active" data-tab="all" id="tabAllChats">All Chats</button>
-            <button class="msg-filter-tab" data-tab="unread" id="tabUnreadChats">
-              Unread <span class="msg-unread-badge" id="convUnreadBadge" style="display: none;">0</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Scrollable Conversations List -->
-        <div class="msg-conv-list" id="conversationsList">
-          <!-- Loading Skeletons -->
-          <div class="msg-conv-skeleton"><div class="skeleton-avatar-circle"></div><div class="skeleton-lines"><div class="skeleton-line w-60"></div><div class="skeleton-line w-80"></div></div></div>
-          <div class="msg-conv-skeleton"><div class="skeleton-avatar-circle"></div><div class="skeleton-lines"><div class="skeleton-line w-40"></div><div class="skeleton-line w-60"></div></div></div>
-          <div class="msg-conv-skeleton"><div class="skeleton-avatar-circle"></div><div class="skeleton-lines"><div class="skeleton-line w-60"></div><div class="skeleton-line w-80"></div></div></div>
-        </div>
-      </aside>
-
-      <!-- ─── 2. ACTIVE CHAT AREA ───────────────────────────────────────────── -->
-      <main class="msg-chat-area" id="msgChatArea">
-
-        <!-- Header -->
-        <header class="msg-chat-header" id="chatHeader" style="display: none;">
-          <button class="msg-back-btn" id="chatBackBtn" aria-label="Back to conversations list">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <!-- ─── SIDEBAR: DIRECT CHATS ─────────────────────────────────────────── -->
+    <aside class="msg-sidebar" id="msgSidebar">
+      <!-- Sidebar Header -->
+      <div class="msg-sidebar-header">
+        <div class="msg-sidebar-title-row">
+          <h2>Direct Chats</h2>
+          <button class="btn-new-chat" id="btnNewChat" title="Start a new direct chat">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            <span>New Chat</span>
           </button>
-          
-          <div class="msg-chat-avatar-wrap">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Avatar" class="msg-chat-avatar" id="chatHeadAvatar" />
-            <span class="msg-chat-online-indicator" id="chatHeadOnlineDot"></span>
-          </div>
+        </div>
 
-          <div class="msg-chat-head-meta">
-            <h2 class="msg-chat-head-name" id="chatHeadName">Trekker</h2>
-            <div class="msg-chat-head-status" id="chatHeadStatus">Offline</div>
-            <div class="msg-trek-badge" id="chatHeadActiveTrek">
-              <span class="msg-trek-badge-dot"></span>
-              <span id="chatHeadActiveTrekText">Active Trek: Kedarkantha</span>
+        <!-- Search Bar -->
+        <div class="msg-search-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="convSearchInput" placeholder="Search trekkers or messages..." aria-label="Search conversations" />
+        </div>
+
+        <!-- Segmented Filter Control -->
+        <div class="msg-segmented-filter" role="tablist">
+          <button class="msg-filter-btn active" data-tab="all" id="tabAllChats" role="tab" aria-selected="true">
+            All Chats
+          </button>
+          <button class="msg-filter-btn" data-tab="unread" id="tabUnreadChats" role="tab" aria-selected="false">
+            Unread <span class="msg-filter-count" id="convUnreadBadge" style="display: none;">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Conversations Scrollable List -->
+      <div class="msg-conversations-list" id="conversationsList" role="region" aria-label="Conversations">
+        <!-- Skeleton Loading Placeholders -->
+        <div class="msg-conv-skeleton"><div class="sk-avatar"></div><div class="sk-meta"><div class="sk-line w-60"></div><div class="sk-line w-85"></div></div></div>
+        <div class="msg-conv-skeleton"><div class="sk-avatar"></div><div class="sk-meta"><div class="sk-line w-40"></div><div class="sk-line w-70"></div></div></div>
+        <div class="msg-conv-skeleton"><div class="sk-avatar"></div><div class="sk-meta"><div class="sk-line w-60"></div><div class="sk-line w-90"></div></div></div>
+      </div>
+    </aside>
+
+    <!-- ─── ACTIVE CHAT AREA ──────────────────────────────────────────────── -->
+    <main class="msg-chat-viewport" id="msgChatArea">
+
+      <!-- Active Chat Sticky Header -->
+      <header class="msg-chat-header" id="chatHeader" style="display: none;">
+        <button class="msg-back-btn" id="chatBackBtn" aria-label="Back to conversations list">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <div class="msg-chat-head-avatar-wrap">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Avatar" class="msg-chat-head-avatar" id="chatHeadAvatar" />
+          <span class="msg-chat-head-status-dot" id="chatHeadOnlineDot"></span>
+        </div>
+
+        <div class="msg-chat-head-info">
+          <div class="msg-chat-head-top">
+            <h2 class="msg-chat-head-title" id="chatHeadName">Rahul Sharma</h2>
+            <div class="msg-active-trek-badge" id="chatHeadActiveTrek">
+              <span class="badge-trek-icon">🏔️</span>
+              <span id="chatHeadActiveTrekText">Active Trek · Sandakphu Phalut Peak</span>
             </div>
           </div>
+          <div class="msg-chat-head-sub" id="chatHeadStatus">● Active now</div>
+        </div>
 
-          <div class="msg-chat-header-actions">
-            <button class="msg-chat-action-btn" id="chatViewProfileBtn" title="View Trekker Profile" aria-label="View Profile">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
+        <div class="msg-chat-head-actions">
+          <button class="msg-head-action-btn" id="chatViewProfileBtn" title="View Trekker Community Profile" aria-label="View Profile">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Reconnection Notification Banner -->
+      <div class="msg-reconnect-bar" id="chatReconnectBanner">
+        <span class="pulse-dot"></span>
+        <span>Reconnecting to TrekIndia messaging stream...</span>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="msg-stream-body" id="chatMessagesBody" style="display: none;" role="log" aria-live="polite">
+        <!-- Rendered Message Bubbles & Trek Cards -->
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="msg-typing-bar" id="chatTypingIndicator">
+        <span class="typing-trekker-name" id="typingName">Trekker</span> is typing
+        <div class="typing-bubble-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <!-- Integrated Modern Message Composer -->
+      <footer class="msg-composer-container" id="chatComposer" style="display: none;">
+        <div class="msg-composer-box">
+          <!-- Attachment Button & Popup -->
+          <div class="msg-composer-attach-wrap">
+            <button type="button" class="btn-composer-icon attach-btn" id="chatAttachTrigger" title="Share Trek Route or Trail Photo" aria-label="Add Attachment">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
             </button>
-          </div>
-        </header>
 
-        <!-- Reconnect Banner -->
-        <div class="msg-reconnect-banner" id="chatReconnectBanner">
-          <span class="msg-reconnect-pulse"></span>
-          <span>Connecting to TrekIndia Kafka streaming backbone...</span>
-        </div>
-
-        <!-- Messages Stream -->
-        <div class="msg-messages-body" id="chatMessagesBody" style="display: none;">
-          <!-- Rendered messages stream -->
-        </div>
-
-        <!-- Typing Indicator -->
-        <div class="msg-typing-indicator" id="chatTypingIndicator">
-          <span id="typingName">Trekker</span> is typing
-          <div class="msg-typing-dots">
-            <span></span><span></span><span></span>
-          </div>
-        </div>
-
-        <!-- Composer Bar -->
-        <footer class="msg-composer" id="chatComposer" style="display: none;">
-          <!-- Attach Trigger -->
-          <div class="msg-attach-wrap">
-            <button type="button" class="msg-attach-btn" id="chatAttachTrigger" title="Share Trek Route or Photo" aria-label="Attachments">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </button>
-
-            <!-- Attach Menu -->
+            <!-- Attachment Menu -->
             <div class="msg-attach-menu" id="chatAttachMenu">
-              <button type="button" class="msg-attach-item" id="attachShareTrekBtn">
-                <span class="msg-attach-item-icon">🏔️</span>
-                <div>
+              <button type="button" class="msg-attach-option" id="attachShareTrekBtn">
+                <span class="opt-icon">🏔️</span>
+                <div class="opt-text">
                   <strong>Share Trek Route</strong>
-                  <span>Send route card from catalog</span>
+                  <span>Himalayan trails with stats</span>
                 </div>
               </button>
-              <button type="button" class="msg-attach-item" id="attachSharePhotoBtn">
-                <span class="msg-attach-item-icon">📷</span>
-                <div>
+              <button type="button" class="msg-attach-option" id="attachSharePhotoBtn">
+                <span class="opt-icon">📷</span>
+                <div class="opt-text">
                   <strong>Send Trail Photo</strong>
                   <span>Share photo attachment</span>
                 </div>
@@ -171,96 +213,105 @@
             <input type="file" id="chatPhotoInput" accept="image/*" style="display: none;" />
           </div>
 
-          <!-- Text Input Wrap -->
-          <div class="msg-input-wrap">
-            <textarea id="chatTextInput" rows="1" placeholder="Write a message... (Press Enter to send, Shift+Enter for newline)" aria-label="Type message"></textarea>
-            
-            <!-- Emoji Trigger -->
-            <button type="button" class="msg-emoji-btn" id="chatEmojiTrigger" title="Insert Emoji" aria-label="Emoji">😊</button>
+          <!-- Auto-Growing Textarea -->
+          <textarea id="chatTextInput" rows="1" placeholder="Write a message..." aria-label="Type message"></textarea>
 
-            <!-- Emoji Popover -->
+          <!-- Integrated Emoji Button -->
+          <div class="msg-composer-emoji-wrap">
+            <button type="button" class="btn-composer-icon emoji-btn" id="chatEmojiTrigger" title="Insert Emoji" aria-label="Insert Emoji">
+              😊
+            </button>
+
+            <!-- Curated Emoji Popover -->
             <div class="msg-emoji-popover" id="chatEmojiPopover">
               <div class="msg-emoji-grid">
-                <span class="msg-emoji-item">🏔️</span>
-                <span class="msg-emoji-item">🌲</span>
-                <span class="msg-emoji-item">🧭</span>
-                <span class="msg-emoji-item">🥾</span>
-                <span class="msg-emoji-item">⛺</span>
-                <span class="msg-emoji-item">🔥</span>
-                <span class="msg-emoji-item">❄️</span>
-                <span class="msg-emoji-item">🎒</span>
-                <span class="msg-emoji-item">🌅</span>
-                <span class="msg-emoji-item">☀️</span>
-                <span class="msg-emoji-item">☕</span>
-                <span class="msg-emoji-item">👏</span>
-                <span class="msg-emoji-item">👍</span>
-                <span class="msg-emoji-item">💪</span>
-                <span class="msg-emoji-item">🙌</span>
-                <span class="msg-emoji-item">✨</span>
-                <span class="msg-emoji-item">❤️</span>
-                <span class="msg-emoji-item">🤩</span>
-                <span class="msg-emoji-item">😎</span>
-                <span class="msg-emoji-item">🤝</span>
+                <span class="emoji-cell">🏔️</span>
+                <span class="emoji-cell">🌲</span>
+                <span class="emoji-cell">🧭</span>
+                <span class="emoji-cell">🥾</span>
+                <span class="emoji-cell">⛺</span>
+                <span class="emoji-cell">🔥</span>
+                <span class="emoji-cell">❄️</span>
+                <span class="emoji-cell">🎒</span>
+                <span class="emoji-cell">🌅</span>
+                <span class="emoji-cell">☀️</span>
+                <span class="emoji-cell">☕</span>
+                <span class="emoji-cell">👏</span>
+                <span class="emoji-cell">👍</span>
+                <span class="emoji-cell">💪</span>
+                <span class="emoji-cell">🙌</span>
+                <span class="emoji-cell">✨</span>
+                <span class="emoji-cell">❤️</span>
+                <span class="emoji-cell">🤩</span>
+                <span class="emoji-cell">😎</span>
+                <span class="emoji-cell">🤝</span>
               </div>
             </div>
           </div>
 
-          <!-- Send Button -->
-          <button type="button" class="msg-send-btn" id="chatSendBtn" aria-label="Send Message" title="Send (Enter)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          <!-- Send Message Button -->
+          <button type="button" class="btn-composer-send" id="chatSendBtn" aria-label="Send Message" title="Send (Enter)" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
           </button>
-        </footer>
+        </div>
+      </footer>
 
-        <!-- Empty Placeholder Screen (When no chat is selected) -->
-        <section class="msg-empty-state" id="emptyChatState">
-          <div class="msg-empty-state-icon">🏔️</div>
-          <h3>Your Trail Conversations</h3>
-          <p>Select a conversation from the sidebar or start a new chat with fellow Himalayan trekkers to plan routes and gear.</p>
-          <button class="msg-empty-cta" id="btnEmptyNewChat">Start New Conversation</button>
-        </section>
+      <!-- Empty State Screen (No Conversation Selected) -->
+      <section class="msg-empty-placeholder" id="emptyChatState">
+        <div class="empty-icon-circle">🏔️</div>
+        <h3>Your Trail Conversations Start Here</h3>
+        <p>Select a conversation from the sidebar or start a new direct chat with fellow trekkers to plan Himalayan routes, gear, and upcoming summits.</p>
+        <button class="btn-empty-start" id="btnEmptyNewChat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Start New Conversation</span>
+        </button>
+      </section>
 
-      </main>
-
-    </div>
-
+    </main>
   </div>
 
-  <!-- ─── MODAL: START NEW CONVERSATION ─────────────────────────────────────── -->
+  <!-- ===== 3. MODALS ===== -->
+  <!-- Start New Conversation Modal -->
   <div class="msg-modal-overlay" id="newChatModal">
     <div class="msg-modal-card">
-      <header class="msg-modal-header">
-        <h3>New Conversation</h3>
-        <button class="msg-modal-close" id="closeNewChatModalBtn" aria-label="Close">&times;</button>
+      <header class="msg-modal-head">
+        <h3>Start Direct Conversation</h3>
+        <button class="msg-modal-close-btn" id="closeNewChatModalBtn" aria-label="Close modal">&times;</button>
       </header>
-      <div class="msg-modal-search">
-        <input type="text" id="newChatSearchInput" placeholder="Search trekkers by name, handle, or location..." />
+      <div class="msg-modal-search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="newChatSearchInput" placeholder="Search trekkers by name, username, or location..." />
       </div>
       <div class="msg-modal-trekkers-list" id="newChatTrekkersList">
-        <!-- Rendered trekkers -->
+        <!-- Rendered Trekkers -->
       </div>
     </div>
   </div>
 
-  <!-- ─── MODAL: SHARE TREK ROUTE PICKER ────────────────────────────────────── -->
+  <!-- Share Trek Route Picker Modal -->
   <div class="msg-modal-overlay" id="shareTrekModal">
     <div class="msg-modal-card">
-      <header class="msg-modal-header">
-        <h3>Share Trek Route</h3>
-        <button class="msg-modal-close" id="closeShareTrekModalBtn" aria-label="Close">&times;</button>
+      <header class="msg-modal-head">
+        <h3>Share Himalayan Trek Route</h3>
+        <button class="msg-modal-close-btn" id="closeShareTrekModalBtn" aria-label="Close modal">&times;</button>
       </header>
-      <div class="msg-modal-search">
+      <div class="msg-modal-search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="shareTrekSearchInput" placeholder="Search Himalayan routes & peaks..." />
       </div>
       <div class="msg-trek-picker-list" id="shareTrekList">
-        <!-- Rendered treks -->
+        <!-- Rendered Treks -->
       </div>
     </div>
   </div>
 
-  <!-- ─── TOAST NOTIFICATION ────────────────────────────────────────────────── -->
+  <!-- Toast Notification -->
   <div class="msg-toast" id="msgToast"></div>
 
-  <!-- Application Logic -->
+  <!-- Messaging Engine Logic -->
   <script src="messages.js"></script>
 </body>
 
