@@ -17,9 +17,7 @@ import { errorMiddleware } from './middleware/errorMiddleware.js';
 import { runMigrations }  from './config/initDb.js';
 
 // Kafka KRaft & WebSocket Modules
-import { initializeKafkaTopics } from './kafka/admin.js';
-import messageProducer from './kafka/producer.js';
-import messageConsumer from './kafka/consumer.js';
+import kafkaCoordinator from './kafka/coordinator.js';
 import wsManager from './websocket/wsServer.js';
 
 dotenv.config();
@@ -92,11 +90,8 @@ app.use(express.static(rootDir));
 app.get('/api/health', (req, res) => {
   return res.status(200).json({
     success: true,
-    message: 'TrekIndia API & Kafka KRaft Services are active.',
-    kafka: {
-      producer_connected: messageProducer.isConnected,
-      consumer_running: messageConsumer.isRunning
-    },
+    message: 'TrekIndia API is active.',
+    kafka: kafkaCoordinator.getStatus(),
     websocket: {
       online_users_count: wsManager.getOnlineUserIds().length
     }
@@ -143,26 +138,14 @@ app.use(errorMiddleware);
 // Initialize WebSocket Manager on HTTP Server
 wsManager.init(server);
 
-// Initialize Kafka KRaft Services (Topics, Producer, Consumer)
-async function startKafkaServices() {
-  try {
-    console.log('[Server Startup] Initializing Kafka KRaft architecture...');
-    await initializeKafkaTopics();
-    await messageProducer.connect();
-    await messageConsumer.start();
-  } catch (err) {
-    console.warn('⚠️ [Server Startup] Notice on Kafka initialization:', err.message);
-  }
-}
-
-startKafkaServices();
+// Start Kafka Coordinator (Auto-discovery, probe, and reconnect)
+kafkaCoordinator.start();
 
 // Graceful Shutdown handling
 async function gracefulShutdown(signal) {
   console.log(`\n[Server] Received ${signal}. Starting graceful shutdown...`);
   try {
-    await messageConsumer.disconnect();
-    await messageProducer.disconnect();
+    await kafkaCoordinator.stop();
     server.close(() => {
       console.log('✅ [Server] HTTP and WebSocket servers closed.');
       process.exit(0);

@@ -1,9 +1,14 @@
-import { kafka, TOPICS } from './config.js';
+import { kafka, TOPICS, isKafkaBrokerReachable } from './config.js';
 
 /**
  * Initialize and verify required Kafka KRaft topics with appropriate partitions
  */
 export async function initializeKafkaTopics() {
+  const isReachable = await isKafkaBrokerReachable();
+  if (!isReachable) {
+    return false;
+  }
+
   const admin = kafka.admin();
 
   try {

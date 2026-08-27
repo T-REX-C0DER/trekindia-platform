@@ -1,4 +1,4 @@
-import { kafka, TOPICS, CONSUMER_GROUPS } from './config.js';
+import { kafka, TOPICS, CONSUMER_GROUPS, isKafkaBrokerReachable } from './config.js';
 import { EVENT_TYPES, createNotificationEvent } from './schemas.js';
 import wsManager from '../websocket/wsServer.js';
 import messageProducer from './producer.js';
@@ -13,43 +13,21 @@ class MessageConsumerService {
     this.consumer = null;
     this.isRunning = false;
     this.maxRetries = 3;
-
-    // Reconnect backoff state
-    this._reconnectAttempts = 0;
     this._reconnectTimer = null;
-    this._baseDelay = 3000;          // 3 seconds
-    this._maxDelay = 5 * 60 * 1000; // 5 minutes cap
-  }
-
-  /**
-   * Compute next exponential backoff delay with jitter
-   */
-  _nextDelay() {
-    const exp = this._baseDelay * Math.pow(2, this._reconnectAttempts);
-    const capped = Math.min(exp, this._maxDelay);
-    return capped + Math.floor(Math.random() * 1000);
-  }
-
-  /**
-   * Schedule a reconnect with exponential backoff
-   */
-  _scheduleReconnect() {
-    if (this.isRunning || this._reconnectTimer) return;
-    const delay = this._nextDelay();
-    console.log(`[Kafka Consumer] Reconnect attempt #${this._reconnectAttempts + 1} in ${Math.round(delay / 1000)}s...`);
-    this._reconnectTimer = setTimeout(async () => {
-      this._reconnectTimer = null;
-      if (!this.isRunning) {
-        this._reconnectAttempts++;
-        await this.start().catch(() => {});
-      }
-    }, delay);
   }
 
   /**
    * Start Kafka Consumer and subscribe to topics
    */
   async start() {
+    if (this.isRunning && this.consumer) return true;
+
+    const isReachable = await isKafkaBrokerReachable();
+    if (!isReachable) {
+      this.isRunning = false;
+      return false;
+    }
+
     try {
       console.log('[Kafka Consumer] Initializing consumer with group:', CONSUMER_GROUPS.MESSAGE_DELIVERY);
 
@@ -65,16 +43,30 @@ class MessageConsumerService {
         heartbeatInterval: 3000,
         allowAutoTopicCreation: true,
         retry: {
-          initialRetryTime: 300,
-          retries: 8
+          initialRetryTime: 200,
+          retries: 3
         }
       });
 
-      // Auto-restart on internal kafkajs crash
-      this.consumer.on(this.consumer.events.CRASH, ({ payload }) => {
-        console.error('❌ [Kafka Consumer] CRASH event:', payload?.error?.message || 'unknown error');
+      // Event listeners for accurate status tracking
+      this.consumer.on(this.consumer.events.CONNECT, () => {
+        this.isRunning = true;
+      });
+
+      this.consumer.on(this.consumer.events.GROUP_JOIN, () => {
+        this.isRunning = true;
+      });
+
+      this.consumer.on(this.consumer.events.STOP, () => {
         this.isRunning = false;
-        this._scheduleReconnect();
+      });
+
+      this.consumer.on(this.consumer.events.DISCONNECT, () => {
+        this.isRunning = false;
+      });
+
+      this.consumer.on(this.consumer.events.CRASH, ({ payload }) => {
+        console.warn('⚠️ [Kafka Consumer] Consumer group rebalance/restart:', payload?.error?.message || 'reconnecting');
       });
 
       await this.consumer.connect();
@@ -87,11 +79,6 @@ class MessageConsumerService {
       });
 
       this.isRunning = true;
-      this._reconnectAttempts = 0; // reset backoff on success
-      if (this._reconnectTimer) {
-        clearTimeout(this._reconnectTimer);
-        this._reconnectTimer = null;
-      }
 
       // Start event processing loop
       await this.consumer.run({
@@ -103,10 +90,10 @@ class MessageConsumerService {
       });
 
       console.log(`✅ [Kafka Consumer] Actively listening on topics: ${[TOPICS.MESSAGES, TOPICS.NOTIFICATIONS, TOPICS.USER_EVENTS].join(', ')}`);
+      return true;
     } catch (err) {
-      console.error('❌ [Kafka Consumer] Initialization error:', err.message);
       this.isRunning = false;
-      this._scheduleReconnect();
+      return false;
     }
   }
 

@@ -1697,13 +1697,26 @@ export async function getConversation(conversationId, currentUser) {
         [convId, userId]
       ).catch(() => {});
 
-      // Publish message.read event to Kafka
+      // Publish message.read event to Kafka (or direct fallback)
       const readEvent = createMessageReadEvent({
         conversation_id: convId,
         reader_id: userId,
         message_ids: unreadMessageIds
       });
-      await messageProducer.publishMessageEvent(readEvent);
+      const published = await messageProducer.publishMessageEvent(readEvent);
+      if (!published) {
+        wsManager.broadcastToConversationParticipants(
+          convId,
+          {
+            type: 'message.read_receipt',
+            conversation_id: convId,
+            reader_id: userId,
+            message_ids: unreadMessageIds,
+            read_at: new Date().toISOString()
+          },
+          userId
+        );
+      }
     }
 
     return {
@@ -1869,7 +1882,11 @@ export async function sendMessage(conversationId, { user, content, message_type 
     created_at: insertedMessage.created_at
   });
 
-  await messageProducer.publishMessageEvent(kafkaEvent);
+  const published = await messageProducer.publishMessageEvent(kafkaEvent);
+  if (!published) {
+    // Deliver directly via WebSocket and DB notification when Kafka is offline
+    await dispatchDirectMessageFallback(kafkaEvent);
+  }
 
   const formattedCreated = new Date(insertedMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -1914,7 +1931,20 @@ export async function markConversationRead(conversationId, currentUser) {
     conversation_id: convId,
     reader_id: userId
   });
-  await messageProducer.publishMessageEvent(readEvent);
+  const published = await messageProducer.publishMessageEvent(readEvent);
+  if (!published) {
+    wsManager.broadcastToConversationParticipants(
+      convId,
+      {
+        type: 'message.read_receipt',
+        conversation_id: convId,
+        reader_id: userId,
+        message_ids: [],
+        read_at: new Date().toISOString()
+      },
+      userId
+    );
+  }
 
   return { success: true, conversation_id: convId };
 }
@@ -2092,3 +2122,102 @@ export async function searchCommunity(q) {
     hashtags: matchedHashtags
   };
 }
+
+/**
+ * Direct WebSocket and notification fallback when Kafka KRaft broker is offline
+ */
+async function dispatchDirectMessageFallback(kafkaEvent) {
+  try {
+    const { payload } = kafkaEvent;
+    const {
+      message_id,
+      conversation_id,
+      sender_id,
+      receiver_id,
+      sender_name,
+      sender_avatar,
+      content,
+      message_type,
+      trek_data,
+      attachment_url,
+      created_at,
+      client_message_id
+    } = payload;
+
+    const res = await query(
+      `SELECT cp.user_id, u.full_name, u.profile_image
+       FROM conversation_participants cp
+       JOIN users u ON cp.user_id = u.user_id
+       WHERE cp.conversation_id = $1`,
+      [conversation_id]
+    ).catch(() => ({ rows: [] }));
+
+    const participants = res.rows && res.rows.length > 0 ? res.rows : [
+      { user_id: sender_id, full_name: sender_name, profile_image: sender_avatar },
+      ...(receiver_id ? [{ user_id: receiver_id, full_name: '', profile_image: null }] : [])
+    ];
+
+    let deliveredToAnyReceiver = false;
+
+    for (const participant of participants) {
+      const participantId = String(participant.user_id);
+      const isSender = participantId === String(sender_id);
+
+      const wsPayload = {
+        type: 'message.new',
+        message: {
+          message_id: parseInt(message_id, 10),
+          conversation_id: parseInt(conversation_id, 10),
+          sender_id: parseInt(sender_id, 10),
+          sender_name,
+          sender_avatar,
+          content,
+          message_type,
+          trek_data,
+          attachment_url,
+          status: isSender ? 'sent' : 'delivered',
+          created_at,
+          is_self: isSender,
+          client_message_id
+        }
+      };
+
+      const wasDelivered = wsManager.sendToUser(participantId, wsPayload);
+
+      if (!isSender) {
+        if (wasDelivered) {
+          deliveredToAnyReceiver = true;
+        } else {
+          try {
+            const title = `New message from ${sender_name}`;
+            const snippet = content && content.length > 80 ? content.substring(0, 77) + '...' : (content || (trek_data ? `Shared Trek: ${trek_data.name}` : 'Sent an attachment'));
+            await query(
+              `INSERT INTO notifications (user_id, actor_id, type, title, message, reference_id, reference_type)
+               VALUES ($1, $2, 'message', $3, $4, $5, 'conversation')`,
+              [participantId, sender_id, title, snippet, conversation_id]
+            ).catch(() => {});
+          } catch (_) {}
+        }
+      }
+    }
+
+    if (deliveredToAnyReceiver) {
+      await query(
+        `UPDATE messages SET status = 'delivered', delivered_at = CURRENT_TIMESTAMP
+         WHERE message_id = $1 AND status = 'sent'`,
+        [message_id]
+      ).catch(() => {});
+
+      wsManager.sendToUser(String(sender_id), {
+        type: 'message.status_update',
+        conversation_id: parseInt(conversation_id, 10),
+        message_id: parseInt(message_id, 10),
+        status: 'delivered',
+        client_message_id
+      });
+    }
+  } catch (err) {
+    console.warn('[Direct Fallback] Dispatch notice:', err.message);
+  }
+}
+

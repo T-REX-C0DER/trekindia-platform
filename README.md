@@ -1,6 +1,8 @@
-# TrekIndia Backend — Production-Ready Authentication System
+# TrekIndia Backend — Production-Ready Authentication & Community Platform
 
-TrekIndia is a trekking platform focused on Indian treks. This module provides a complete, secure, production-ready V1 authentication backend built with Node.js, Express.js, PostgreSQL 18 (`pg`), Argon2id password hashing, and HttpOnly session cookies.
+> 🚀 **Quick Start & Kafka Guide**: See [KAFKA_AND_STARTUP_GUIDE.md](file:///c:/Users/SANJAY%20LADE/Downloads/trekindia-platform/KAFKA_AND_STARTUP_GUIDE.md) for step-by-step instructions on running the platform, Kafka KRaft setup, and laptop sleep auto-recovery.
+
+TrekIndia is a trekking platform focused on Indian treks. This module provides a complete, secure, production-ready backend built with Node.js, Express.js, PostgreSQL 18 (`pg`), Apache Kafka KRaft event streaming, WebSockets, Argon2id password hashing, and HttpOnly session cookies.
 
 ---
 
