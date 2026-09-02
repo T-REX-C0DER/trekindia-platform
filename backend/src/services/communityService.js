@@ -1549,6 +1549,7 @@ export async function getConversations(currentUser) {
         ORDER BY created_at DESC LIMIT 1
       ) latest_m ON TRUE
       WHERE cp.user_id = $1
+        AND (cp.hidden_at IS NULL)
       ORDER BY COALESCE(latest_m.created_at, c.last_message_at, c.created_at) DESC;
     `;
 
@@ -1765,7 +1766,14 @@ export async function getOrCreateDirectConversation(userIdA, userIdB) {
 
   const existingRes = await query(existingSql, [uidA, uidB]);
   if (existingRes.rows.length > 0) {
-    return { conversation_id: parseInt(existingRes.rows[0].conversation_id, 10) };
+    const convId = parseInt(existingRes.rows[0].conversation_id, 10);
+    // If the conversation was previously hidden by either user, un-hide it
+    await query(
+      `UPDATE conversation_participants SET hidden_at = NULL
+       WHERE conversation_id = $1 AND user_id IN ($2, $3) AND hidden_at IS NOT NULL`,
+      [convId, uidA, uidB]
+    ).catch(() => {});
+    return { conversation_id: convId };
   }
 
   // Create new conversation
@@ -1951,19 +1959,83 @@ export async function markConversationRead(conversationId, currentUser) {
 
 /**
  * Delete Message
+ * Soft-deletes the message (is_deleted = TRUE) and broadcasts a real-time WS event
+ * so other participants can remove it from their UI without refresh.
  */
 export async function deleteMessage(conversationId, messageId, currentUser) {
   const convId = parseInt(conversationId, 10);
   const msgId = parseInt(messageId, 10);
   const userId = currentUser?.user_id;
 
-  await query(
+  if (!userId) {
+    const err = new Error('Authentication required');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  // Soft-delete only if the user is the sender
+  const result = await query(
     `UPDATE messages SET is_deleted = TRUE
-     WHERE message_id = $1 AND conversation_id = $2 AND sender_id = $3`,
+     WHERE message_id = $1 AND conversation_id = $2 AND sender_id = $3
+     RETURNING message_id`,
     [msgId, convId, userId]
   );
 
-  return { success: true };
+  if (result.rows.length === 0) {
+    const err = new Error('Message not found or you are not authorized to delete it');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  // Broadcast message.deleted event to all conversation participants via WebSocket
+  wsManager.broadcastToConversationParticipants(
+    convId,
+    {
+      type: 'message.deleted',
+      conversation_id: convId,
+      message_id: msgId,
+      deleted_by: userId
+    },
+    null // broadcast to ALL participants including sender (for multi-device support)
+  );
+
+  return { success: true, message_id: msgId };
+}
+
+/**
+ * Delete / Hide Conversation For Current User Only
+ * Sets hidden_at timestamp on the participant row — the other participant is unaffected.
+ * If the user starts a new chat with the same person, hidden_at is cleared.
+ */
+export async function deleteConversationForMe(conversationId, currentUser) {
+  const convId = parseInt(conversationId, 10);
+  const userId = currentUser?.user_id;
+
+  if (!userId) {
+    const err = new Error('Authentication required');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  // Verify user is a participant in this conversation
+  const partRes = await query(
+    `SELECT id FROM conversation_participants WHERE conversation_id = $1 AND user_id = $2`,
+    [convId, userId]
+  );
+
+  if (partRes.rows.length === 0) {
+    const err = new Error('Conversation not found or unauthorized');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  await query(
+    `UPDATE conversation_participants SET hidden_at = CURRENT_TIMESTAMP
+     WHERE conversation_id = $1 AND user_id = $2`,
+    [convId, userId]
+  );
+
+  return { success: true, conversation_id: convId };
 }
 
 /**

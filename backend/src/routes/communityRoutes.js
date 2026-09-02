@@ -37,6 +37,7 @@ router.get('/messages/conversations/:id', requireAuth, communityController.getCo
 router.post('/messages/conversations/:id/messages', requireAuth, communityController.sendMessage);
 router.post('/messages/conversations/:id/read', requireAuth, communityController.markConversationRead);
 router.delete('/messages/conversations/:id/messages/:messageId', requireAuth, communityController.deleteMessage);
+router.delete('/messages/conversations/:id', requireAuth, communityController.deleteConversationForMe);
 router.post('/messages/conversations/:id/request', requireAuth, communityController.handleMessageRequest);
 
 // ─── Notifications ───────────────────────────────────────────────────────────

@@ -369,9 +369,31 @@
         <button class="modal-close-btn" id="btnCloseEditModal">&times;</button>
       </div>
       <form id="formEditProfile">
-        <div class="form-group">
-          <label class="form-label">Profile Image URL</label>
-          <input type="url" class="form-input" id="editAvatarUrl" placeholder="https://example.com/photo.jpg" />
+        <!-- Avatar Selector -->
+        <div class="form-group avatar-picker-group">
+          <label class="form-label">Avatar & Profile Photo</label>
+          <div class="avatar-picker-preview-row">
+            <div class="avatar-preview-box" id="avatarPreviewBox">
+              <img id="editAvatarPreviewImg" src="https://api.dicebear.com/7.x/adventurer/svg?seed=trekindia&backgroundColor=2d6a4f" alt="Avatar preview" />
+            </div>
+            <div style="flex: 1;">
+              <input type="url" class="form-input" id="editAvatarUrl" placeholder="Paste custom image URL or select below..." />
+              <span style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; display: block;">Pick an adventurer avatar below or paste your own custom photo link.</span>
+            </div>
+          </div>
+          
+          <div class="avatar-selector-wrap">
+            <div class="avatar-category-tabs" id="avatarCategoryTabs">
+              <button type="button" class="avatar-cat-btn active" data-cat="all">All</button>
+              <button type="button" class="avatar-cat-btn" data-cat="male">Male</button>
+              <button type="button" class="avatar-cat-btn" data-cat="female">Female</button>
+              <button type="button" class="avatar-cat-btn" data-cat="adventure">Adventure</button>
+              <button type="button" class="avatar-cat-btn" data-cat="himalayan">Wildlife</button>
+            </div>
+            <div class="avatar-presets-grid" id="avatarPresetsGrid">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Full Name</label>

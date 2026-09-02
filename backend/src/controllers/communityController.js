@@ -295,6 +295,16 @@ export async function deleteMessage(req, res, next) {
   }
 }
 
+export async function deleteConversationForMe(req, res, next) {
+  try {
+    const { id } = req.params;
+    const result = await communityService.deleteConversationForMe(id, req.user);
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function handleMessageRequest(req, res, next) {
   try {
     const { id } = req.params;

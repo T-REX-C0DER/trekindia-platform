@@ -72,6 +72,9 @@
     btnCancelEditModal: document.getElementById('btnCancelEditModal'),
     formEditProfile: document.getElementById('formEditProfile'),
     editAvatarUrl: document.getElementById('editAvatarUrl'),
+    editAvatarPreviewImg: document.getElementById('editAvatarPreviewImg'),
+    avatarPresetsGrid: document.getElementById('avatarPresetsGrid'),
+    avatarCategoryTabs: document.getElementById('avatarCategoryTabs'),
     editFullName: document.getElementById('editFullName'),
     editUsername: document.getElementById('editUsername'),
     editLocation: document.getElementById('editLocation'),
@@ -92,6 +95,41 @@
     
     toastContainer: document.getElementById('toast-container')
   };
+
+  // Predefined Avatar Presets
+  const AVATAR_PRESETS = [
+    // Male
+    { id: 'm1', name: 'Aarav (Trekker)', category: 'male', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Aarav&backgroundColor=2d6a4f' },
+    { id: 'm2', name: 'Rohan (Climber)', category: 'male', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Rohan&backgroundColor=1b4332' },
+    { id: 'm3', name: 'Vikram (Guide)', category: 'male', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Vikram&backgroundColor=2d6a4f' },
+    { id: 'm4', name: 'Kabir (Explorer)', category: 'male', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Kabir&backgroundColor=40916c' },
+    { id: 'm5', name: 'Arjun (Photo)', category: 'male', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' },
+    { id: 'm6', name: 'Dev (Hiker)', category: 'male', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
+    
+    // Female
+    { id: 'f1', name: 'Ananya (Trailblazer)', category: 'female', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Ananya&backgroundColor=2d6a4f' },
+    { id: 'f2', name: 'Priya (Mountaineer)', category: 'female', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Priya&backgroundColor=1b4332' },
+    { id: 'f3', name: 'Meera (Camper)', category: 'female', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Meera&backgroundColor=40916c' },
+    { id: 'f4', name: 'Tanvi (Summiteer)', category: 'female', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Tanvi&backgroundColor=2d6a4f' },
+    { id: 'f5', name: 'Rhea (Photo)', category: 'female', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
+    { id: 'f6', name: 'Sneha (Explorer)', category: 'female', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
+
+    // Adventure
+    { id: 'a1', name: 'Sherpa Guide', category: 'adventure', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sherpa&backgroundColor=2d6a4f' },
+    { id: 'a2', name: 'Peak Hunter', category: 'adventure', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=PeakHunter&backgroundColor=1b4332' },
+    { id: 'a3', name: 'Trail Blazer', category: 'adventure', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=TrailBlazer&backgroundColor=40916c' },
+    { id: 'a4', name: 'Backpacker', category: 'adventure', url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Backpacker&backgroundColor=2d6a4f' },
+    { id: 'a5', name: 'TrekBot', category: 'adventure', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=TrekBot&backgroundColor=2d6a4f' },
+    { id: 'a6', name: 'Himalayan Nomad', category: 'adventure', url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Himalayan&backgroundColor=1b4332' },
+
+    // Wildlife
+    { id: 'w1', name: 'Snow Leopard', category: 'himalayan', url: 'https://api.dicebear.com/7.x/shapes/svg?seed=SnowLeopard&backgroundColor=2d6a4f' },
+    { id: 'w2', name: 'Mountain Ibex', category: 'himalayan', url: 'https://api.dicebear.com/7.x/shapes/svg?seed=MountainIbex&backgroundColor=1b4332' },
+    { id: 'w3', name: 'Golden Eagle', category: 'himalayan', url: 'https://api.dicebear.com/7.x/shapes/svg?seed=HimalayanEagle&backgroundColor=40916c' },
+    { id: 'w4', name: 'Summit Mark', category: 'himalayan', url: 'https://api.dicebear.com/7.x/identicon/svg?seed=SummitMark&backgroundColor=2d6a4f' }
+  ];
+
+  let selectedAvatarCategory = 'all';
 
   // 1. Initialize Application
   async function init() {
@@ -520,6 +558,74 @@
     DOM.wishlistGrid.innerHTML = renderSkeletonCardsHtml(3);
   }
 
+  // 15B. Avatar Picker Functions
+  function updateAvatarPreview(url) {
+    const fallback = 'https://api.dicebear.com/7.x/adventurer/svg?seed=trekindia&backgroundColor=2d6a4f';
+    if (DOM.editAvatarPreviewImg) {
+      DOM.editAvatarPreviewImg.src = url || fallback;
+      DOM.editAvatarPreviewImg.onerror = () => {
+        DOM.editAvatarPreviewImg.src = fallback;
+      };
+    }
+  }
+
+  function renderAvatarPresets(category = 'all', currentSelectedUrl = '') {
+    if (!DOM.avatarPresetsGrid) return;
+    
+    let list = AVATAR_PRESETS;
+    if (category !== 'all') {
+      list = AVATAR_PRESETS.filter(a => a.category === category);
+    }
+
+    DOM.avatarPresetsGrid.innerHTML = list.map(item => {
+      const isSelected = currentSelectedUrl && (currentSelectedUrl === item.url);
+      return `
+        <div class="avatar-preset-card ${isSelected ? 'selected' : ''}" data-avatar-url="${escapeHtml(item.url)}" title="${escapeHtml(item.name)}">
+          <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.name)}" onerror="this.src='https://api.dicebear.com/7.x/adventurer/svg?seed=fallback&backgroundColor=2d6a4f'" />
+        </div>
+      `;
+    }).join('');
+
+    // Attach click events on avatar preset cards
+    DOM.avatarPresetsGrid.querySelectorAll('.avatar-preset-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const url = card.getAttribute('data-avatar-url');
+        DOM.editAvatarUrl.value = url;
+        updateAvatarPreview(url);
+        
+        DOM.avatarPresetsGrid.querySelectorAll('.avatar-preset-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+      });
+    });
+  }
+
+  function setupAvatarPicker() {
+    if (DOM.avatarCategoryTabs) {
+      DOM.avatarCategoryTabs.querySelectorAll('.avatar-cat-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          DOM.avatarCategoryTabs.querySelectorAll('.avatar-cat-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedAvatarCategory = btn.getAttribute('data-cat');
+          renderAvatarPresets(selectedAvatarCategory, DOM.editAvatarUrl.value.trim());
+        });
+      });
+    }
+
+    if (DOM.editAvatarUrl) {
+      DOM.editAvatarUrl.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        updateAvatarPreview(val);
+        // Highlight matching preset if any
+        if (DOM.avatarPresetsGrid) {
+          DOM.avatarPresetsGrid.querySelectorAll('.avatar-preset-card').forEach(card => {
+            const url = card.getAttribute('data-avatar-url');
+            card.classList.toggle('selected', url === val);
+          });
+        }
+      });
+    }
+  }
+
   // 16. Event Listeners & Modals
   function setupEventListeners() {
     // Navigation link clicks
@@ -531,11 +637,16 @@
       });
     });
 
+    // Avatar Picker Setup
+    setupAvatarPicker();
+
     // Edit Profile Modal Trigger
     DOM.btnEditProfile.addEventListener('click', () => {
       if (!currentUserProfile) return;
       const u = currentUserProfile.user;
       DOM.editAvatarUrl.value = u.profile_image || '';
+      updateAvatarPreview(u.profile_image);
+      renderAvatarPresets(selectedAvatarCategory, u.profile_image);
       DOM.editFullName.value = u.full_name || '';
       DOM.editUsername.value = u.username || '';
       DOM.editLocation.value = u.location || '';

@@ -308,8 +308,21 @@
     </div>
   </div>
 
+  <!-- ===== CONFIRMATION DIALOG ===== -->
+  <div class="msg-confirm-overlay" id="msgConfirmDialog" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
+    <div class="msg-confirm-card">
+      <div class="msg-confirm-icon" id="confirmDialogIcon">🗑️</div>
+      <h4 id="confirmDialogTitle">Delete message?</h4>
+      <p id="confirmDialogMessage">This action cannot be undone.</p>
+      <div class="msg-confirm-actions">
+        <button class="msg-confirm-btn cancel-btn" id="confirmCancelBtn" aria-label="Cancel">Cancel</button>
+        <button class="msg-confirm-btn danger-btn" id="confirmActionBtn" aria-label="Confirm delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
-  <div class="msg-toast" id="msgToast"></div>
+  <div class="msg-toast" id="msgToast" role="status" aria-live="polite"></div>
 
   <!-- Messaging Engine Logic -->
   <script src="messages.js"></script>

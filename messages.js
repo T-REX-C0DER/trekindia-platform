@@ -1,11 +1,27 @@
 /**
- * TrekIndia — Full-Screen Messaging System Engine (v2.0)
- * Real-time messaging powered by WebSockets, Kafka streaming backbone,
- * smart message grouping, cohesive integrated composer, trek route sharing, presence, and typing indicators.
+ * TrekIndia — Full-Screen Messaging System Engine (v3.0)
+ * Real-time messaging powered by WebSockets, Kafka streaming backbone.
+ * Completely redesigned message layout, date grouping, delete message/chat,
+ * enhanced search, smart grouping, and real-time WS delete events.
  */
 
 (function () {
   'use strict';
+
+  // ─── AVATAR CATALOG (DiceBear + Unsplash fallbacks) ─────────────────────────
+  const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/adventurer/svg?seed=trekindia&backgroundColor=2d6a4f';
+
+  function getAvatarSrc(url) {
+    if (!url) return DEFAULT_AVATAR;
+    return url;
+  }
+
+  function handleAvatarError(imgEl) {
+    if (imgEl && !imgEl.dataset.fallbackApplied) {
+      imgEl.dataset.fallbackApplied = '1';
+      imgEl.src = DEFAULT_AVATAR;
+    }
+  }
 
   // ─── STATE STORE ────────────────────────────────────────────────────────────
   const state = {
@@ -20,6 +36,9 @@
     isMobileView: window.innerWidth <= 768
   };
 
+  // Confirm dialog state
+  let confirmPendingAction = null;
+
   // WebSocket references
   let wsClient = null;
   let wsReconnectTimer = null;
@@ -27,13 +46,13 @@
   let wsPingTimer = null;
   let typingTimeout = null;
   let lastTypingSentAt = 0;
+  let searchDebounceTimer = null;
 
   // ─── 1. INITIALIZATION ──────────────────────────────────────────────────────
   async function init() {
     initTheme();
     initWindowResize();
 
-    // Check Auth
     const user = await checkAuthentication();
     if (!user) {
       window.location.href = 'auth.html?redirect=/messages&message=auth_required';
@@ -43,16 +62,10 @@
     state.currentUser = user;
     updateUserAvatarUI(user);
 
-    // Bind UI Event Listeners
     bindEventListeners();
-
-    // Connect to WebSocket & Kafka bridge
     initWebSocket();
-
-    // Load available treks for route sharing
     loadAvailableTreks();
 
-    // Load conversations and handle URL params (?conv=123 or ?user=102)
     await loadConversations();
     handleUrlParameters();
   }
@@ -66,9 +79,7 @@
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.success && data.user) {
-          return data.user;
-        }
+        if (data.success && data.user) return data.user;
       }
     } catch (err) {
       console.warn('[Messaging] Auth verification error:', err);
@@ -79,8 +90,9 @@
   function updateUserAvatarUI(user) {
     const avatarEl = document.getElementById('msgNavUserAvatar');
     if (avatarEl && user) {
-      avatarEl.src = user.profile_image || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100';
+      avatarEl.src = getAvatarSrc(user.profile_image);
       avatarEl.title = `${user.full_name || user.username} (@${user.username})`;
+      avatarEl.onerror = () => handleAvatarError(avatarEl);
     }
   }
 
@@ -109,7 +121,6 @@
     const isDark = document.body.classList.contains('dark');
     const lightIcons = document.querySelectorAll('.brand-icon-img.light-icon');
     const darkIcons = document.querySelectorAll('.brand-icon-img.dark-icon');
-
     if (isDark) {
       lightIcons.forEach(el => el.style.display = 'none');
       darkIcons.forEach(el => el.style.display = 'block');
@@ -127,9 +138,7 @@
 
   // ─── 4. WEBSOCKET & KAFKA STREAMING BACKBONE ────────────────────────────────
   function initWebSocket() {
-    if (wsClient && (wsClient.readyState === WebSocket.OPEN || wsClient.readyState === WebSocket.CONNECTING)) {
-      return;
-    }
+    if (wsClient && (wsClient.readyState === WebSocket.OPEN || wsClient.readyState === WebSocket.CONNECTING)) return;
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/messages`;
@@ -157,7 +166,6 @@
         }
       }, 25000);
 
-      // Refresh list to catch up on missed messages
       loadConversations(false);
     };
 
@@ -225,6 +233,10 @@
         handleIncomingMessage(data.message);
         break;
 
+      case 'message.deleted':
+        handleMessageDeletedEvent(data);
+        break;
+
       case 'message.status_update':
         handleMessageStatusUpdate(data);
         break;
@@ -251,11 +263,8 @@
     const convId = parseInt(msg.conversation_id, 10);
     const isActiveConv = state.activeConversationId === convId;
 
-    // 1. If currently in this chat, append message bubble
     if (isActiveConv) {
       const messagesBody = document.getElementById('chatMessagesBody');
-
-      // Check if temporary optimistic element exists
       const existingEl = document.querySelector(`[data-client-msg-id="${msg.client_message_id}"]`) ||
                          document.querySelector(`[data-msg-id="${msg.message_id}"]`);
 
@@ -275,12 +284,11 @@
           rowEl.innerHTML = renderSingleMessageRow(msg, isSelf, false, true);
           if (rowEl.firstElementChild) {
             messagesBody.appendChild(rowEl.firstElementChild);
-            messagesBody.scrollTop = messagesBody.scrollHeight;
+            scrollToBottom(messagesBody);
           }
         }
       }
 
-      // Mark incoming message as read immediately since user is actively viewing it
       if (msg.sender_id !== state.currentUser?.user_id) {
         fetch(`/api/community/messages/conversations/${convId}/read`, {
           method: 'POST',
@@ -289,9 +297,8 @@
       }
     }
 
-    // 2. Update conversation snippet in conversations list
     let conv = state.conversations.find(c => c.conversation_id === convId);
-    let snippet = msg.content || (msg.message_type === 'trek_card' ? `Shared Trek: ${msg.trek_data?.name || 'Trek'}` : '📷 Photo');
+    const snippet = msg.content || (msg.message_type === 'trek_card' ? `Shared Trek: ${msg.trek_data?.name || 'Trek'}` : '📷 Photo');
 
     if (conv) {
       conv.last_message = snippet;
@@ -300,12 +307,29 @@
         conv.unread_count = (conv.unread_count || 0) + 1;
       }
     } else {
-      // New conversation created by someone else: fetch fresh list
       loadConversations(false);
     }
 
     renderConversationsList();
     updateUnreadBadgeCount();
+  }
+
+  // ─── HANDLE REAL-TIME MESSAGE DELETE ────────────────────────────────────────
+  function handleMessageDeletedEvent(data) {
+    const { conversation_id, message_id } = data;
+    if (state.activeConversationId !== parseInt(conversation_id, 10)) return;
+
+    const msgEl = document.querySelector(`[data-msg-id="${message_id}"]`);
+    if (msgEl) {
+      const bubbleEl = msgEl.querySelector('.msg-bubble');
+      if (bubbleEl) {
+        bubbleEl.textContent = 'This message was deleted.';
+        bubbleEl.classList.add('deleted-msg');
+      }
+      // Remove action buttons since message is deleted
+      const actionsEl = msgEl.querySelector('.msg-actions');
+      if (actionsEl) actionsEl.remove();
+    }
   }
 
   function handleMessageStatusUpdate(data) {
@@ -328,7 +352,7 @@
     const { conversation_id } = data;
     if (state.activeConversationId !== parseInt(conversation_id, 10)) return;
 
-    document.querySelectorAll('.msg-row.self .msg-status').forEach(icon => {
+    document.querySelectorAll('.msg-row.outgoing .msg-status').forEach(icon => {
       icon.className = 'msg-status read';
       icon.innerHTML = getStatusIconHtml('read');
     });
@@ -346,15 +370,12 @@
 
     updatePresenceIndicators();
 
-    // Update active chat header if this user is active
     if (state.activeConversationData && String(state.activeConversationData.participant?.user_id) === uid) {
       const onlineDot = document.getElementById('chatHeadOnlineDot');
       const statusText = document.getElementById('chatHeadStatus');
       const isOnline = status === 'online';
 
-      if (onlineDot) {
-        onlineDot.className = `msg-chat-head-status-dot ${isOnline ? 'online' : ''}`;
-      }
+      if (onlineDot) onlineDot.className = `msg-chat-head-status-dot ${isOnline ? 'online' : ''}`;
       if (statusText) {
         statusText.className = `msg-chat-head-sub ${isOnline ? 'online' : ''}`;
         statusText.textContent = isOnline ? '● Active now' : 'Offline';
@@ -369,7 +390,6 @@
 
     const typingIndicator = document.getElementById('chatTypingIndicator');
     const typingName = document.getElementById('typingName');
-
     if (!typingIndicator) return;
 
     if (is_typing) {
@@ -378,7 +398,6 @@
         typingName.textContent = activeConv?.participant?.full_name?.split(' ')[0] || 'Trekker';
       }
       typingIndicator.classList.add('visible');
-
       if (typingTimeout) clearTimeout(typingTimeout);
       typingTimeout = setTimeout(() => {
         typingIndicator.classList.remove('visible');
@@ -393,21 +412,16 @@
       const participantId = item.getAttribute('data-participant-id');
       const isOnline = participantId && state.onlineUsers.has(String(participantId));
       const dot = item.querySelector('.msg-online-dot');
-      if (dot) {
-        dot.classList.toggle('visible', Boolean(isOnline));
-      }
+      if (dot) dot.classList.toggle('visible', Boolean(isOnline));
     });
   }
 
   function getStatusIconHtml(status) {
     if (status === 'read') {
-      // Double checkmark (emerald)
       return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L7 17l-5-5"/><path d="M22 10l-7.5 7.5L13 16"/></svg>`;
     } else if (status === 'delivered') {
-      // Double checkmark (gray)
       return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L7 17l-5-5"/><path d="M22 10l-7.5 7.5L13 16"/></svg>`;
     } else {
-      // Single checkmark (sent)
       return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
     }
   }
@@ -442,12 +456,10 @@
 
     let list = state.conversations || [];
 
-    // Filter by tab
     if (state.activeFilterTab === 'unread') {
       list = list.filter(c => (c.unread_count || 0) > 0);
     }
 
-    // Filter by search query
     if (state.searchQuery) {
       const q = state.searchQuery.toLowerCase();
       list = list.filter(c =>
@@ -472,15 +484,17 @@
       const isOnline = conv.participant?.online_status === 'online' || state.onlineUsers.has(String(conv.participant?.user_id));
       const isActive = conv.conversation_id === state.activeConversationId;
       const isUnread = (conv.unread_count || 0) > 0;
+      const avatarSrc = getAvatarSrc(conv.participant?.avatar);
 
       return `
-        <div class="msg-conv-item ${isActive ? 'active' : ''} ${isUnread ? 'unread' : ''}" 
-             data-conv-id="${conv.conversation_id}" 
+        <div class="msg-conv-item ${isActive ? 'active' : ''} ${isUnread ? 'unread' : ''}"
+             data-conv-id="${conv.conversation_id}"
              data-participant-id="${conv.participant?.user_id || ''}">
           <div class="msg-conv-avatar-wrap">
-            <img src="${escapeHtml(conv.participant?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" 
-                 alt="${escapeHtml(conv.participant?.full_name || 'Trekker')}" 
-                 class="msg-conv-avatar" />
+            <img src="${escapeHtml(avatarSrc)}"
+                 alt="${escapeHtml(conv.participant?.full_name || 'Trekker')}"
+                 class="msg-conv-avatar"
+                 onerror="this.src='${DEFAULT_AVATAR}'" />
             <span class="msg-online-dot ${isOnline ? 'visible' : ''}"></span>
           </div>
           <div class="msg-conv-meta">
@@ -493,17 +507,70 @@
               ${conv.unread_count > 0 ? `<span class="msg-conv-unread-pill">${conv.unread_count}</span>` : ''}
             </div>
           </div>
+          <button class="msg-conv-menu-btn" data-conv-id="${conv.conversation_id}" aria-label="Conversation options" title="Options">⋮</button>
+          <div class="msg-conv-dropdown" id="convDropdown_${conv.conversation_id}">
+            <button class="msg-conv-dropdown-item" data-action="view-profile" data-participant-id="${conv.participant?.user_id || ''}">
+              👤 View Profile
+            </button>
+            <button class="msg-conv-dropdown-item danger" data-action="delete-chat" data-conv-id="${conv.conversation_id}">
+              🗑️ Delete Chat
+            </button>
+          </div>
         </div>
       `;
     }).join('');
 
     // Attach click handlers
     container.querySelectorAll('.msg-conv-item').forEach(el => {
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        // Don't trigger if clicked on menu button or dropdown
+        if (e.target.closest('.msg-conv-menu-btn') || e.target.closest('.msg-conv-dropdown')) return;
         const id = parseInt(el.getAttribute('data-conv-id'), 10);
         selectConversation(id);
       });
     });
+
+    // Context menu buttons
+    container.querySelectorAll('.msg-conv-menu-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const convId = btn.getAttribute('data-conv-id');
+        // Close all other dropdowns
+        container.querySelectorAll('.msg-conv-dropdown.open').forEach(d => {
+          if (d.id !== `convDropdown_${convId}`) d.classList.remove('open');
+        });
+        const dropdown = document.getElementById(`convDropdown_${convId}`);
+        if (dropdown) dropdown.classList.toggle('open');
+      });
+    });
+
+    // Dropdown action items
+    container.querySelectorAll('.msg-conv-dropdown-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = item.getAttribute('data-action');
+        // Close dropdown
+        item.closest('.msg-conv-dropdown')?.classList.remove('open');
+
+        if (action === 'view-profile') {
+          window.location.href = 'community.html#trekkers';
+        } else if (action === 'delete-chat') {
+          const convId = item.getAttribute('data-conv-id');
+          showConfirmDialog({
+            icon: '🗑️',
+            title: 'Delete this chat?',
+            message: 'This will remove the conversation from your chat list. The other person\'s messages won\'t be affected.',
+            actionLabel: 'Delete Chat',
+            onConfirm: () => deleteConversationForMe(parseInt(convId, 10))
+          });
+        }
+      });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+      container.querySelectorAll('.msg-conv-dropdown.open').forEach(d => d.classList.remove('open'));
+    }, { once: false, capture: false });
   }
 
   function updateUnreadBadgeCount() {
@@ -515,28 +582,49 @@
     }
   }
 
-  // ─── 6. ACTIVE CHAT AREA & SMART GROUPING ──────────────────────────────────
+  // ─── 6. DELETE CONVERSATION FOR ME ──────────────────────────────────────────
+  async function deleteConversationForMe(convId) {
+    try {
+      const res = await fetch(`/api/community/messages/conversations/${convId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        state.conversations = state.conversations.filter(c => c.conversation_id !== convId);
+        if (state.activeConversationId === convId) {
+          showEmptyChatView();
+        }
+        renderConversationsList();
+        updateUnreadBadgeCount();
+        showToast('Chat removed from your list.');
+      } else {
+        showToast('Failed to delete chat. Try again.');
+      }
+    } catch (err) {
+      console.error('[Messaging] Delete conversation error:', err);
+      showToast('Failed to delete chat. Check connection.');
+    }
+  }
+
+  // ─── 7. ACTIVE CHAT AREA & SMART DATE GROUPING ──────────────────────────────
   async function selectConversation(conversationId) {
     const convId = parseInt(conversationId, 10);
     state.activeConversationId = convId;
 
-    // Update URL query parameter cleanly without reloading page
     const url = new URL(window.location.href);
     url.searchParams.set('conv', convId);
     url.searchParams.delete('user');
     window.history.pushState({ convId }, '', url.toString());
 
-    // Highlight in sidebar
     document.querySelectorAll('.msg-conv-item').forEach(el => {
       const id = parseInt(el.getAttribute('data-conv-id'), 10);
       el.classList.toggle('active', id === convId);
     });
 
-    // Mobile slide transition
     const pane = document.getElementById('msgPane');
     if (pane) pane.classList.add('chat-active');
 
-    // Local unread clear
     const targetConv = state.conversations.find(c => c.conversation_id === convId);
     if (targetConv) {
       targetConv.unread_count = 0;
@@ -587,7 +675,6 @@
     if (messagesBody) messagesBody.style.display = 'flex';
     if (composer) composer.style.display = 'block';
 
-    // Set Dynamic Placeholder
     const firstName = conv.participant?.full_name?.split(' ')[0] || 'Trekker';
     if (chatInput) {
       chatInput.placeholder = `Message ${firstName}...`;
@@ -604,9 +691,11 @@
 
     const isOnline = conv.participant?.online_status === 'online' || state.onlineUsers.has(String(conv.participant?.user_id));
 
-    if (avatar) avatar.src = conv.participant?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
+    if (avatar) {
+      avatar.src = getAvatarSrc(conv.participant?.avatar);
+      avatar.onerror = () => handleAvatarError(avatar);
+    }
     if (name) name.textContent = conv.participant?.full_name || 'Trekker';
-
     if (onlineDot) onlineDot.className = `msg-chat-head-status-dot ${isOnline ? 'online' : ''}`;
     if (statusText) {
       statusText.className = `msg-chat-head-sub ${isOnline ? 'online' : ''}`;
@@ -629,52 +718,122 @@
       };
     }
 
-    // Populate Messages Body with Smart Grouping
+    // Render Messages with Smart Date Grouping
     if (messagesBody) {
       if (!conv.messages || conv.messages.length === 0) {
         messagesBody.innerHTML = `
-          <div style="padding: 60px 20px; text-align: center; color: var(--msg-text-muted); margin: auto;">
-            <div style="font-size: 2.4rem; margin-bottom: 10px;">🏔️</div>
-            <strong style="color: var(--msg-text-primary); font-size: 0.96rem; display: block;">Beginning of Trail Conversation</strong>
-            <p style="font-size: 0.82rem; margin-top: 5px; max-width: 320px; margin-inline: auto;">Say hello or share a TrekIndia Himalayan route to coordinate your upcoming hike!</p>
+          <div style="padding: 60px 20px; text-align: center; color: var(--msg-text-muted); margin: auto; display: flex; flex-direction: column; align-items: center;">
+            <div style="font-size: 3rem; margin-bottom: 12px;">🏔️</div>
+            <strong style="color: var(--msg-text-primary); font-size: 1rem; display: block; margin-bottom: 6px;">Beginning of Trail Conversation</strong>
+            <p style="font-size: 0.82rem; max-width: 300px; line-height: 1.5;">Say hello or share a TrekIndia route to coordinate your upcoming trek!</p>
           </div>
         `;
       } else {
-        let messagesHtml = '<div class="msg-date-separator"><span>Today</span></div>';
-        
-        let prevSenderId = null;
-        const messages = conv.messages;
-
-        for (let i = 0; i < messages.length; i++) {
-          const msg = messages[i];
-          const isSelf = msg.is_self || msg.sender_id === state.currentUser?.user_id;
-          const nextMsg = messages[i + 1];
-          
-          const isGroupedWithNext = nextMsg && (nextMsg.is_self === msg.is_self || nextMsg.sender_id === msg.sender_id);
-          const isSenderChanged = prevSenderId !== null && prevSenderId !== msg.sender_id;
-          
-          messagesHtml += renderSingleMessageRow(msg, isSelf, isGroupedWithNext, isSenderChanged);
-          prevSenderId = msg.sender_id;
-        }
-
-        messagesBody.innerHTML = messagesHtml;
-        messagesBody.scrollTop = messagesBody.scrollHeight;
+        messagesBody.innerHTML = buildMessagesHtml(conv.messages);
+        scrollToBottom(messagesBody);
       }
     }
   }
 
-  function renderSingleMessageRow(msg, isSelf, isGrouped = false, isSenderChanged = false) {
+  // ─── SMART DATE GROUPING & MESSAGE HTML BUILDER ──────────────────────────────
+  function buildMessagesHtml(messages) {
+    let html = '';
+    let lastDateStr = null;
+    let prevSenderId = null;
+
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i];
+      const isSelf = msg.is_self || msg.sender_id === state.currentUser?.user_id;
+
+      // Date divider
+      const dateStr = getMessageDateLabel(msg.raw_created_at || msg.created_at);
+      if (dateStr !== lastDateStr) {
+        html += `<div class="msg-date-separator"><span>${escapeHtml(dateStr)}</span></div>`;
+        lastDateStr = dateStr;
+        prevSenderId = null; // reset grouping on date change
+      }
+
+      // Determine grouping — consecutive messages from same sender
+      const nextMsg = messages[i + 1];
+      const sameAsPrev = prevSenderId !== null && prevSenderId === msg.sender_id;
+      const sameAsNext = nextMsg && nextMsg.sender_id === msg.sender_id;
+
+      // isGrouped = this message is part of a consecutive group AND NOT the first in the group
+      const isGrouped = sameAsPrev;
+      // Show avatar only on the last message of a consecutive group (sameAsPrev = true, sameAsNext = false)
+      const showAvatar = !isSelf && !sameAsNext;
+
+      html += renderSingleMessageRow(msg, isSelf, isGrouped, showAvatar);
+      prevSenderId = msg.sender_id;
+    }
+
+    return html;
+  }
+
+  function getMessageDateLabel(dateVal) {
+    if (!dateVal) return 'Today';
+
+    let d;
+    // If it looks like a time string only (e.g. "04:50 PM"), treat as today
+    if (/^\d{1,2}:\d{2}/.test(String(dateVal)) && !String(dateVal).includes('-')) {
+      return 'Today';
+    }
+
+    try {
+      d = new Date(dateVal);
+      if (isNaN(d.getTime())) return 'Today';
+    } catch (_) {
+      return 'Today';
+    }
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diffDays = Math.floor((today - msgDay) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return d.toLocaleDateString([], { weekday: 'long' });
+    return d.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  // ─── RENDER SINGLE MESSAGE ROW ───────────────────────────────────────────────
+  function renderSingleMessageRow(msg, isSelf, isGrouped = false, showAvatar = true) {
     const status = msg.status || 'sent';
+    const rowClass = `msg-row ${isSelf ? 'outgoing' : 'incoming'} ${isGrouped ? 'is-grouped' : 'sender-changed'}`;
+    const msgId = escapeHtml(msg.message_id || '');
+    const clientMsgId = escapeHtml(msg.client_message_id || '');
+
+    // Avatar HTML for incoming messages
+    const avatarSrc = getAvatarSrc(msg.avatar);
+    const avatarHtml = !isSelf
+      ? `<img src="${escapeHtml(avatarSrc)}" class="msg-row-avatar ${showAvatar ? '' : 'hidden'}" alt="" onerror="this.src='${DEFAULT_AVATAR}'" />`
+      : '';
+
+    // Delete action (only for own messages) + timestamp
+    const deleteActionHtml = isSelf
+      ? `<div class="msg-actions">
+           <button class="msg-action-btn delete-btn" data-msg-id="${msgId}" data-conv-id="${msg.conversation_id || ''}" aria-label="Delete message" title="Delete message">
+             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+           </button>
+         </div>`
+      : '';
+
+    const timeHtml = `<span class="msg-time">${escapeHtml(msg.created_at || '')}</span>`;
+    const statusHtml = isSelf
+      ? `<span class="msg-status ${status}">${getStatusIconHtml(status)}</span>`
+      : '';
+
+    const footerHtml = `<div class="msg-footer">${timeHtml}${statusHtml}</div>`;
 
     // 1. Trek Card Message
     if (msg.message_type === 'trek_card' && msg.trek_data) {
       const trek = msg.trek_data;
       return `
-        <div class="msg-row ${isSelf ? 'self' : 'other'} ${isSenderChanged ? 'sender-changed' : ''}" 
-             data-msg-id="${msg.message_id || ''}" 
-             data-client-msg-id="${msg.client_message_id || ''}">
-          ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="msg-row-avatar ${isGrouped ? 'spacer' : ''}" alt="" />` : ''}
+        <div class="${rowClass}" data-msg-id="${msgId}" data-client-msg-id="${clientMsgId}">
+          ${avatarHtml}
           <div class="msg-content-wrap">
+            ${deleteActionHtml}
             <div class="msg-trek-card">
               <div class="msg-trek-card-img">
                 <img src="${escapeHtml(trek.image || 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=600')}" alt="${escapeHtml(trek.name)}" />
@@ -692,10 +851,7 @@
                 </button>
               </div>
             </div>
-            <div class="msg-footer">
-              <span class="msg-time">${escapeHtml(msg.created_at || 'Just now')}</span>
-              ${isSelf ? `<span class="msg-status ${status}">${getStatusIconHtml(status)}</span>` : ''}
-            </div>
+            ${footerHtml}
           </div>
         </div>
       `;
@@ -704,18 +860,14 @@
     // 2. Photo Message
     if (msg.message_type === 'image' && msg.attachment_url) {
       return `
-        <div class="msg-row ${isSelf ? 'self' : 'other'} ${isSenderChanged ? 'sender-changed' : ''}" 
-             data-msg-id="${msg.message_id || ''}" 
-             data-client-msg-id="${msg.client_message_id || ''}">
-          ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="msg-row-avatar ${isGrouped ? 'spacer' : ''}" alt="" />` : ''}
+        <div class="${rowClass}" data-msg-id="${msgId}" data-client-msg-id="${clientMsgId}">
+          ${avatarHtml}
           <div class="msg-content-wrap">
+            ${deleteActionHtml}
             <div class="msg-photo-bubble">
               <img src="${escapeHtml(msg.attachment_url)}" alt="Trail attachment" onclick="window.open(this.src, '_blank')" />
             </div>
-            <div class="msg-footer">
-              <span class="msg-time">${escapeHtml(msg.created_at || 'Just now')}</span>
-              ${isSelf ? `<span class="msg-status ${status}">${getStatusIconHtml(status)}</span>` : ''}
-            </div>
+            ${footerHtml}
           </div>
         </div>
       `;
@@ -723,24 +875,18 @@
 
     // 3. Regular Text Message
     return `
-      <div class="msg-row ${isSelf ? 'self' : 'other'} ${isGrouped ? 'is-grouped' : ''} ${isSenderChanged ? 'sender-changed' : ''}" 
-           data-msg-id="${msg.message_id || ''}" 
-           data-client-msg-id="${msg.client_message_id || ''}">
-        ${!isSelf ? `<img src="${escapeHtml(msg.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" class="msg-row-avatar ${isGrouped ? 'spacer' : ''}" alt="" />` : ''}
+      <div class="${rowClass}" data-msg-id="${msgId}" data-client-msg-id="${clientMsgId}">
+        ${avatarHtml}
         <div class="msg-content-wrap">
-          <div class="msg-bubble">
-            ${escapeHtml(msg.content || '')}
-          </div>
-          <div class="msg-footer">
-            <span class="msg-time">${escapeHtml(msg.created_at || 'Just now')}</span>
-            ${isSelf ? `<span class="msg-status ${status}">${getStatusIconHtml(status)}</span>` : ''}
-          </div>
+          ${deleteActionHtml}
+          <div class="msg-bubble">${escapeHtml(msg.content || '')}</div>
+          ${footerHtml}
         </div>
       </div>
     `;
   }
 
-  // ─── 7. SENDING MESSAGES & AUTO-GROWING COMPOSER ───────────────────────────
+  // ─── 8. SENDING MESSAGES ────────────────────────────────────────────────────
   async function sendChatMessage(customPayload = null) {
     if (!state.activeConversationId) return;
 
@@ -767,7 +913,7 @@
     const sendBtn = document.getElementById('chatSendBtn');
     if (sendBtn) sendBtn.disabled = true;
 
-    // Optimistic UI Append
+    // Optimistic UI
     const messagesBody = document.getElementById('chatMessagesBody');
     if (messagesBody) {
       const optimisticMsg = {
@@ -784,11 +930,22 @@
         is_self: true
       };
 
+      // Check if we need a date separator for today
+      const lastDateSep = messagesBody.querySelector('.msg-date-separator:last-of-type');
+      if (!lastDateSep) {
+        const sep = document.createElement('div');
+        sep.innerHTML = `<div class="msg-date-separator"><span>Today</span></div>`;
+        if (sep.firstElementChild) messagesBody.appendChild(sep.firstElementChild);
+      }
+
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = renderSingleMessageRow(optimisticMsg, true, false, true);
+      tempDiv.innerHTML = renderSingleMessageRow(optimisticMsg, true, false, false);
       if (tempDiv.firstElementChild) {
-        messagesBody.appendChild(tempDiv.firstElementChild);
-        messagesBody.scrollTop = messagesBody.scrollHeight;
+        const newMsgEl = tempDiv.firstElementChild;
+        messagesBody.appendChild(newMsgEl);
+        scrollToBottom(messagesBody);
+        // Bind delete for the optimistic message
+        bindMessageDeleteButtons(newMsgEl);
       }
     }
 
@@ -812,6 +969,9 @@
             statusIcon.className = 'msg-status sent';
             statusIcon.innerHTML = getStatusIconHtml('sent');
           }
+          // Update delete button with real message id
+          const deleteBtn = msgEl.querySelector('.msg-action-btn.delete-btn');
+          if (deleteBtn) deleteBtn.setAttribute('data-msg-id', data.message.message_id);
         }
       }
     } catch (err) {
@@ -820,6 +980,11 @@
     } finally {
       updateSendButtonState();
     }
+  }
+
+  function scrollToBottom(el) {
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }
 
   function updateSendButtonState() {
@@ -832,7 +997,6 @@
 
   function emitTypingIndicator() {
     if (!wsClient || wsClient.readyState !== WebSocket.OPEN || !state.activeConversationId) return;
-
     const now = Date.now();
     if (now - lastTypingSentAt > 2000) {
       lastTypingSentAt = now;
@@ -844,7 +1008,93 @@
     }
   }
 
-  // ─── 8. NEW DIRECT CONVERSATION MODAL ──────────────────────────────────────
+  // ─── 9. DELETE MESSAGE ───────────────────────────────────────────────────────
+  function bindMessageDeleteButtons(container) {
+    const deleteBtns = (container || document).querySelectorAll('.msg-action-btn.delete-btn');
+    deleteBtns.forEach(btn => {
+      if (btn.dataset.boundDelete) return;
+      btn.dataset.boundDelete = '1';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const msgId = btn.getAttribute('data-msg-id');
+        const convId = state.activeConversationId;
+
+        if (!msgId || msgId.startsWith('temp_')) {
+          showToast('Cannot delete this message yet. Please wait.');
+          return;
+        }
+
+        showConfirmDialog({
+          icon: '🗑️',
+          title: 'Delete message?',
+          message: 'This action cannot be undone. The message will be removed for all participants.',
+          actionLabel: 'Delete',
+          onConfirm: async () => {
+            try {
+              const res = await fetch(`/api/community/messages/conversations/${convId}/messages/${msgId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+              });
+              const data = await res.json();
+              if (data.success) {
+                // Update UI immediately (WS event will propagate to others)
+                const msgEl = document.querySelector(`[data-msg-id="${msgId}"]`);
+                if (msgEl) {
+                  const bubbleEl = msgEl.querySelector('.msg-bubble');
+                  if (bubbleEl) {
+                    bubbleEl.textContent = 'You deleted this message.';
+                    bubbleEl.classList.add('deleted-msg');
+                  }
+                  const actionsEl = msgEl.querySelector('.msg-actions');
+                  if (actionsEl) actionsEl.remove();
+                }
+              } else {
+                showToast(data.message || 'Failed to delete message.');
+              }
+            } catch (err) {
+              console.error('[Messaging] Delete message error:', err);
+              showToast('Failed to delete. Check connection.');
+            }
+          }
+        });
+      });
+    });
+  }
+
+  // ─── 10. CONFIRM DIALOG SYSTEM ──────────────────────────────────────────────
+  function showConfirmDialog({ icon, title, message, actionLabel, onConfirm }) {
+    const overlay = document.getElementById('msgConfirmDialog');
+    const iconEl = document.getElementById('confirmDialogIcon');
+    const titleEl = document.getElementById('confirmDialogTitle');
+    const msgEl = document.getElementById('confirmDialogMessage');
+    const actionBtn = document.getElementById('confirmActionBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+
+    if (!overlay) {
+      // Fallback if modal not in HTML
+      if (confirm(`${title}\n\n${message}`)) onConfirm();
+      return;
+    }
+
+    if (iconEl) iconEl.textContent = icon || '🗑️';
+    if (titleEl) titleEl.textContent = title || 'Are you sure?';
+    if (msgEl) msgEl.textContent = message || '';
+    if (actionBtn) actionBtn.textContent = actionLabel || 'Confirm';
+
+    confirmPendingAction = onConfirm;
+    overlay.classList.add('open');
+
+    // Focus the cancel button for accessibility
+    setTimeout(() => cancelBtn?.focus(), 50);
+  }
+
+  function closeConfirmDialog() {
+    const overlay = document.getElementById('msgConfirmDialog');
+    if (overlay) overlay.classList.remove('open');
+    confirmPendingAction = null;
+  }
+
+  // ─── 11. NEW DIRECT CONVERSATION MODAL ──────────────────────────────────────
   async function openNewChatModal() {
     const modal = document.getElementById('newChatModal');
     const list = document.getElementById('newChatTrekkersList');
@@ -857,29 +1107,57 @@
       searchInput.focus();
     }
 
-    list.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--msg-text-muted);">Finding trekkers...</div>';
+    list.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--msg-text-muted);">Finding trekkers...</div>`;
 
+    // Load initial list from trekkers endpoint
+    let allTrekkers = [];
     try {
-      const res = await fetch('/api/community/trekkers');
+      const res = await fetch('/api/community/users/search?q=&limit=50', { credentials: 'include' });
       const data = await res.json();
       if (data.success && data.trekkers) {
-        const filteredSelf = data.trekkers.filter(t => t.user_id !== state.currentUser?.user_id);
-        renderNewChatTrekkers(filteredSelf);
-
-        if (searchInput) {
-          searchInput.oninput = () => {
-            const q = searchInput.value.trim().toLowerCase();
-            const filtered = filteredSelf.filter(t =>
-              (t.full_name || '').toLowerCase().includes(q) ||
-              (t.username || '').toLowerCase().includes(q) ||
-              (t.location || '').toLowerCase().includes(q)
-            );
-            renderNewChatTrekkers(filtered);
-          };
+        allTrekkers = data.trekkers.filter(t => t.user_id !== state.currentUser?.user_id);
+      } else {
+        // Fallback to trekkers endpoint
+        const res2 = await fetch('/api/community/trekkers');
+        const data2 = await res2.json();
+        if (data2.success && data2.trekkers) {
+          allTrekkers = data2.trekkers.filter(t => t.user_id !== state.currentUser?.user_id);
         }
       }
     } catch (err) {
-      list.innerHTML = '<div style="padding: 24px; text-align: center; color: #ef4444;">Failed to load trekkers.</div>';
+      list.innerHTML = `<div style="padding: 24px; text-align: center; color: #ef4444;">Failed to load trekkers.</div>`;
+      return;
+    }
+
+    renderNewChatTrekkers(allTrekkers);
+
+    if (searchInput) {
+      searchInput.oninput = () => {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(async () => {
+          const q = searchInput.value.trim();
+          if (!q) {
+            renderNewChatTrekkers(allTrekkers);
+            return;
+          }
+          try {
+            const res = await fetch(`/api/community/users/search?q=${encodeURIComponent(q)}&limit=30`, { credentials: 'include' });
+            const data = await res.json();
+            if (data.success) {
+              const filtered = (data.trekkers || []).filter(t => t.user_id !== state.currentUser?.user_id);
+              renderNewChatTrekkers(filtered);
+            }
+          } catch (_) {
+            // Fallback: filter locally
+            const qLower = q.toLowerCase();
+            const filtered = allTrekkers.filter(t =>
+              (t.full_name || '').toLowerCase().includes(qLower) ||
+              (t.username || '').toLowerCase().includes(qLower)
+            );
+            renderNewChatTrekkers(filtered);
+          }
+        }, 300);
+      };
     }
   }
 
@@ -888,21 +1166,29 @@
     if (!list) return;
 
     if (!trekkers || trekkers.length === 0) {
-      list.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--msg-text-muted);">No trekkers match your search.</div>';
+      list.innerHTML = `<div style="padding: 28px 20px; text-align: center; color: var(--msg-text-muted);">
+        <div style="font-size: 1.8rem; margin-bottom: 8px;">🔍</div>
+        <strong style="color: var(--msg-text-primary); display: block; margin-bottom: 4px;">No trekkers found</strong>
+        <p style="font-size: 0.8rem;">Try a different name or username.</p>
+      </div>`;
       return;
     }
 
-    list.innerHTML = trekkers.map(t => `
-      <div class="msg-modal-trekker-row" data-user-id="${t.user_id}">
-        <img src="${escapeHtml(t.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" 
-             class="msg-modal-trekker-avatar" alt="${escapeHtml(t.full_name)}" />
-        <div class="msg-modal-trekker-info">
-          <strong>${escapeHtml(t.full_name)}</strong>
-          <span>@${escapeHtml(t.username)} • 📍 ${escapeHtml(t.location || 'India')}</span>
+    list.innerHTML = trekkers.map(t => {
+      const avatarSrc = getAvatarSrc(t.avatar || t.profile_image);
+      return `
+        <div class="msg-modal-trekker-row" data-user-id="${t.user_id}">
+          <img src="${escapeHtml(avatarSrc)}"
+               class="msg-modal-trekker-avatar" alt="${escapeHtml(t.full_name)}"
+               onerror="this.src='${DEFAULT_AVATAR}'" />
+          <div class="msg-modal-trekker-info">
+            <strong>${escapeHtml(t.full_name)}</strong>
+            <span>@${escapeHtml(t.username)}${t.location ? ' · 📍 ' + escapeHtml(t.location) : ''}</span>
+          </div>
+          <button type="button" class="msg-modal-msg-btn">Chat</button>
         </div>
-        <button type="button" class="msg-modal-msg-btn">Chat</button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     list.querySelectorAll('.msg-modal-trekker-row').forEach(row => {
       row.addEventListener('click', async () => {
@@ -932,7 +1218,7 @@
     }
   }
 
-  // ─── 9. SHARE HIMALAYAN TREK ROUTE MODAL ───────────────────────────────────
+  // ─── 12. SHARE TREK ROUTE MODAL ─────────────────────────────────────────────
   async function loadAvailableTreks() {
     try {
       const res = await fetch('/api/treks');
@@ -955,13 +1241,8 @@
     const modal = document.getElementById('shareTrekModal');
     const searchInput = document.getElementById('shareTrekSearchInput');
     if (!modal) return;
-
     modal.classList.add('open');
-    if (searchInput) {
-      searchInput.value = '';
-      searchInput.focus();
-    }
-
+    if (searchInput) { searchInput.value = ''; searchInput.focus(); }
     renderShareTrekList(state.availableTreks);
 
     if (searchInput) {
@@ -980,9 +1261,8 @@
   function renderShareTrekList(treks) {
     const list = document.getElementById('shareTrekList');
     if (!list) return;
-
     if (!treks || treks.length === 0) {
-      list.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--msg-text-muted);">No treks found.</div>';
+      list.innerHTML = `<div style="padding: 24px; text-align: center; color: var(--msg-text-muted);">No treks found.</div>`;
       return;
     }
 
@@ -1025,7 +1305,6 @@
       showToast('Image size exceeds 5MB limit.');
       return;
     }
-
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64Url = e.target.result;
@@ -1038,7 +1317,7 @@
     reader.readAsDataURL(file);
   }
 
-  // ─── 10. URL PARAMETERS ROUTING ────────────────────────────────────────────
+  // ─── 13. URL PARAMETERS ROUTING ─────────────────────────────────────────────
   async function handleUrlParameters() {
     const params = new URLSearchParams(window.location.search);
     const convId = params.get('conv');
@@ -1051,7 +1330,7 @@
     }
   }
 
-  // ─── 11. GLOBAL EVENT LISTENERS ────────────────────────────────────────────
+  // ─── 14. GLOBAL EVENT LISTENERS ─────────────────────────────────────────────
   function bindEventListeners() {
     // New Chat buttons
     document.getElementById('btnNewChat')?.addEventListener('click', openNewChatModal);
@@ -1063,19 +1342,37 @@
       document.getElementById('shareTrekModal')?.classList.remove('open');
     });
 
+    // Close modals on overlay click
+    document.querySelectorAll('.msg-modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+    });
+
+    // Confirm dialog buttons
+    document.getElementById('confirmActionBtn')?.addEventListener('click', () => {
+      if (typeof confirmPendingAction === 'function') {
+        confirmPendingAction();
+      }
+      closeConfirmDialog();
+    });
+    document.getElementById('confirmCancelBtn')?.addEventListener('click', closeConfirmDialog);
+    document.getElementById('msgConfirmDialog')?.addEventListener('click', (e) => {
+      if (e.target === document.getElementById('msgConfirmDialog')) closeConfirmDialog();
+    });
+
     // Mobile back button
     document.getElementById('chatBackBtn')?.addEventListener('click', () => {
       const pane = document.getElementById('msgPane');
       if (pane) pane.classList.remove('chat-active');
       state.activeConversationId = null;
-
       const url = new URL(window.location.href);
       url.searchParams.delete('conv');
       url.searchParams.delete('user');
       window.history.pushState({}, '', url.pathname);
     });
 
-    // Search Box
+    // Sidebar Search
     document.getElementById('convSearchInput')?.addEventListener('input', (e) => {
       state.searchQuery = e.target.value.trim();
       renderConversationsList();
@@ -1084,8 +1381,7 @@
     // Filter Tabs
     document.getElementById('tabAllChats')?.addEventListener('click', (e) => {
       document.querySelectorAll('.msg-filter-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
+        b.classList.remove('active'); b.setAttribute('aria-selected', 'false');
       });
       e.currentTarget.classList.add('active');
       e.currentTarget.setAttribute('aria-selected', 'true');
@@ -1095,8 +1391,7 @@
 
     document.getElementById('tabUnreadChats')?.addEventListener('click', (e) => {
       document.querySelectorAll('.msg-filter-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-selected', 'false');
+        b.classList.remove('active'); b.setAttribute('aria-selected', 'false');
       });
       e.currentTarget.classList.add('active');
       e.currentTarget.setAttribute('aria-selected', 'true');
@@ -1104,7 +1399,7 @@
       renderConversationsList();
     });
 
-    // Chat Composer Textarea Auto-grow & Send Button state
+    // Chat Composer
     const chatInput = document.getElementById('chatTextInput');
     if (chatInput) {
       chatInput.addEventListener('input', () => {
@@ -1123,6 +1418,57 @@
     }
 
     document.getElementById('chatSendBtn')?.addEventListener('click', () => sendChatMessage());
+
+    // Message delete delegation — handles dynamically added messages
+    const chatMessagesBody = document.getElementById('chatMessagesBody');
+    if (chatMessagesBody) {
+      chatMessagesBody.addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.msg-action-btn.delete-btn');
+        if (deleteBtn) {
+          e.stopPropagation();
+          const msgId = deleteBtn.getAttribute('data-msg-id');
+          const convId = state.activeConversationId;
+
+          if (!msgId || msgId.startsWith('temp_')) {
+            showToast('Cannot delete this message yet.');
+            return;
+          }
+
+          showConfirmDialog({
+            icon: '🗑️',
+            title: 'Delete message?',
+            message: 'This action cannot be undone. The message will be removed for all participants.',
+            actionLabel: 'Delete',
+            onConfirm: async () => {
+              try {
+                const res = await fetch(`/api/community/messages/conversations/${convId}/messages/${msgId}`, {
+                  method: 'DELETE',
+                  credentials: 'include'
+                });
+                const data = await res.json();
+                if (data.success) {
+                  const msgEl = document.querySelector(`[data-msg-id="${msgId}"]`);
+                  if (msgEl) {
+                    const bubbleEl = msgEl.querySelector('.msg-bubble');
+                    if (bubbleEl) {
+                      bubbleEl.textContent = 'You deleted this message.';
+                      bubbleEl.classList.add('deleted-msg');
+                    }
+                    const actionsEl = msgEl.querySelector('.msg-actions');
+                    if (actionsEl) actionsEl.remove();
+                  }
+                } else {
+                  showToast(data.message || 'Failed to delete message.');
+                }
+              } catch (err) {
+                console.error('[Messaging] Delete message error:', err);
+                showToast('Failed to delete. Check connection.');
+              }
+            }
+          });
+        }
+      });
+    }
 
     // Emoji Popover
     const emojiBtn = document.getElementById('chatEmojiTrigger');
@@ -1172,7 +1518,6 @@
       });
     }
 
-    // Attach Action Buttons
     document.getElementById('attachShareTrekBtn')?.addEventListener('click', () => {
       attachMenu?.classList.remove('open');
       openShareTrekModal();
@@ -1192,6 +1537,15 @@
         }
       });
     }
+
+    // Escape key closes all overlays
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.msg-modal-overlay.open').forEach(o => o.classList.remove('open'));
+        closeConfirmDialog();
+        document.querySelectorAll('.msg-conv-dropdown.open').forEach(d => d.classList.remove('open'));
+      }
+    });
   }
 
   // ─── UTILITIES ──────────────────────────────────────────────────────────────
@@ -1210,9 +1564,7 @@
     if (!toast) return;
     toast.textContent = msg;
     toast.classList.add('show');
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 3000);
+    setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
   // Run on DOM ready
