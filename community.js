@@ -101,6 +101,14 @@
         switchCommunityTab(newHash, targetBtn);
       }
     });
+
+    // Listen for global profile / avatar updates
+    window.addEventListener('trekindia:user-updated', (e) => {
+      if (e.detail) {
+        state.currentUser = { ...(state.currentUser || {}), ...e.detail };
+        updateUserSidebarUI(state.currentUser);
+      }
+    });
   }
 
   async function checkAuthentication() {

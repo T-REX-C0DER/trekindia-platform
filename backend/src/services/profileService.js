@@ -581,3 +581,68 @@ export async function deleteUserAccount(userId, password) {
   await query(`DELETE FROM users WHERE user_id = $1`, [userId]);
   return true;
 }
+
+/**
+ * Get User's Smart Packing Checklist
+ */
+export async function getUserChecklist(userId) {
+  try {
+    const res = await query(
+      `SELECT items, updated_at FROM user_checklists WHERE user_id = $1`,
+      [userId]
+    );
+    if (res.rows.length === 0) {
+      return { items: [], updated_at: null };
+    }
+    return {
+      items: Array.isArray(res.rows[0].items) ? res.rows[0].items : [],
+      updated_at: res.rows[0].updated_at
+    };
+  } catch (err) {
+    // If table not created yet or fallback
+    console.warn('Checklist query error:', err.message);
+    return { items: [], updated_at: null };
+  }
+}
+
+/**
+ * Save User's Smart Packing Checklist
+ */
+export async function saveUserChecklist(userId, items) {
+  const sanitizedItems = Array.isArray(items) ? items : [];
+  try {
+    await query(
+      `INSERT INTO user_checklists (user_id, items, updated_at)
+       VALUES ($1, $2, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_id) DO UPDATE SET
+         items = EXCLUDED.items,
+         updated_at = CURRENT_TIMESTAMP`,
+      [userId, JSON.stringify(sanitizedItems)]
+    );
+  } catch (err) {
+    // Attempt auto table creation if needed
+    if (err.message.includes('relation "user_checklists" does not exist')) {
+      await query(`
+        CREATE TABLE IF NOT EXISTS user_checklists (
+          user_id BIGINT PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
+          items JSONB NOT NULL DEFAULT '[]'::jsonb,
+          created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await query(
+        `INSERT INTO user_checklists (user_id, items, updated_at)
+         VALUES ($1, $2, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id) DO UPDATE SET
+           items = EXCLUDED.items,
+           updated_at = CURRENT_TIMESTAMP`,
+        [userId, JSON.stringify(sanitizedItems)]
+      );
+    } else {
+      throw err;
+    }
+  }
+
+  return getUserChecklist(userId);
+}
+

@@ -660,85 +660,412 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ─── D. PACKING CHECKLIST ─────────────────────────────────
+  // ─── D. SMART PACKING CHECKLIST ENGINE ─────────────────────────────────
 
-  const CHECKLIST_KEY = 'trekindia-checklist-v1';
+  const CHECKLIST_STORAGE_KEY = 'trekindia_smart_checklist_v2';
   const checklistContainer = document.getElementById('checklistContainer');
   const checklistProgressFill = document.getElementById('checklistProgressFill');
   const checklistProgressLabel = document.getElementById('checklistProgressLabel');
+  const checklistPresetPills = document.getElementById('checklistPresetPills');
+  const btnAddChecklistItem = document.getElementById('btnAddChecklistItem');
+  const customItemModal = document.getElementById('customItemModal');
+  const btnCloseCustomItemModal = document.getElementById('btnCloseCustomItemModal');
+  const btnCancelCustomItem = document.getElementById('btnCancelCustomItem');
+  const formCustomItem = document.getElementById('formCustomItem');
+  const customItemId = document.getElementById('customItemId');
+  const customItemName = document.getElementById('customItemName');
+  const customItemCategory = document.getElementById('customItemCategory');
+  const customItemQty = document.getElementById('customItemQty');
+  const customItemModalTitle = document.getElementById('customItemModalTitle');
+  const saveChecklistBtn = document.getElementById('saveChecklistBtn');
+  const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+  // Base checklist catalog
+  const BASE_CHECKLIST = [
+    { id: 'item1', name: 'Waterproof Shell Jacket', category: 'CLOTHING', checked: false, isCustom: false },
+    { id: 'item2', name: 'Headlamp with Spare Batteries', category: 'GEAR', checked: true, isCustom: false },
+    { id: 'item3', name: 'Thermal Inner Layers (Top & Bottom)', category: 'CLOTHING', checked: false, isCustom: false },
+    { id: 'item4', name: '2L Hydration Bladder / Bottles', category: 'UTILITY', checked: false, isCustom: false },
+    { id: 'item5', name: 'Trekking Poles (Collapsible)', category: 'GEAR', checked: false, isCustom: false },
+    { id: 'item6', name: 'First Aid Kit & Blister Care', category: 'UTILITY', checked: false, isCustom: false },
+    { id: 'item7', name: 'Trail Snacks & Energy Bars', category: 'FOOD', checked: false, isCustom: false },
+    { id: 'item8', name: 'Trekking Socks (3 pairs minimum)', category: 'CLOTHING', checked: false, isCustom: false },
+    { id: 'item9', name: 'Sunscreen SPF 50+ & Lip Balm', category: 'ACCESSORIES', checked: false, isCustom: false },
+    { id: 'item10', name: 'Offline GPX Map & Emergency Whistle', category: 'UTILITY', checked: false, isCustom: false }
+  ];
+
+  // Smart preset additions
+  const PRESET_EXTRAS = {
+    himalayan: [
+      { id: 'extra_him_1', name: 'Down Jacket (-10°C Rated)', category: 'CLOTHING', checked: false, isCustom: false },
+      { id: 'extra_him_2', name: 'Pulse Oximeter & Diamox (Altitude Meds)', category: 'UTILITY', checked: false, isCustom: false },
+      { id: 'extra_him_3', name: 'Category 3/4 UV Glacier Sunglasses', category: 'ACCESSORIES', checked: false, isCustom: false },
+      { id: 'extra_him_4', name: 'Fleece Mid-layer Jacket', category: 'CLOTHING', checked: false, isCustom: false }
+    ],
+    monsoon: [
+      { id: 'extra_mon_1', name: 'Waterproof Backpack Rain Cover (Heavy Duty)', category: 'GEAR', checked: false, isCustom: false },
+      { id: 'extra_mon_2', name: 'Quick-dry Trekking Pants (Synthetic)', category: 'CLOTHING', checked: false, isCustom: false },
+      { id: 'extra_mon_3', name: 'Waterproof Dry Bags for Electronics', category: 'UTILITY', checked: false, isCustom: false },
+      { id: 'extra_mon_4', name: 'Anti-Leech Socks / Salt Kit', category: 'ACCESSORIES', checked: false, isCustom: false }
+    ],
+    winter: [
+      { id: 'extra_win_1', name: 'Insulated Snow Boots with Grip', category: 'GEAR', checked: false, isCustom: false },
+      { id: 'extra_win_2', name: 'Waterproof Ski Gloves + Liner Gloves', category: 'CLOTHING', checked: false, isCustom: false },
+      { id: 'extra_win_3', name: 'Microspikes / Crampons for Ice', category: 'GEAR', checked: false, isCustom: false },
+      { id: 'extra_win_4', name: 'Vacuum Insulated Hot Flask (Thermos)', category: 'UTILITY', checked: false, isCustom: false }
+    ],
+    day_hike: [
+      { id: 'extra_day_1', name: '20L Compact Daypack', category: 'GEAR', checked: false, isCustom: false },
+      { id: 'extra_day_2', name: 'Electrolyte Energy Hydration Powders', category: 'FOOD', checked: false, isCustom: false },
+      { id: 'extra_day_3', name: 'UV Protection Sun Hat & Buff', category: 'ACCESSORIES', checked: false, isCustom: false }
+    ]
+  };
+
+  let currentPreset = 'all';
+  let checklistItems = [...BASE_CHECKLIST];
+
+  function getCombinedChecklist() {
+    let items = [...checklistItems];
+    if (currentPreset !== 'all' && PRESET_EXTRAS[currentPreset]) {
+      const extras = PRESET_EXTRAS[currentPreset];
+      extras.forEach(extra => {
+        if (!items.some(i => i.id === extra.id)) {
+          items.push({ ...extra });
+        }
+      });
+    }
+    return items;
+  }
+
+  function renderChecklistUI() {
+    if (!checklistContainer) return;
+    const items = getCombinedChecklist();
+
+    checklistContainer.innerHTML = items.map(item => {
+      const isChecked = Boolean(item.checked);
+      const customBadge = item.isCustom ? `<span class="checklist-custom-tag">Custom</span>` : '';
+      const actionButtons = item.isCustom ? `
+        <div class="checklist-item-actions">
+          <button type="button" class="checklist-item-action-btn edit" data-id="${item.id}" title="Edit Item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button type="button" class="checklist-item-action-btn delete" data-id="${item.id}" title="Delete Item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      ` : '';
+
+      return `
+        <label class="checklist-item" role="listitem" data-id="${item.id}">
+          <input type="checkbox" class="checklist-checkbox" id="${item.id}" ${isChecked ? 'checked' : ''} />
+          <span class="checklist-item-name">${escapeHtml(item.name)}${item.qty ? ` <small style="color:var(--text-secondary); font-weight:normal;">(${escapeHtml(item.qty)})</small>` : ''}</span>
+          ${customBadge}
+          <span class="checklist-category-tag">${escapeHtml(item.category || 'GEAR')}</span>
+          ${actionButtons}
+        </label>
+      `;
+    }).join('');
+
+    // Attach custom item actions
+    checklistContainer.querySelectorAll('.checklist-item-action-btn.edit').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        openEditCustomItemModal(id);
+      });
+    });
+
+    checklistContainer.querySelectorAll('.checklist-item-action-btn.delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        deleteCustomItem(id);
+      });
+    });
+
+    updateChecklistProgress();
+  }
 
   function updateChecklistProgress() {
     if (!checklistContainer) return;
     const all = checklistContainer.querySelectorAll('.checklist-checkbox');
     const checked = checklistContainer.querySelectorAll('.checklist-checkbox:checked');
-    const pct = all.length > 0 ? Math.round((checked.length / all.length) * 100) : 0;
+    const total = all.length;
+    const count = checked.length;
+    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+
     if (checklistProgressFill) checklistProgressFill.style.width = pct + '%';
     if (checklistProgressLabel) {
-      checklistProgressLabel.textContent = `${checked.length} of ${all.length} packed`;
+      checklistProgressLabel.textContent = `${count} of ${total} packed`;
     }
   }
 
-  function saveChecklist() {
+  function syncCheckboxStates() {
     if (!checklistContainer) return;
-    const state = {};
+    const checkedMap = {};
     checklistContainer.querySelectorAll('.checklist-checkbox').forEach(cb => {
-      state[cb.id] = cb.checked;
+      checkedMap[cb.id] = cb.checked;
     });
-    localStorage.setItem(CHECKLIST_KEY, JSON.stringify(state));
-  }
 
-  function loadChecklist() {
-    if (!checklistContainer) return;
+    checklistItems.forEach(i => {
+      if (i.id in checkedMap) {
+        i.checked = checkedMap[i.id];
+      }
+    });
+
+    // Save locally
     try {
-      const saved = JSON.parse(localStorage.getItem(CHECKLIST_KEY) || '{}');
-      checklistContainer.querySelectorAll('.checklist-checkbox').forEach(cb => {
-        if (cb.id in saved) cb.checked = saved[cb.id];
-      });
-    } catch {}
-    updateChecklistProgress();
+      localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(checklistItems));
+    } catch (_) {}
   }
 
+  async function loadChecklist() {
+    let loadedFromBackend = false;
+    try {
+      const res = await fetch('/api/profile/checklist', {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.items) && data.items.length > 0) {
+          checklistItems = data.items;
+          loadedFromBackend = true;
+        }
+      }
+    } catch (_) {}
+
+    if (!loadedFromBackend) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(CHECKLIST_STORAGE_KEY));
+        if (Array.isArray(saved) && saved.length > 0) {
+          checklistItems = saved;
+        }
+      } catch (_) {}
+    }
+
+    renderChecklistUI();
+  }
+
+  async function saveChecklistToStorageAndBackend() {
+    syncCheckboxStates();
+    try {
+      localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(checklistItems));
+    } catch (_) {}
+
+    try {
+      await fetch('/api/profile/checklist', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ items: checklistItems })
+      });
+    } catch (_) {}
+  }
+
+  function openAddCustomItemModal() {
+    if (!customItemModal) return;
+    customItemModalTitle.textContent = 'Add Custom Item';
+    customItemId.value = '';
+    customItemName.value = '';
+    customItemCategory.value = 'GEAR';
+    customItemQty.value = '';
+    customItemModal.style.display = 'flex';
+    customItemName.focus();
+  }
+
+  function openEditCustomItemModal(id) {
+    const item = checklistItems.find(i => i.id === id);
+    if (!item || !customItemModal) return;
+
+    customItemModalTitle.textContent = 'Edit Custom Item';
+    customItemId.value = item.id;
+    customItemName.value = item.name;
+    customItemCategory.value = item.category || 'GEAR';
+    customItemQty.value = item.qty || '';
+    customItemModal.style.display = 'flex';
+    customItemName.focus();
+  }
+
+  function closeCustomItemModal() {
+    if (customItemModal) customItemModal.style.display = 'none';
+  }
+
+  function deleteCustomItem(id) {
+    if (!confirm('Are you sure you want to remove this item from your checklist?')) return;
+    checklistItems = checklistItems.filter(i => i.id !== id);
+    saveChecklistToStorageAndBackend();
+    renderChecklistUI();
+  }
+
+  // Event Listeners for Packing Checklist
   if (checklistContainer) {
-    loadChecklist();
     checklistContainer.addEventListener('change', (e) => {
       if (e.target.classList.contains('checklist-checkbox')) {
+        syncCheckboxStates();
         updateChecklistProgress();
       }
     });
   }
 
-  // Save List button
-  const saveChecklistBtn = document.getElementById('saveChecklistBtn');
-  if (saveChecklistBtn) {
-    saveChecklistBtn.addEventListener('click', () => {
-      saveChecklist();
-      saveChecklistBtn.textContent = '✓ Saved!';
-      setTimeout(() => {
-        saveChecklistBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save List`;
-      }, 1800);
+  if (checklistPresetPills) {
+    checklistPresetPills.querySelectorAll('.checklist-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        checklistPresetPills.querySelectorAll('.checklist-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentPreset = btn.getAttribute('data-preset') || 'all';
+        renderChecklistUI();
+      });
     });
   }
 
-  // PDF export
-  const exportPdfBtn = document.getElementById('exportPdfBtn');
+  if (btnAddChecklistItem) {
+    btnAddChecklistItem.addEventListener('click', openAddCustomItemModal);
+  }
+
+  if (btnCloseCustomItemModal) {
+    btnCloseCustomItemModal.addEventListener('click', closeCustomItemModal);
+  }
+
+  if (btnCancelCustomItem) {
+    btnCancelCustomItem.addEventListener('click', closeCustomItemModal);
+  }
+
+  if (formCustomItem) {
+    formCustomItem.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = customItemId.value.trim();
+      const name = customItemName.value.trim();
+      const category = customItemCategory.value.trim();
+      const qty = customItemQty.value.trim();
+
+      if (!name) return;
+
+      if (id) {
+        // Edit existing
+        const idx = checklistItems.findIndex(i => i.id === id);
+        if (idx !== -1) {
+          checklistItems[idx].name = name;
+          checklistItems[idx].category = category;
+          checklistItems[idx].qty = qty;
+        }
+      } else {
+        // Add new
+        const newId = `custom_${Date.now()}`;
+        checklistItems.push({
+          id: newId,
+          name,
+          category,
+          qty,
+          checked: false,
+          isCustom: true
+        });
+      }
+
+      closeCustomItemModal();
+      saveChecklistToStorageAndBackend();
+      renderChecklistUI();
+    });
+  }
+
+  if (saveChecklistBtn) {
+    saveChecklistBtn.addEventListener('click', async () => {
+      await saveChecklistToStorageAndBackend();
+      saveChecklistBtn.textContent = '✓ Saved!';
+      setTimeout(() => {
+        saveChecklistBtn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          Save List
+        `;
+      }, 2000);
+    });
+  }
+
   if (exportPdfBtn) {
     exportPdfBtn.addEventListener('click', () => {
-      const items = [];
-      document.querySelectorAll('.checklist-item').forEach(item => {
-        const name = item.querySelector('.checklist-item-name')?.textContent || '';
-        const cat = item.querySelector('.checklist-category-tag')?.textContent || '';
-        const checked = item.querySelector('.checklist-checkbox')?.checked ? '☑' : '☐';
-        items.push(`${checked} ${name}  [${cat}]`);
+      syncCheckboxStates();
+      const items = getCombinedChecklist();
+      const total = items.length;
+      const packed = items.filter(i => i.checked).length;
+      const categories = {};
+
+      items.forEach(i => {
+        const cat = i.category || 'GEAR';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(i);
       });
-      const content = `TrekIndia — Packing Checklist\n${'='.repeat(40)}\n\n${items.join('\n')}\n\nGenerated: ${new Date().toLocaleDateString('en-IN')}\ntrekindia.com`;
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'TrekIndia-PackingChecklist.txt';
-      a.click();
-      URL.revokeObjectURL(url);
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        alert('Please allow popups to export your checklist as a printable PDF.');
+        return;
+      }
+
+      const categorySectionsHtml = Object.keys(categories).map(cat => {
+        const catItems = categories[cat];
+        return `
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 14px; text-transform: uppercase; color: #285D2A; border-bottom: 2px solid #E1E7E2; padding-bottom: 4px; margin-bottom: 12px; letter-spacing: 0.05em;">
+              ${cat} (${catItems.length})
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              ${catItems.map(item => `
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #17231A; padding: 4px 0;">
+                  <span style="font-size: 16px; color: ${item.checked ? '#285D2A' : '#999'};">${item.checked ? '☑' : '☐'}</span>
+                  <span style="${item.checked ? 'text-decoration: line-through; color: #6B766F;' : ''}">${escapeHtml(item.name)}${item.qty ? ` <small>(${escapeHtml(item.qty)})</small>` : ''}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>TrekIndia Smart Packing Checklist</title>
+          <style>
+            body { font-family: 'Inter', -apple-system, sans-serif; padding: 40px; color: #17231A; max-width: 800px; margin: auto; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #285D2A; padding-bottom: 16px; margin-bottom: 24px;">
+            <div>
+              <h1 style="margin: 0; color: #285D2A; font-size: 24px;">TrekIndia Explorer Checklist</h1>
+              <div style="font-size: 13px; color: #6B766F; margin-top: 4px;">Generated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 18px; font-weight: 700; color: #285D2A;">${packed} of ${total} Packed (${Math.round((packed / total) * 100)}%)</div>
+              <div style="font-size: 12px; color: #6B766F;">Trail-Ready Status</div>
+            </div>
+          </div>
+          ${categorySectionsHtml}
+          <div style="margin-top: 40px; padding-top: 16px; border-top: 1px solid #E1E7E2; font-size: 11px; color: #6B766F; text-align: center;">
+            TrekIndia Platform · Designed for Safe & Sustainable Mountain Expeditions · trekindia.com
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
     });
+  }
+
+  // Load checklist on init
+  if (checklistContainer) {
+    loadChecklist();
   }
 
   // ─── E. WATER PLANNER ─────────────────────────────────────

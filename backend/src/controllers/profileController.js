@@ -128,3 +128,23 @@ export async function uploadAvatar(req, res, next) {
     next(error);
   }
 }
+
+export async function getChecklist(req, res, next) {
+  try {
+    const checklist = await profileService.getUserChecklist(req.user.user_id);
+    return res.status(200).json({ success: true, ...checklist });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function saveChecklist(req, res, next) {
+  try {
+    const { items } = req.body;
+    const checklist = await profileService.saveUserChecklist(req.user.user_id, items);
+    return res.status(200).json({ success: true, message: 'Checklist saved successfully.', ...checklist });
+  } catch (error) {
+    next(error);
+  }
+}
+

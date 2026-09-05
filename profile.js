@@ -689,6 +689,9 @@
         if (data.success) {
           showToast('Profile updated successfully.');
           DOM.editProfileModal.classList.remove('active');
+          if (data.user && window.TrekIndiaAuth && window.TrekIndiaAuth.updateCurrentUser) {
+            window.TrekIndiaAuth.updateCurrentUser(data.user);
+          }
           await loadProfileData();
         } else {
           showToast(data.message || 'Failed to update profile.');

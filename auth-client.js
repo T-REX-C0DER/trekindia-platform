@@ -5,7 +5,9 @@
 
 (function () {
   let currentUser = null;
-  let authCheckPromise = null; // Store the pending auth promise to avoid race conditions
+  let authCheckPromise = null; // Store pending auth promise to avoid race conditions
+
+  const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/adventurer/svg?seed=trekindia&backgroundColor=2d6a4f';
 
   async function checkAuthStatus() {
     try {
@@ -19,6 +21,9 @@
         const data = await response.json();
         if (data.success && data.authenticated && data.user) {
           currentUser = data.user;
+          try {
+            localStorage.setItem('trekindia_cached_user', JSON.stringify(currentUser));
+          } catch (_) {}
           updateNavbarUI(currentUser);
           return currentUser;
         }
@@ -27,6 +32,9 @@
       console.warn('Auth check could not reach backend:', err.message);
     }
     currentUser = null;
+    try {
+      localStorage.removeItem('trekindia_cached_user');
+    } catch (_) {}
     updateNavbarUI(null);
     return null;
   }
@@ -36,16 +44,24 @@
     if (!profileBtn) return;
 
     if (user) {
-      profileBtn.setAttribute('title', `Logged in as ${user.full_name} (${user.username})`);
-      profileBtn.setAttribute('aria-label', `Profile: ${user.full_name}`);
+      profileBtn.setAttribute('title', `Logged in as ${user.full_name || user.username} (@${user.username})`);
+      profileBtn.setAttribute('aria-label', `Profile: ${user.full_name || user.username}`);
       
-      // Replace profile icon with user initial avatar or badge if authenticated
       const initial = (user.full_name || user.username || 'U').charAt(0).toUpperCase();
-      profileBtn.innerHTML = `
-        <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #708238, #556B2F); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
-          ${initial}
-        </div>
-      `;
+
+      if (user.profile_image) {
+        profileBtn.innerHTML = `
+          <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 2px solid #285D2A; box-shadow: 0 2px 6px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; background: #f0f4f1;">
+            <img src="${escapeHtml(user.profile_image)}" alt="${escapeHtml(user.full_name || user.username)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;background:linear-gradient(135deg, #708238, #556B2F);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;\\'>${initial}</div>';" />
+          </div>
+        `;
+      } else {
+        profileBtn.innerHTML = `
+          <div style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #708238, #556B2F); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2); box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+            ${initial}
+          </div>
+        `;
+      }
 
       // Setup click handler for logout popup / profile menu
       profileBtn.onclick = function (e) {
@@ -55,6 +71,12 @@
     } else {
       profileBtn.setAttribute('title', 'Sign In / Register');
       profileBtn.setAttribute('aria-label', 'User profile');
+      profileBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      `;
       profileBtn.onclick = null; // Default link to auth.html
     }
   }
@@ -84,8 +106,8 @@
     `;
 
     const avatarHtml = user.profile_image
-      ? `<img src="${escapeHtml(user.profile_image)}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;" />`
-      : `<div style="width: 36px; height: 36px; border-radius: 50%; background: #285D2A; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem;">
+      ? `<img src="${escapeHtml(user.profile_image)}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #285D2A;" onerror="this.src='${DEFAULT_AVATAR}'" />`
+      : `<div style="width: 38px; height: 38px; border-radius: 50%; background: #285D2A; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem;">
           ${(user.full_name || user.username || 'U').charAt(0).toUpperCase()}
         </div>`;
 
@@ -93,7 +115,7 @@
       <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #E1E7E2;">
         ${avatarHtml}
         <div style="min-width: 0;">
-          <div style="font-weight: 700; font-size: 0.9rem; color: #17231A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(user.full_name)}</div>
+          <div style="font-weight: 700; font-size: 0.9rem; color: #17231A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(user.full_name || user.username)}</div>
           <div style="font-size: 0.75rem; color: #6B766F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${escapeHtml(user.username)}</div>
         </div>
       </div>
@@ -160,6 +182,16 @@
     });
   }
 
+  function updateCurrentUser(updatedUser) {
+    if (!updatedUser) return;
+    currentUser = { ...(currentUser || {}), ...updatedUser };
+    try {
+      localStorage.setItem('trekindia_cached_user', JSON.stringify(currentUser));
+    } catch (_) {}
+    updateNavbarUI(currentUser);
+    window.dispatchEvent(new CustomEvent('trekindia:user-updated', { detail: currentUser }));
+  }
+
   function initCommunityLinkGuards() {
     document.addEventListener('click', (e) => {
       const commLink = e.target.closest('a[href="/community"], a[href="community.html"], a[href="#community"]');
@@ -170,19 +202,15 @@
         return;
       }
 
-      // Intercept the click to await auth resolution before deciding
+      // Intercept click to await auth resolution
       e.preventDefault();
 
-      // Await the auth check promise (may already be resolved if checkAuthStatus() completed)
-      // This eliminates the race condition where currentUser is null on fast first clicks
       const resolveAndNavigate = async () => {
         try {
           if (authCheckPromise) {
             await authCheckPromise;
           }
-        } catch (_) {
-          // Auth check failed — treat as logged out
-        }
+        } catch (_) {}
 
         if (!currentUser) {
           window.location.href = 'auth.html?redirect=/community&message=community_required';
@@ -195,14 +223,36 @@
     });
   }
 
+  // Cross-tab and in-page user update listeners
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'trekindia_cached_user') {
+      try {
+        const u = JSON.parse(e.newValue);
+        if (u) {
+          currentUser = u;
+          updateNavbarUI(currentUser);
+          window.dispatchEvent(new CustomEvent('trekindia:user-updated', { detail: currentUser }));
+        }
+      } catch (_) {}
+    }
+  });
+
+  window.addEventListener('trekindia:user-updated', (e) => {
+    if (e.detail) {
+      currentUser = { ...(currentUser || {}), ...e.detail };
+      updateNavbarUI(currentUser);
+    }
+  });
+
   document.addEventListener('DOMContentLoaded', () => {
-    // Store the promise so the click guard can await it if auth hasn't resolved yet
     authCheckPromise = checkAuthStatus();
     initCommunityLinkGuards();
   });
 
   window.TrekIndiaAuth = {
     checkAuthStatus,
-    getUser: () => currentUser
+    getUser: () => currentUser,
+    updateCurrentUser,
+    getAvatarUrl: (user) => (user && user.profile_image) ? user.profile_image : DEFAULT_AVATAR
   };
 })();

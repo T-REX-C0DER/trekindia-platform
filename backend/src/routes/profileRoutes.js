@@ -21,6 +21,8 @@ router.post('/reviews', profileController.createReview);
 
 router.put('/preferences', profileController.updateSettings);
 router.post('/avatar', profileController.uploadAvatar);
+router.get('/checklist', profileController.getChecklist);
+router.put('/checklist', profileController.saveChecklist);
 router.delete('/account', profileController.deleteAccount);
 
 export default router;

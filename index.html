@@ -1001,6 +1001,13 @@
             <h3 class="prep-block-title" id="packingTitle">Smart Packing Checklist</h3>
           </div>
           <div class="checklist-actions">
+            <button class="checklist-btn-add" id="btnAddChecklistItem" aria-label="Add custom packing item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add Item
+            </button>
             <button class="checklist-btn-save" id="saveChecklistBtn" aria-label="Save checklist">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1021,63 +1028,65 @@
             </button>
           </div>
         </div>
-        <div class="checklist-list" id="checklistContainer" role="list" aria-label="Packing checklist items">
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item1" aria-describedby="item1Desc" />
-            <span class="checklist-item-name" id="item1Desc">Waterproof Shell Jacket</span>
-            <span class="checklist-category-tag">CLOTHING</span>
-          </label>
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item2" aria-describedby="item2Desc" checked />
-            <span class="checklist-item-name" id="item2Desc">Headlamp with Spare Batteries</span>
-            <span class="checklist-category-tag">GEAR</span>
-          </label>
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item3" aria-describedby="item3Desc" />
-            <span class="checklist-item-name" id="item3Desc">Thermal Inner Layers (Top &amp; Bottom)</span>
-            <span class="checklist-category-tag">CLOTHING</span>
-          </label>
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item4" aria-describedby="item4Desc" />
-            <span class="checklist-item-name" id="item4Desc">2L Hydration Bladder / Bottles</span>
-            <span class="checklist-category-tag">UTILITY</span>
-          </label>
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item5" aria-describedby="item5Desc" />
-            <span class="checklist-item-name" id="item5Desc">Trekking Poles (Collapsible)</span>
-            <span class="checklist-category-tag">GEAR</span>
-          </label>
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item6" aria-describedby="item6Desc" />
-            <span class="checklist-item-name" id="item6Desc">First Aid Kit</span>
-            <span class="checklist-category-tag">UTILITY</span>
-          </label>
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item7" aria-describedby="item7Desc" />
-            <span class="checklist-item-name" id="item7Desc">Trail Snacks &amp; Energy Bars</span>
-            <span class="checklist-category-tag">FOOD</span>
-          </label>
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item8" aria-describedby="item8Desc" />
-            <span class="checklist-item-name" id="item8Desc">Trekking Socks (3 pairs minimum)</span>
-            <span class="checklist-category-tag">CLOTHING</span>
-          </label>
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item9" aria-describedby="item9Desc" />
-            <span class="checklist-item-name" id="item9Desc">Sunscreen SPF 50+ &amp; Lip Balm</span>
-            <span class="checklist-category-tag">ACCESSORIES</span>
-          </label>
-          <label class="checklist-item" role="listitem">
-            <input type="checkbox" class="checklist-checkbox" id="item10" aria-describedby="item10Desc" />
-            <span class="checklist-item-name" id="item10Desc">Offline GPX Map Download</span>
-            <span class="checklist-category-tag">UTILITY</span>
-          </label>
+
+        <!-- Smart Trail Adaptation Pills -->
+        <div class="checklist-preset-pills" id="checklistPresetPills" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
+          <button type="button" class="checklist-pill active" data-preset="all">🏔️ All Essentials</button>
+          <button type="button" class="checklist-pill" data-preset="himalayan">❄️ High Altitude (>3,500m)</button>
+          <button type="button" class="checklist-pill" data-preset="monsoon">🌧️ Monsoon & Ghats</button>
+          <button type="button" class="checklist-pill" data-preset="winter">⛄ Winter & Snow</button>
+          <button type="button" class="checklist-pill" data-preset="day_hike">🌲 Day Hike</button>
         </div>
+
+        <div class="checklist-list" id="checklistContainer" role="list" aria-label="Packing checklist items">
+          <!-- Rendered dynamically by main.js -->
+        </div>
+
         <div class="checklist-progress-row" aria-live="polite" aria-label="Packing progress">
-          <span class="checklist-progress-label" id="checklistProgressLabel">1 of 10 packed</span>
+          <span class="checklist-progress-label" id="checklistProgressLabel">0 of 0 packed</span>
           <div class="checklist-progress-bar-track">
-            <div class="checklist-progress-bar-fill" id="checklistProgressFill" style="width:10%;"></div>
+            <div class="checklist-progress-bar-fill" id="checklistProgressFill" style="width:0%;"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- Add/Edit Custom Packing Item Modal -->
+      <div class="modal-overlay" id="customItemModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="modal-card" style="background: var(--card-bg, #fff); width: 100%; max-width: 460px; border-radius: 16px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 id="customItemModalTitle" style="font-size: 1.15rem; font-weight: 700; color: var(--text);">Add Custom Item</h3>
+            <button type="button" id="btnCloseCustomItemModal" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
+          </div>
+          <form id="formCustomItem">
+            <input type="hidden" id="customItemId" value="" />
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 6px;">Item Name *</label>
+              <input type="text" id="customItemName" required placeholder="e.g. DSLR Camera with spare battery" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem;" />
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 6px;">Category</label>
+                <select id="customItemCategory" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; background: var(--card-bg, #fff);">
+                  <option value="CLOTHING">Clothing</option>
+                  <option value="GEAR">Gear</option>
+                  <option value="UTILITY">Utility</option>
+                  <option value="FOOD">Food</option>
+                  <option value="ACCESSORIES">Accessories</option>
+                  <option value="ELECTRONICS">Electronics</option>
+                  <option value="DOCUMENTS">Documents</option>
+                  <option value="CUSTOM">Custom</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 6px;">Quantity / Note</label>
+                <input type="text" id="customItemQty" placeholder="e.g. 1 pair / 2 units" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem;" />
+              </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+              <button type="button" id="btnCancelCustomItem" style="padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border); background: transparent; font-weight: 600; cursor: pointer;">Cancel</button>
+              <button type="submit" class="btn-primary" style="padding: 9px 20px; font-weight: 600;">Save Item</button>
+            </div>
+          </form>
         </div>
       </div>
 

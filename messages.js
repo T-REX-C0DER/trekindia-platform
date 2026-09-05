@@ -68,6 +68,13 @@
 
     await loadConversations();
     handleUrlParameters();
+
+    window.addEventListener('trekindia:user-updated', (e) => {
+      if (e.detail) {
+        state.currentUser = { ...(state.currentUser || {}), ...e.detail };
+        updateUserAvatarUI(state.currentUser);
+      }
+    });
   }
 
   // ─── 2. AUTHENTICATION GUARD ───────────────────────────────────────────────
@@ -738,29 +745,33 @@
   // ─── SMART DATE GROUPING & MESSAGE HTML BUILDER ──────────────────────────────
   function buildMessagesHtml(messages) {
     let html = '';
-    let lastDateStr = null;
+    let lastDateKey = null;
     let prevSenderId = null;
 
     for (let i = 0; i < messages.length; i++) {
       const msg = messages[i];
-      const isSelf = msg.is_self || msg.sender_id === state.currentUser?.user_id;
+      const isSelf = Boolean(msg.is_self || String(msg.sender_id) === String(state.currentUser?.user_id));
 
-      // Date divider
-      const dateStr = getMessageDateLabel(msg.raw_created_at || msg.created_at);
-      if (dateStr !== lastDateStr) {
-        html += `<div class="msg-date-separator"><span>${escapeHtml(dateStr)}</span></div>`;
-        lastDateStr = dateStr;
+      // Calculate reliable Date object and date key
+      const dateObj = parseMessageDate(msg.raw_created_at || msg.created_at);
+      const dateKey = `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
+
+      // Date divider only once per day boundary
+      if (dateKey !== lastDateKey) {
+        const dateLabel = getMessageDateLabelFromDate(dateObj);
+        html += `<div class="msg-date-separator"><span>${escapeHtml(dateLabel)}</span></div>`;
+        lastDateKey = dateKey;
         prevSenderId = null; // reset grouping on date change
       }
 
       // Determine grouping — consecutive messages from same sender
       const nextMsg = messages[i + 1];
-      const sameAsPrev = prevSenderId !== null && prevSenderId === msg.sender_id;
-      const sameAsNext = nextMsg && nextMsg.sender_id === msg.sender_id;
+      const sameAsPrev = prevSenderId !== null && String(prevSenderId) === String(msg.sender_id);
+      const sameAsNext = nextMsg && String(nextMsg.sender_id) === String(msg.sender_id);
 
       // isGrouped = this message is part of a consecutive group AND NOT the first in the group
       const isGrouped = sameAsPrev;
-      // Show avatar only on the last message of a consecutive group (sameAsPrev = true, sameAsNext = false)
+      // Show avatar only on the last message of a consecutive group
       const showAvatar = !isSelf && !sameAsNext;
 
       html += renderSingleMessageRow(msg, isSelf, isGrouped, showAvatar);
@@ -770,31 +781,41 @@
     return html;
   }
 
-  function getMessageDateLabel(dateVal) {
-    if (!dateVal) return 'Today';
-
-    let d;
-    // If it looks like a time string only (e.g. "04:50 PM"), treat as today
-    if (/^\d{1,2}:\d{2}/.test(String(dateVal)) && !String(dateVal).includes('-')) {
-      return 'Today';
+  function parseMessageDate(dateVal) {
+    if (!dateVal) return new Date();
+    if (dateVal instanceof Date) return dateVal;
+    
+    // If it is a time-only string like "04:50 PM", treat as today
+    if (typeof dateVal === 'string' && /^\d{1,2}:\d{2}/.test(dateVal) && !dateVal.includes('-') && !dateVal.includes('T')) {
+      return new Date();
     }
 
     try {
-      d = new Date(dateVal);
-      if (isNaN(d.getTime())) return 'Today';
-    } catch (_) {
-      return 'Today';
-    }
+      const d = new Date(dateVal);
+      if (!isNaN(d.getTime())) return d;
+    } catch (_) {}
+    return new Date();
+  }
 
+  function getMessageDateLabelFromDate(d) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const diffDays = Math.floor((today - msgDay) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round((today - msgDay) / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return d.toLocaleDateString([], { weekday: 'long' });
-    return d.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
+    if (diffDays === 0) return 'TODAY';
+    if (diffDays === 1) return 'YESTERDAY';
+
+    const monthNames = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+    const day = d.getDate();
+    const month = monthNames[d.getMonth()];
+    const currentYear = now.getFullYear();
+    const msgYear = d.getFullYear();
+
+    if (msgYear === currentYear) {
+      return `${day} ${month}`;
+    }
+    return `${day} ${month} ${msgYear}`;
   }
 
   // ─── RENDER SINGLE MESSAGE ROW ───────────────────────────────────────────────
@@ -931,11 +952,19 @@
       };
 
       // Check if we need a date separator for today
-      const lastDateSep = messagesBody.querySelector('.msg-date-separator:last-of-type');
-      if (!lastDateSep) {
+      const allSeparators = messagesBody.querySelectorAll('.msg-date-separator span');
+      let hasTodaySep = false;
+      if (allSeparators.length > 0) {
+        const lastSepText = allSeparators[allSeparators.length - 1].textContent.trim().toUpperCase();
+        if (lastSepText === 'TODAY') {
+          hasTodaySep = true;
+        }
+      }
+      if (!hasTodaySep) {
         const sep = document.createElement('div');
-        sep.innerHTML = `<div class="msg-date-separator"><span>Today</span></div>`;
-        if (sep.firstElementChild) messagesBody.appendChild(sep.firstElementChild);
+        sep.className = 'msg-date-separator';
+        sep.innerHTML = `<span>TODAY</span>`;
+        messagesBody.appendChild(sep);
       }
 
       const tempDiv = document.createElement('div');
