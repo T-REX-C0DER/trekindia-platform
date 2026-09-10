@@ -259,8 +259,90 @@
     </div>
   </main>
 
+  <!-- COMPLETE TREK CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="completeTrekModal" role="dialog" aria-modal="true" aria-labelledby="completeModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title" id="completeModalTitle">🎉 Complete Trek?</h2>
+        <button class="modal-close-btn" id="btnCloseCompleteModal" aria-label="Close dialog">&times;</button>
+      </div>
+      <p style="font-size: 15px; color: var(--detail-text-muted); margin-bottom: 20px; line-height: 1.5;">
+        Did you successfully complete <strong id="modalTrekName" style="color: var(--detail-text);">this trek</strong>?
+      </p>
+      <form id="formCompleteTrek">
+        <div class="form-group">
+          <label class="form-label" for="completeTrekDate">Completion Date</label>
+          <input type="date" class="form-input" id="completeTrekDate" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Personal Rating (Optional)</label>
+          <div class="star-rating-select" id="modalStarRating">
+            <span data-val="1">★</span>
+            <span data-val="2">★</span>
+            <span data-val="3">★</span>
+            <span data-val="4">★</span>
+            <span data-val="5">★</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="completeTrekNotes">Optional Note</label>
+          <textarea class="form-textarea" id="completeTrekNotes" placeholder="Tell us about your trail experience, summit moments, weather..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="btnCancelCompleteModal">Cancel</button>
+          <button type="submit" class="btn-primary-confirm" id="btnConfirmCompleteTrek">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Mark Trek as Completed
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- UNCOMPLETE TREK CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="uncompleteTrekModal" role="dialog" aria-modal="true" aria-labelledby="uncompleteModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title" id="uncompleteModalTitle" style="color:#dc3545;">Remove Completion?</h2>
+        <button class="modal-close-btn" id="btnCloseUncompleteModal" aria-label="Close dialog">&times;</button>
+      </div>
+      <p style="font-size: 14px; color: var(--detail-text); margin-bottom: 20px; line-height: 1.6;">
+        This will remove this trek from your completed trek statistics and remove any badge that was earned exclusively from this completion.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="btnCancelUncompleteModal">Cancel</button>
+        <button type="button" class="btn-danger-confirm" id="btnConfirmUncompleteTrek">Remove Completion</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS CELEBRATION MODAL -->
+  <div class="modal-overlay" id="celebrationModal" role="dialog" aria-modal="true" aria-labelledby="celebrationTitle">
+    <div class="modal-card" style="text-align: center;">
+      <div style="font-size: 44px; margin-bottom: 10px;">🎉</div>
+      <h2 class="modal-title" id="celebrationTitle" style="justify-content: center; font-size: 24px;">Trek Completed!</h2>
+      <p style="font-size: 15px; color: var(--detail-text-muted); margin: 8px 0 16px;">
+        You completed <strong id="celebrationTrekName" style="color: var(--detail-text);">Trek</strong>.
+      </p>
+
+      <div class="celebration-pill-grid" id="celebrationStatsGrid">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div id="celebrationBadgeWrap">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="modal-actions" style="justify-content: center; margin-top: 24px; gap: 12px;">
+        <button type="button" class="btn-secondary" id="btnCloseCelebration">Close</button>
+        <a href="profile.html#overview" class="btn-primary-confirm" style="text-decoration: none;">View in Profile →</a>
+      </div>
+    </div>
+  </div>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="auth-client.js"></script>
   <script src="trek-detail.js"></script>
 </body>
 </html>

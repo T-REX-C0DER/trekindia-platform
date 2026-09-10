@@ -274,13 +274,40 @@
       <!-- ================= 5. BADGES VIEW ================= -->
       <section id="view-badges" class="view-section">
         <div class="badges-header">
-          <h2>My Badges</h2>
+          <h2>Badges & Achievements</h2>
           <p>Every trail tells a story. Every summit earns a badge.</p>
         </div>
-        <div class="badges-grid" id="badgesGrid">
-          <!-- Rendered via JS -->
+
+        <!-- Section A: My Trek Badges -->
+        <div style="margin-bottom: 40px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 class="section-title" style="margin: 0; font-size: 1.3rem;">
+              🏔️ My Trek Badges
+              <span id="trekBadgesCountBadge" style="font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(40,93,42,0.1); color: var(--primary-forest); margin-left: 8px;">0 Earned</span>
+            </h3>
+          </div>
+          <div class="badges-grid" id="trekBadgesGrid">
+            <!-- Rendered via JS -->
+          </div>
         </div>
+
+        <!-- Section B: Milestone Badges -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 class="section-title" style="margin: 0; font-size: 1.3rem;">
+              🏆 Milestone Badges
+              <span id="milestoneBadgesCountBadge" style="font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(200,166,90,0.15); color: #9A7B2C; margin-left: 8px;">0 / 9 Earned</span>
+            </h3>
+          </div>
+          <div class="badges-grid" id="milestoneBadgesGrid">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Fallback Grid if needed -->
+        <div class="badges-grid" id="badgesGrid" style="display: none;"></div>
       </section>
+
 
       <!-- ================= 6. REVIEWS VIEW ================= -->
       <section id="view-reviews" class="view-section">

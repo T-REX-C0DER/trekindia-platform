@@ -4,6 +4,8 @@
  */
 
 import * as trekService from '../services/trekService.js';
+import * as profileService from '../services/profileService.js';
+import { query } from '../config/database.js';
 
 /**
  * GET /api/treks
@@ -143,5 +145,107 @@ export async function getTrekCompanies(req, res, next) {
     next(err);
   }
 }
+/**
+ * Helper to resolve numeric trek_id from slug or numeric id parameter
+ */
+async function resolveTrekId(identifier) {
+  if (!identifier) return null;
+  const num = parseInt(identifier, 10);
+  if (!isNaN(num) && String(num) === String(identifier).trim()) {
+    const res = await query('SELECT trek_id FROM treks WHERE trek_id = $1', [num]);
+    if (res.rows.length > 0) return res.rows[0].trek_id;
+  }
+  const res = await query('SELECT trek_id FROM treks WHERE slug = $1', [identifier]);
+  if (res.rows.length > 0) return res.rows[0].trek_id;
+  return null;
+}
 
+/**
+ * POST /api/treks/:id/complete or /api/treks/slug/:slug/complete
+ */
+export async function completeTrek(req, res, next) {
+  try {
+    const identifier = req.params.slug || req.params.id;
+    const trekId = await resolveTrekId(identifier);
+    if (!trekId) {
+      return res.status(404).json({ success: false, message: 'Trek not found.' });
+    }
+    const { completed_at, notes, rating } = req.body;
+    const result = await profileService.completeTrek(req.user.user_id, trekId, {
+      completed_at,
+      notes,
+      rating
+    });
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
 
+/**
+ * POST /api/treks/:id/uncomplete or /api/treks/slug/:slug/uncomplete
+ */
+export async function uncompleteTrek(req, res, next) {
+  try {
+    const identifier = req.params.slug || req.params.id;
+    const trekId = await resolveTrekId(identifier);
+    if (!trekId) {
+      return res.status(404).json({ success: false, message: 'Trek not found.' });
+    }
+    const result = await profileService.uncompleteTrek(req.user.user_id, trekId);
+    return res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/treks/:id/user-status or /api/treks/slug/:slug/user-status
+ */
+export async function getTrekUserStatus(req, res, next) {
+  try {
+    const identifier = req.params.slug || req.params.id;
+    const trekId = await resolveTrekId(identifier);
+    if (!trekId) {
+      return res.status(404).json({ success: false, message: 'Trek not found.' });
+    }
+    const statuses = await profileService.getUserTrekStatus(req.user.user_id, trekId);
+    return res.status(200).json({ success: true, trek_id: trekId, ...statuses });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/treks/:id/save or /api/treks/slug/:slug/save
+ */
+export async function toggleSaveTrek(req, res, next) {
+  try {
+    const identifier = req.params.slug || req.params.id;
+    const trekId = await resolveTrekId(identifier);
+    if (!trekId) {
+      return res.status(404).json({ success: false, message: 'Trek not found.' });
+    }
+    const { saved } = req.body;
+    const currentStatus = await profileService.getUserTrekStatus(req.user.user_id, trekId);
+    const targetSaved = saved !== undefined ? !!saved : !currentStatus.saved;
+
+    if (targetSaved) {
+      await profileService.setUserTrekStatus(req.user.user_id, trekId, { status: 'saved' });
+    } else {
+      await query(
+        `DELETE FROM user_treks WHERE user_id = $1 AND trek_id = $2 AND status = 'saved'`,
+        [req.user.user_id, trekId]
+      );
+    }
+
+    const updated = await profileService.getUserTrekStatus(req.user.user_id, trekId);
+    return res.status(200).json({
+      success: true,
+      saved: updated.saved,
+      message: updated.saved ? 'Trek saved.' : 'Trek removed from saved.'
+    });
+  } catch (err) {
+    next(err);
+  }
+}

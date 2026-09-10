@@ -3,6 +3,7 @@ import { query, getClient } from '../config/database.js';
 
 /**
  * Fetch full dynamic user profile & trekking statistics
+ * Authoritative source of truth derived directly from completion records in database
  */
 export async function getUserProfile(userId) {
   // 1. Core User & Profile Information
@@ -32,7 +33,13 @@ export async function getUserProfile(userId) {
        COALESCE(SUM(t.distance_km) FILTER (WHERE ut.status = 'completed'), 0) AS total_distance_km,
        COALESCE(MAX(GREATEST(t.elevation_m, t.highest_point_m)) FILTER (WHERE ut.status = 'completed'), 0) AS highest_summit_m,
        COUNT(DISTINCT t.state_id) FILTER (WHERE ut.status = 'completed') AS states_explored,
-       COALESCE(SUM(LEAST(CEIL(t.duration_hours / 6.0), 10)) FILTER (WHERE ut.status = 'completed'), 0) AS days_on_trail,
+       COALESCE(SUM(
+         CASE 
+           WHEN t.duration_label ~* '(\\d+)\\s*Day' THEN (SUBSTRING(t.duration_label FROM '(\\d+)')::INT)
+           WHEN t.duration_hours IS NOT NULL THEN GREATEST(1, CEIL(t.duration_hours / 8.0)::INT)
+           ELSE 1
+         END
+       ) FILTER (WHERE ut.status = 'completed'), 0) AS days_on_trail,
        COUNT(DISTINCT ut.trek_id) FILTER (WHERE ut.status = 'saved') AS saved_count,
        COUNT(DISTINCT ut.trek_id) FILTER (WHERE ut.status = 'wishlist') AS wishlist_count
      FROM user_treks ut
@@ -255,6 +262,426 @@ export async function getUserTreks(userId, { status = 'completed', difficulty, s
 }
 
 /**
+ * Fetch a user's specific status on a trek (Completed, Saved, Wishlist)
+ */
+export async function getUserTrekStatus(userId, trekId) {
+  const res = await query(
+    `SELECT status, completed_at, personal_rating, notes, created_at 
+     FROM user_treks 
+     WHERE user_id = $1 AND trek_id = $2`,
+    [userId, trekId]
+  );
+
+  const statuses = {
+    completed: false,
+    saved: false,
+    wishlist: false,
+    completed_at: null,
+    personal_rating: null,
+    notes: null
+  };
+
+  for (const row of res.rows) {
+    if (row.status === 'completed') {
+      statuses.completed = true;
+      statuses.completed_at = row.completed_at;
+      statuses.personal_rating = row.personal_rating;
+      statuses.notes = row.notes;
+    } else if (row.status === 'saved') {
+      statuses.saved = true;
+    } else if (row.status === 'wishlist') {
+      statuses.wishlist = true;
+    }
+  }
+
+  return statuses;
+}
+
+/**
+ * Complete a Trek — Atomic Transaction Workflow
+ * 1. Upsert completion record in user_treks (idempotent)
+ * 2. Award individual trek badge
+ * 3. Evaluate and award global milestone badges
+ * 4. Create activity stream log
+ * 5. Return updated profile, newly earned badges, and trek badge
+ */
+export async function completeTrek(userId, trekId, { completed_at, notes, rating } = {}) {
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Verify Trek Exists
+    const trekRes = await client.query(
+      `SELECT t.*, s.state_name 
+       FROM treks t 
+       LEFT JOIN states s ON t.state_id = s.state_id 
+       WHERE t.trek_id = $1`,
+      [trekId]
+    );
+
+    if (trekRes.rows.length === 0) {
+      const err = new Error('Trek not found.');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    const trek = trekRes.rows[0];
+    const completionTimestamp = completed_at ? new Date(completed_at) : new Date();
+
+    // 2. Insert or update completion in user_treks (idempotent, single record per user/trek)
+    const completionRes = await client.query(
+      `INSERT INTO user_treks (user_id, trek_id, status, personal_rating, completed_at, notes, created_at, updated_at)
+       VALUES ($1, $2, 'completed', $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_id, trek_id, status) DO UPDATE SET
+         personal_rating = COALESCE(EXCLUDED.personal_rating, user_treks.personal_rating),
+         completed_at = COALESCE(EXCLUDED.completed_at, user_treks.completed_at),
+         notes = COALESCE(EXCLUDED.notes, user_treks.notes),
+         updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [userId, trekId, rating ? parseFloat(rating) : null, completionTimestamp, notes || null]
+    );
+
+    // 3. Ensure individual trek badge exists for this trek
+    let badgeRes = await client.query(`SELECT * FROM badges WHERE trek_id = $1`, [trekId]);
+    let trekBadge;
+
+    if (badgeRes.rows.length > 0) {
+      trekBadge = badgeRes.rows[0];
+    } else {
+      // Auto-create trek badge if missing
+      const badgeSlug = `trek-${trek.slug || trek.trek_id}`;
+      const badgeName = `${trek.trek_name} Explorer`;
+      const badgeDesc = `Completed the ${trek.trek_name} in ${trek.state_name || 'India'}.`;
+      const rarity = (trek.elevation_m >= 4500 || trek.difficulty === 'Extreme') ? 'Legendary' :
+                     (trek.elevation_m >= 3000 || trek.difficulty === 'Difficult') ? 'Epic' :
+                     (trek.elevation_m >= 1500 || trek.difficulty === 'Moderate') ? 'Rare' :
+                     (trek.difficulty === 'Easy' && trek.elevation_m < 1000) ? 'Common' : 'Uncommon';
+      const icon = (trek.best_time && (trek.best_time.toLowerCase().includes('winter') || trek.best_time.toLowerCase().includes('snow'))) ? 'snowflake' :
+                   (trek.elevation_m >= 3000) ? 'mountain' :
+                   (trek.elevation_m >= 2000) ? 'flag' : 'compass';
+
+      const createBadgeRes = await client.query(
+        `INSERT INTO badges (trek_id, slug, name, description, category, requirement_type, requirement_value, icon, rarity)
+         VALUES ($1, $2, $3, $4, 'Trek Badges', 'trek_completion', 1, $5, $6)
+         ON CONFLICT (slug) DO UPDATE SET trek_id = EXCLUDED.trek_id
+         RETURNING *`,
+        [trekId, badgeSlug, badgeName, badgeDesc, icon, rarity]
+      );
+      trekBadge = createBadgeRes.rows[0];
+    }
+
+    // 4. Award Trek Badge to User (idempotent)
+    const awardTrekBadgeRes = await client.query(
+      `INSERT INTO user_badges (user_id, badge_id, earned_at)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, badge_id) DO NOTHING
+       RETURNING *`,
+      [userId, trekBadge.badge_id, completionTimestamp]
+    );
+
+    const newlyEarnedBadges = [];
+    const isNewTrekBadge = awardTrekBadgeRes.rows.length > 0;
+    if (isNewTrekBadge) {
+      newlyEarnedBadges.push({ ...trekBadge, is_trek_badge: true });
+    }
+
+    // 5. Evaluate Global Milestone Badges (inside transaction)
+    const milestoneBadgesRes = await client.query(`SELECT * FROM badges WHERE trek_id IS NULL`);
+    const allMilestones = milestoneBadgesRes.rows;
+
+    const userEarnedMilestonesRes = await client.query(
+      `SELECT badge_id FROM user_badges WHERE user_id = $1`,
+      [userId]
+    );
+    const existingEarnedIds = new Set(userEarnedMilestonesRes.rows.map(r => parseInt(r.badge_id, 10)));
+
+    // Calculate current stats for milestone badge evaluation
+    const statsCalcRes = await client.query(
+      `SELECT
+         COUNT(DISTINCT ut.trek_id) FILTER (WHERE ut.status = 'completed') AS treks_completed,
+         COALESCE(SUM(t.distance_km) FILTER (WHERE ut.status = 'completed'), 0) AS total_distance_km,
+         COALESCE(MAX(GREATEST(t.elevation_m, t.highest_point_m)) FILTER (WHERE ut.status = 'completed'), 0) AS highest_summit_m,
+         COUNT(DISTINCT t.state_id) FILTER (WHERE ut.status = 'completed') AS states_explored,
+         COUNT(*) FILTER (WHERE ut.status = 'completed' AND (t.best_time ILIKE '%winter%' OR t.best_time ILIKE '%snow%' OR t.best_time ILIKE '%december%' OR t.best_time ILIKE '%january%')) AS winter_treks,
+         COUNT(*) FILTER (WHERE ut.status = 'completed' AND GREATEST(t.elevation_m, t.highest_point_m) >= 3000) AS summits_3000m,
+         COUNT(*) FILTER (WHERE ut.status = 'completed' AND GREATEST(t.elevation_m, t.highest_point_m) >= 4500) AS summits_4500m
+       FROM user_treks ut
+       JOIN treks t ON ut.trek_id = t.trek_id
+       WHERE ut.user_id = $1`,
+      [userId]
+    );
+
+    const calcStats = statsCalcRes.rows[0];
+    const treksCompleted = parseInt(calcStats.treks_completed || 0, 10);
+    const totalDistanceKm = parseFloat(calcStats.total_distance_km || 0);
+    const statesExplored = parseInt(calcStats.states_explored || 0, 10);
+    const winterTreks = parseInt(calcStats.winter_treks || 0, 10);
+    const summits3000m = parseInt(calcStats.summits_3000m || 0, 10);
+    const summits4500m = parseInt(calcStats.summits_4500m || 0, 10);
+
+    for (const badge of allMilestones) {
+      if (existingEarnedIds.has(badge.badge_id)) continue;
+
+      let qualifies = false;
+      switch (badge.requirement_type) {
+        case 'treks_completed':
+          qualifies = treksCompleted >= badge.requirement_value;
+          break;
+        case 'distance_km':
+          qualifies = totalDistanceKm >= badge.requirement_value;
+          break;
+        case 'states_explored':
+          qualifies = statesExplored >= badge.requirement_value;
+          break;
+        case 'winter_trek':
+          qualifies = winterTreks >= badge.requirement_value;
+          break;
+        case 'summit_3000m':
+          qualifies = summits3000m >= badge.requirement_value;
+          break;
+        case 'summit_4500m':
+          qualifies = summits4500m >= badge.requirement_value;
+          break;
+      }
+
+      if (qualifies) {
+        await client.query(
+          `INSERT INTO user_badges (user_id, badge_id, earned_at)
+           VALUES ($1, $2, CURRENT_TIMESTAMP)
+           ON CONFLICT (user_id, badge_id) DO NOTHING`,
+          [userId, badge.badge_id]
+        );
+
+        // Activity for newly earned milestone badge
+        await client.query(
+          `INSERT INTO user_activities (user_id, type, title, description, badge_id, metadata, created_at)
+           VALUES ($1, 'BADGE_EARNED', $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
+          [
+            userId,
+            `Earned ${badge.name}`,
+            `Unlocked milestone: ${badge.description}`,
+            badge.badge_id,
+            JSON.stringify({ rarity: badge.rarity, category: badge.category })
+          ]
+        );
+
+        newlyEarnedBadges.push({ ...badge, is_trek_badge: false });
+      }
+    }
+
+    // 6. Log Activities (Avoid duplicates if completing same trek again)
+    const existingActivityRes = await client.query(
+      `SELECT activity_id FROM user_activities WHERE user_id = $1 AND type = 'TREK_COMPLETED' AND trek_id = $2`,
+      [userId, trekId]
+    );
+
+    if (existingActivityRes.rows.length === 0) {
+      const durationDesc = trek.duration_label || (trek.duration_hours ? `${trek.duration_hours}h` : '1 Day');
+      const distDesc = trek.distance_km ? `${trek.distance_km} km` : 'Trail';
+      const locDesc = trek.state_name || 'India';
+      const descText = `${distDesc} • ${durationDesc} • ${locDesc}`;
+
+      await client.query(
+        `INSERT INTO user_activities (user_id, type, title, description, trek_id, metadata, created_at)
+         VALUES ($1, 'TREK_COMPLETED', $2, $3, $4, $5, $6)`,
+        [
+          userId,
+          `Completed ${trek.trek_name}`,
+          descText,
+          trekId,
+          JSON.stringify({
+            distance_km: trek.distance_km,
+            elevation_m: trek.elevation_m,
+            duration: durationDesc,
+            state: locDesc
+          }),
+          completionTimestamp
+        ]
+      );
+    }
+
+    if (isNewTrekBadge) {
+      const existingBadgeAct = await client.query(
+        `SELECT activity_id FROM user_activities WHERE user_id = $1 AND type = 'BADGE_EARNED' AND badge_id = $2`,
+        [userId, trekBadge.badge_id]
+      );
+      if (existingBadgeAct.rows.length === 0) {
+        await client.query(
+          `INSERT INTO user_activities (user_id, type, title, description, trek_id, badge_id, metadata, created_at)
+           VALUES ($1, 'BADGE_EARNED', $2, $3, $4, $5, $6, $7)`,
+          [
+            userId,
+            `Earned ${trekBadge.name}`,
+            trekBadge.description,
+            trekId,
+            trekBadge.badge_id,
+            JSON.stringify({ rarity: trekBadge.rarity, is_trek_badge: true }),
+            completionTimestamp
+          ]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+
+    // 7. Fetch authoritative profile stats to return
+    const profile = await getUserProfile(userId);
+
+    return {
+      success: true,
+      completed: true,
+      trek: {
+        trek_id: trek.trek_id,
+        name: trek.trek_name,
+        slug: trek.slug,
+        distance_km: trek.distance_km,
+        elevation_m: trek.elevation_m,
+        duration_label: trek.duration_label,
+        state: trek.state_name
+      },
+      trekBadge: {
+        ...trekBadge,
+        earned_at: completionTimestamp
+      },
+      newlyEarnedBadges,
+      stats: profile.stats,
+      profile
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Uncomplete / Remove Trek Completion — Atomic Transaction
+ * 1. Remove completion row from user_treks
+ * 2. Remove individual trek badge
+ * 3. Re-evaluate milestone badges and revoke unearned ones
+ * 4. Return recalculated profile stats
+ */
+export async function uncompleteTrek(userId, trekId) {
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Remove completion record
+    await client.query(
+      `DELETE FROM user_treks WHERE user_id = $1 AND trek_id = $2 AND status = 'completed'`,
+      [userId, trekId]
+    );
+
+    // 2. Remove individual trek badge from user_badges
+    await client.query(
+      `DELETE FROM user_badges 
+       WHERE user_id = $1 AND badge_id IN (
+         SELECT badge_id FROM badges WHERE trek_id = $2
+       )`,
+      [userId, trekId]
+    );
+
+    // 3. Remove activities associated with this completion
+    await client.query(
+      `DELETE FROM user_activities WHERE user_id = $1 AND trek_id = $2 AND type = 'TREK_COMPLETED'`,
+      [userId, trekId]
+    );
+    await client.query(
+      `DELETE FROM user_activities 
+       WHERE user_id = $1 AND type = 'BADGE_EARNED' AND badge_id IN (
+         SELECT badge_id FROM badges WHERE trek_id = $2
+       )`,
+      [userId, trekId]
+    );
+
+    // 4. Re-calculate current stats to verify milestone badges
+    const statsCalcRes = await client.query(
+      `SELECT
+         COUNT(DISTINCT ut.trek_id) FILTER (WHERE ut.status = 'completed') AS treks_completed,
+         COALESCE(SUM(t.distance_km) FILTER (WHERE ut.status = 'completed'), 0) AS total_distance_km,
+         COALESCE(MAX(GREATEST(t.elevation_m, t.highest_point_m)) FILTER (WHERE ut.status = 'completed'), 0) AS highest_summit_m,
+         COUNT(DISTINCT t.state_id) FILTER (WHERE ut.status = 'completed') AS states_explored,
+         COUNT(*) FILTER (WHERE ut.status = 'completed' AND (t.best_time ILIKE '%winter%' OR t.best_time ILIKE '%snow%' OR t.best_time ILIKE '%december%' OR t.best_time ILIKE '%january%')) AS winter_treks,
+         COUNT(*) FILTER (WHERE ut.status = 'completed' AND GREATEST(t.elevation_m, t.highest_point_m) >= 3000) AS summits_3000m,
+         COUNT(*) FILTER (WHERE ut.status = 'completed' AND GREATEST(t.elevation_m, t.highest_point_m) >= 4500) AS summits_4500m
+       FROM user_treks ut
+       JOIN treks t ON ut.trek_id = t.trek_id
+       WHERE ut.user_id = $1`,
+      [userId]
+    );
+
+    const calcStats = statsCalcRes.rows[0];
+    const treksCompleted = parseInt(calcStats.treks_completed || 0, 10);
+    const totalDistanceKm = parseFloat(calcStats.total_distance_km || 0);
+    const statesExplored = parseInt(calcStats.states_explored || 0, 10);
+    const winterTreks = parseInt(calcStats.winter_treks || 0, 10);
+    const summits3000m = parseInt(calcStats.summits_3000m || 0, 10);
+    const summits4500m = parseInt(calcStats.summits_4500m || 0, 10);
+
+    // Fetch all milestone badges the user currently holds
+    const userMilestonesRes = await client.query(
+      `SELECT b.* 
+       FROM user_badges ub
+       JOIN badges b ON ub.badge_id = b.badge_id
+       WHERE ub.user_id = $1 AND b.trek_id IS NULL`,
+      [userId]
+    );
+
+    for (const badge of userMilestonesRes.rows) {
+      let stillQualifies = false;
+      switch (badge.requirement_type) {
+        case 'treks_completed':
+          stillQualifies = treksCompleted >= badge.requirement_value;
+          break;
+        case 'distance_km':
+          stillQualifies = totalDistanceKm >= badge.requirement_value;
+          break;
+        case 'states_explored':
+          stillQualifies = statesExplored >= badge.requirement_value;
+          break;
+        case 'winter_trek':
+          stillQualifies = winterTreks >= badge.requirement_value;
+          break;
+        case 'summit_3000m':
+          stillQualifies = summits3000m >= badge.requirement_value;
+          break;
+        case 'summit_4500m':
+          stillQualifies = summits4500m >= badge.requirement_value;
+          break;
+      }
+
+      if (!stillQualifies) {
+        await client.query(
+          `DELETE FROM user_badges WHERE user_id = $1 AND badge_id = $2`,
+          [userId, badge.badge_id]
+        );
+        await client.query(
+          `DELETE FROM user_activities WHERE user_id = $1 AND badge_id = $2`,
+          [userId, badge.badge_id]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+
+    const profile = await getUserProfile(userId);
+    return {
+      success: true,
+      completed: false,
+      message: 'Trek completion removed.',
+      stats: profile.stats,
+      profile
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * Add / Update / Toggle Trek Status for user (Completed, Saved, Wishlist, or Remove)
  */
 export async function setUserTrekStatus(userId, trekId, { status, rating, completed_at, notes }) {
@@ -266,7 +693,7 @@ export async function setUserTrekStatus(userId, trekId, { status, rating, comple
   }
 
   // Fetch trek info for activity log
-  const trekRes = await query(`SELECT trek_name FROM treks WHERE trek_id = $1`, [trekId]);
+  const trekRes = await query(`SELECT t.trek_name, s.state_name FROM treks t LEFT JOIN states s ON t.state_id = s.state_id WHERE t.trek_id = $1`, [trekId]);
   if (trekRes.rows.length === 0) {
     const err = new Error('Trek not found.');
     err.statusCode = 404;
@@ -274,54 +701,49 @@ export async function setUserTrekStatus(userId, trekId, { status, rating, comple
   }
   const trekName = trekRes.rows[0].trek_name;
 
-  if (status === 'none') {
-    // Delete status
-    await query(`DELETE FROM user_treks WHERE user_id = $1 AND trek_id = $2`, [userId, trekId]);
-  } else {
-    // Upsert trek status
-    await query(
-      `INSERT INTO user_treks (user_id, trek_id, status, personal_rating, completed_at, notes, updated_at)
-       VALUES ($1, $2, $3, $4, COALESCE($5, CURRENT_TIMESTAMP), $6, CURRENT_TIMESTAMP)
-       ON CONFLICT (user_id, trek_id, status) DO UPDATE SET
-         personal_rating = COALESCE(EXCLUDED.personal_rating, user_treks.personal_rating),
-         completed_at = COALESCE(EXCLUDED.completed_at, user_treks.completed_at),
-         notes = COALESCE(EXCLUDED.notes, user_treks.notes),
-         updated_at = CURRENT_TIMESTAMP`,
-      [userId, trekId, status, rating || null, completed_at || null, notes || null]
-    );
-
-    // Log user activity
-    let actType = 'TREK_COMPLETED';
-    let actTitle = `Completed ${trekName}`;
-    if (status === 'saved') {
-      actType = 'TREK_SAVED';
-      actTitle = `Saved ${trekName}`;
-    } else if (status === 'wishlist') {
-      actType = 'WISHLIST_ADDED';
-      actTitle = `Added ${trekName} to Wishlist`;
-    }
-
-    await logUserActivity(userId, actType, actTitle, null, trekId);
-
-    // Evaluate badges automatically if trek completed
-    if (status === 'completed') {
-      await evaluateBadges(userId);
-    }
+  if (status === 'completed') {
+    return completeTrek(userId, trekId, { completed_at, notes, rating });
   }
 
+  if (status === 'none') {
+    // Delete all user trek statuses for this trek (both saved & wishlist)
+    await query(`DELETE FROM user_treks WHERE user_id = $1 AND trek_id = $2`, [userId, trekId]);
+    return getUserProfile(userId);
+  }
+
+  // Upsert trek status (saved or wishlist)
+  await query(
+    `INSERT INTO user_treks (user_id, trek_id, status, personal_rating, completed_at, notes, updated_at)
+     VALUES ($1, $2, $3, $4, COALESCE($5, CURRENT_TIMESTAMP), $6, CURRENT_TIMESTAMP)
+     ON CONFLICT (user_id, trek_id, status) DO UPDATE SET
+       personal_rating = COALESCE(EXCLUDED.personal_rating, user_treks.personal_rating),
+       completed_at = COALESCE(EXCLUDED.completed_at, user_treks.completed_at),
+       notes = COALESCE(EXCLUDED.notes, user_treks.notes),
+       updated_at = CURRENT_TIMESTAMP`,
+    [userId, trekId, status, rating || null, completed_at || null, notes || null]
+  );
+
+  // Log user activity
+  let actType = 'TREK_SAVED';
+  let actTitle = `Saved ${trekName}`;
+  if (status === 'wishlist') {
+    actType = 'WISHLIST_ADDED';
+    actTitle = `Added ${trekName} to Wishlist`;
+  }
+
+  await logUserActivity(userId, actType, actTitle, null, trekId);
   return getUserProfile(userId);
 }
 
 /**
- * Automatically Evaluate and Award Badges based on User Activity
+ * Automatically Evaluate and Award Badges based on User Activity (standalone helper)
  */
 export async function evaluateBadges(userId) {
   const profileData = await getUserProfile(userId);
-  if (!profileData) return;
+  if (!profileData) return [];
 
   const { stats } = profileData;
 
-  // Additional stats needed for specific badges
   const seasonalStatsRes = await query(
     `SELECT 
        COUNT(*) FILTER (WHERE t.best_time ILIKE '%winter%' OR t.best_time ILIKE '%snow%' OR t.best_time ILIKE '%december%' OR t.best_time ILIKE '%january%') AS winter_treks,
@@ -338,11 +760,9 @@ export async function evaluateBadges(userId) {
   const summits3000m = parseInt(extraStats.summits_3000m || 0, 10);
   const summits4500m = parseInt(extraStats.summits_4500m || 0, 10);
 
-  // Fetch all badges
-  const allBadgesRes = await query(`SELECT * FROM badges`);
+  const allBadgesRes = await query(`SELECT * FROM badges WHERE trek_id IS NULL`);
   const allBadges = allBadgesRes.rows;
 
-  // Fetch user earned badges
   const earnedRes = await query(`SELECT badge_id FROM user_badges WHERE user_id = $1`, [userId]);
   const earnedBadgeIds = new Set(earnedRes.rows.map(r => parseInt(r.badge_id, 10)));
 
@@ -381,7 +801,7 @@ export async function evaluateBadges(userId) {
         [userId, badge.badge_id]
       );
 
-      await logUserActivity(userId, 'BADGE_EARNED', `Earned ${badge.name} badge`, `Unlocked ${badge.rarity} badge`, null, badge.badge_id);
+      await logUserActivity(userId, 'BADGE_EARNED', `Earned ${badge.name}`, `Unlocked milestone: ${badge.description}`, null, badge.badge_id);
       newlyEarned.push(badge);
     }
   }
@@ -390,7 +810,7 @@ export async function evaluateBadges(userId) {
 }
 
 /**
- * Get all badges with unlock state & progress
+ * Get all badges with unlock state & progress, partitioned into Trek Badges & Milestone Badges
  */
 export async function getUserBadges(userId) {
   const profileData = await getUserProfile(userId);
@@ -408,17 +828,19 @@ export async function getUserBadges(userId) {
   );
   const extraStats = extraStatsRes.rows[0];
 
-  const badgesRes = await query(
+  // 1. Fetch Milestone Badges (where trek_id IS NULL)
+  const milestoneRes = await query(
     `SELECT 
        b.*,
        ub.earned_at
      FROM badges b
      LEFT JOIN user_badges ub ON b.badge_id = ub.badge_id AND ub.user_id = $1
+     WHERE b.trek_id IS NULL
      ORDER BY (ub.earned_at IS NOT NULL) DESC, b.badge_id ASC`,
     [userId]
   );
 
-  return badgesRes.rows.map(b => {
+  const milestoneBadges = milestoneRes.rows.map(b => {
     let current = 0;
     switch (b.requirement_type) {
       case 'treks_completed': current = stats.treksCompleted; break;
@@ -448,6 +870,60 @@ export async function getUserBadges(userId) {
       progress_pct: progress
     };
   });
+
+  // 2. Fetch User Trek Badges (both earned and featured/available)
+  const trekBadgesRes = await query(
+    `SELECT 
+       b.*,
+       ub.earned_at,
+       t.trek_name,
+       t.slug AS trek_slug,
+       t.distance_km,
+       t.elevation_m,
+       t.duration_label,
+       s.state_name
+     FROM user_badges ub
+     JOIN badges b ON ub.badge_id = b.badge_id
+     JOIN treks t ON b.trek_id = t.trek_id
+     LEFT JOIN states s ON t.state_id = s.state_id
+     WHERE ub.user_id = $1 AND b.trek_id IS NOT NULL
+     ORDER BY ub.earned_at DESC`,
+    [userId]
+  );
+
+  const trekBadges = trekBadgesRes.rows.map(b => {
+    return {
+      badge_id: b.badge_id,
+      trek_id: b.trek_id,
+      slug: b.slug,
+      name: b.name,
+      description: b.description,
+      category: 'Trek Badges',
+      icon: b.icon,
+      rarity: b.rarity,
+      unlocked: true,
+      earned_at: b.earned_at,
+      trek_name: b.trek_name,
+      trek_slug: b.trek_slug,
+      distance_km: b.distance_km,
+      elevation_m: b.elevation_m,
+      duration_label: b.duration_label,
+      state_name: b.state_name
+    };
+  });
+
+  const earnedMilestonesCount = milestoneBadges.filter(b => b.unlocked).length;
+  const earnedTrekBadgesCount = trekBadges.length;
+
+  return {
+    totalUnlocked: earnedMilestonesCount + earnedTrekBadgesCount,
+    milestonesCount: milestoneBadges.length,
+    milestonesUnlocked: earnedMilestonesCount,
+    trekBadgesCount: earnedTrekBadgesCount,
+    trekBadgesUnlocked: earnedTrekBadgesCount,
+    milestoneBadges,
+    trekBadges
+  };
 }
 
 /**
@@ -462,15 +938,17 @@ export async function logUserActivity(userId, type, title, description = null, t
 }
 
 /**
- * Get User Activity Feed
+ * Get User Activity Feed with smart date grouping
  */
-export async function getUserActivities(userId, limit = 20) {
+export async function getUserActivities(userId, limit = 30) {
   const res = await query(
     `SELECT 
        ua.*,
        t.trek_name,
+       t.slug AS trek_slug,
        b.name AS badge_name,
-       b.icon AS badge_icon
+       b.icon AS badge_icon,
+       b.rarity AS badge_rarity
      FROM user_activities ua
      LEFT JOIN treks t ON ua.trek_id = t.trek_id
      LEFT JOIN badges b ON ua.badge_id = b.badge_id
@@ -479,7 +957,31 @@ export async function getUserActivities(userId, limit = 20) {
      LIMIT $2`,
     [userId, limit]
   );
-  return res.rows;
+
+  return res.rows.map(item => {
+    const actDate = new Date(item.created_at);
+    const now = new Date();
+    
+    // Check if Today
+    const isToday = actDate.toDateString() === now.toDateString();
+    
+    // Check if Yesterday
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = actDate.toDateString() === yesterday.toDateString();
+
+    let dateGroup = actDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+    if (isToday) dateGroup = 'TODAY';
+    else if (isYesterday) dateGroup = 'YESTERDAY';
+
+    const formattedTime = actDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    return {
+      ...item,
+      date_group: dateGroup,
+      formatted_time: formattedTime
+    };
+  });
 }
 
 /**
@@ -599,7 +1101,6 @@ export async function getUserChecklist(userId) {
       updated_at: res.rows[0].updated_at
     };
   } catch (err) {
-    // If table not created yet or fallback
     console.warn('Checklist query error:', err.message);
     return { items: [], updated_at: null };
   }
@@ -620,7 +1121,6 @@ export async function saveUserChecklist(userId, items) {
       [userId, JSON.stringify(sanitizedItems)]
     );
   } catch (err) {
-    // Attempt auto table creation if needed
     if (err.message.includes('relation "user_checklists" does not exist')) {
       await query(`
         CREATE TABLE IF NOT EXISTS user_checklists (
@@ -645,4 +1145,5 @@ export async function saveUserChecklist(userId, items) {
 
   return getUserChecklist(userId);
 }
+
 

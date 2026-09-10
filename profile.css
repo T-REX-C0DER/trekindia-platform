@@ -607,11 +607,24 @@ button {
 
 /* ==========================================================================
    TREK CARDS GRID
+/* ==========================================================================
+   TREK CARDS GRID
    ========================================================================== */
 .trek-cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
+}
+
+#highlightsTrekGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  max-width: 100%;
+  gap: 20px;
+}
+
+#highlightsTrekGrid .trek-card {
+  max-width: 340px;
 }
 
 .trek-card {
@@ -631,16 +644,20 @@ button {
 }
 
 .trek-card-media {
-  height: 140px;
+  height: 150px;
   position: relative;
   overflow: hidden;
-  background: #EAF2EA;
+  background: linear-gradient(135deg, #EAF2EA 0%, #D5E5D5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .trek-card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
   transition: transform 0.4s ease;
 }
 
@@ -652,8 +669,9 @@ button {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(23, 59, 29, 0.85);
-  backdrop-filter: blur(4px);
+  background: rgba(23, 59, 29, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: #FFFFFF;
   font-size: 0.725rem;
   font-weight: 700;
@@ -661,7 +679,9 @@ button {
   border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .trek-card-content {
@@ -676,7 +696,18 @@ button {
   font-weight: 700;
   color: var(--deep-forest);
   margin-bottom: 4px;
-  line-height: 1.3;
+  line-height: 1.35;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+.trek-title:hover {
+  color: var(--primary-forest);
 }
 
 .trek-location {
@@ -690,28 +721,35 @@ button {
 
 .trek-stats-footer {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   padding-top: 12px;
   border-top: 1px solid var(--border-color);
   margin-top: auto;
   font-size: 0.8rem;
   color: var(--text-secondary);
+  gap: 8px;
 }
 
 .trek-stat-col {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .trek-stat-val {
   font-weight: 700;
   color: var(--text-primary);
+  white-space: nowrap;
+  font-size: 0.85rem;
 }
 
 .trek-stat-lbl {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 /* ==========================================================================
@@ -848,12 +886,11 @@ button {
   letter-spacing: 0.05em;
   padding: 3px 8px;
   border-radius: var(--radius-pill);
-}
-
-.rarity-Common { background: var(--bg-main); color: var(--text-secondary); }
-.rarity-Rare { background: #E3F2FD; color: #1565C0; }
-.rarity-Epic { background: #FBE9E7; color: #D84315; }
-.rarity-Legendary { background: #FFF8E1; color: #B78103; border: 1px solid var(--achievement-gold); }
+}.rarity-Common { background: #F1F5F2; color: #4A5568; border: 1px solid #CBD5E0; }
+.rarity-Uncommon { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+.rarity-Rare { background: #E3F2FD; color: #1565C0; border: 1px solid #90CAF9; }
+.rarity-Epic { background: #F3E5F5; color: #7B1FA2; border: 1px solid #CE93D8; }
+.rarity-Legendary { background: #FFF8E1; color: #B78103; border: 1px solid #FFD54F; box-shadow: 0 0 8px rgba(255, 213, 79, 0.4); }
 
 .badge-icon-wrap {
   width: 72px;
@@ -868,34 +905,57 @@ button {
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
+.badge-card.unlocked {
+  border-color: rgba(40, 93, 42, 0.35);
+  background: linear-gradient(180deg, rgba(240, 245, 241, 0.5) 0%, var(--surface-card) 100%);
+  box-shadow: 0 4px 16px rgba(40, 93, 42, 0.08);
+}
+
+.badge-card.unlocked .badge-icon-wrap {
+  background: linear-gradient(135deg, #285D2A, #3E7C41);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(40, 93, 42, 0.3);
+}
+
 .badge-card.locked .badge-icon-wrap {
   background: #EAEAEA;
-  color: #A0A0A0;
+  color: #9E9E9E;
 }
 
 .badge-card.locked {
-  opacity: 0.7;
+  opacity: 0.72;
+  filter: grayscale(0.2);
 }
 
 .badge-title {
-  font-size: 1.05rem;
+  font-size: 1.025rem;
   font-weight: 700;
   color: var(--deep-forest);
   margin-bottom: 6px;
+  line-height: 1.3;
 }
 
 .badge-desc {
   font-size: 0.825rem;
   color: var(--text-secondary);
   line-height: 1.4;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex: 1;
 }
 
-.badge-status {
+.badge-meta-sub {
   font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.badge-status {
+  font-size: 0.775rem;
   font-weight: 700;
   color: var(--primary-forest);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .badge-card.locked .badge-status {
@@ -905,20 +965,21 @@ button {
 .badge-progress-bar {
   width: 100%;
   height: 6px;
-  background: #EAEAEA;
+  background: #E2E8F0;
   border-radius: 3px;
   overflow: hidden;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .badge-progress-fill {
   height: 100%;
   background: var(--primary-forest);
   border-radius: 3px;
+  transition: width 0.3s ease;
 }
 
 /* ==========================================================================
-   TIMELINE ACTIVITY
+   TIMELINE ACTIVITY & DATE GROUPING
    ========================================================================== */
 .activity-card {
   background: var(--surface-card);
@@ -943,9 +1004,32 @@ button {
   background: var(--border-color);
 }
 
+.timeline-group {
+  margin-bottom: 24px;
+}
+
+.timeline-group:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-group-header {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--primary-forest);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--soft-green);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+}
+
 .timeline-item {
   position: relative;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .timeline-item:last-child {
@@ -954,14 +1038,18 @@ button {
 
 .timeline-dot {
   position: absolute;
-  left: -20px;
-  top: 5px;
-  width: 14px;
-  height: 14px;
+  left: -26px;
+  top: 2px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: var(--primary-forest);
-  border: 3px solid var(--surface-card);
-  box-shadow: 0 0 0 2px var(--soft-green);
+  background: var(--surface-card);
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
 }
 
 .timeline-content {
@@ -971,12 +1059,36 @@ button {
 .timeline-title {
   font-weight: 700;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.timeline-desc {
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
 }
 
 .timeline-time {
-  font-size: 0.775rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
-  margin-top: 2px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.timeline-date-group {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 6px 0 4px;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-color);
+  opacity: 0.7;
 }
 
 /* ==========================================================================

@@ -40,7 +40,7 @@ export async function setTrekStatus(req, res, next) {
   try {
     const { trekId } = req.params;
     const { status, rating, completed_at, notes } = req.body;
-    const updatedProfile = await profileService.setUserTrekStatus(req.user.user_id, parseInt(trekId, 10), {
+    const result = await profileService.setUserTrekStatus(req.user.user_id, parseInt(trekId, 10), {
       status,
       rating,
       completed_at,
@@ -49,17 +49,53 @@ export async function setTrekStatus(req, res, next) {
     return res.status(200).json({
       success: true,
       message: status === 'none' ? 'Trek removed from your profile.' : `Trek marked as ${status}.`,
-      ...updatedProfile
+      ...result
     });
   } catch (error) {
     next(error);
   }
 }
 
+export async function completeTrek(req, res, next) {
+  try {
+    const { trekId } = req.params;
+    const { completed_at, notes, rating } = req.body;
+    const result = await profileService.completeTrek(req.user.user_id, parseInt(trekId, 10), {
+      completed_at,
+      notes,
+      rating
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function uncompleteTrek(req, res, next) {
+  try {
+    const { trekId } = req.params;
+    const result = await profileService.uncompleteTrek(req.user.user_id, parseInt(trekId, 10));
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getTrekUserStatus(req, res, next) {
+  try {
+    const { trekId } = req.params;
+    const statuses = await profileService.getUserTrekStatus(req.user.user_id, parseInt(trekId, 10));
+    return res.status(200).json({ success: true, ...statuses });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
 export async function getBadges(req, res, next) {
   try {
-    const badges = await profileService.getUserBadges(req.user.user_id);
-    return res.status(200).json({ success: true, count: badges.length, badges });
+    const badgeData = await profileService.getUserBadges(req.user.user_id);
+    return res.status(200).json({ success: true, ...badgeData });
   } catch (error) {
     next(error);
   }

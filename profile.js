@@ -51,6 +51,10 @@
     savedTreksGrid: document.getElementById('savedTreksGrid'),
     wishlistGrid: document.getElementById('wishlistGrid'),
     badgesGrid: document.getElementById('badgesGrid'),
+    trekBadgesGrid: document.getElementById('trekBadgesGrid'),
+    milestoneBadgesGrid: document.getElementById('milestoneBadgesGrid'),
+    trekBadgesCountBadge: document.getElementById('trekBadgesCountBadge'),
+    milestoneBadgesCountBadge: document.getElementById('milestoneBadgesCountBadge'),
     reviewsGrid: document.getElementById('reviewsGrid'),
     fullActivityTimeline: document.getElementById('fullActivityTimeline'),
     myTreksCompletedCount: document.getElementById('myTreksCompletedCount'),
@@ -290,7 +294,7 @@
       const data = await res.json();
 
       if (data.success && data.activities && data.activities.length > 0) {
-        DOM.overviewTimeline.innerHTML = data.activities.map(a => renderTimelineItemHtml(a)).join('');
+        DOM.overviewTimeline.innerHTML = renderGroupedTimeline(data.activities);
       } else {
         DOM.overviewTimeline.innerHTML = `
           <div style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; padding: 20px;">
@@ -379,15 +383,66 @@
     }
   }
 
-  // 12. Load Badges Grid
+  // 12. Load Badges Grid — renders Trek Badges and Milestone Badges in separate sections
   async function loadBadges() {
     try {
+      // Show loading skeletons
+      if (DOM.trekBadgesGrid) {
+        DOM.trekBadgesGrid.innerHTML = '<div class="trek-card skeleton" style="height:180px"></div>'.repeat(4);
+      }
+      if (DOM.milestoneBadgesGrid) {
+        DOM.milestoneBadgesGrid.innerHTML = '<div class="trek-card skeleton" style="height:180px"></div>'.repeat(3);
+      }
+
       const res = await fetch('/api/profile/badges', { credentials: 'include' });
       const data = await res.json();
 
-      if (data.success && data.badges) {
-        DOM.badgesGrid.innerHTML = data.badges.map(b => renderBadgeCardHtml(b)).join('');
+      if (!data.success) return;
+
+      // --- Section A: My Trek Badges ---
+      const trekBadges = data.trekBadges || [];
+      const earnedTrekBadges = trekBadges.filter(b => b.unlocked);
+
+      if (DOM.trekBadgesCountBadge) {
+        DOM.trekBadgesCountBadge.textContent = `${earnedTrekBadges.length} Earned`;
       }
+
+      if (DOM.trekBadgesGrid) {
+        if (trekBadges.length > 0) {
+          DOM.trekBadgesGrid.innerHTML = trekBadges.map(b => renderTrekBadgeCardHtml(b)).join('');
+        } else {
+          DOM.trekBadgesGrid.innerHTML = `
+            <div class="empty-state-card" style="grid-column: 1 / -1;">
+              <div class="empty-state-icon">🏔️</div>
+              <div class="empty-state-title">Complete your first trek to earn a Trek Badge.</div>
+              <a href="index.html#treks" class="btn-primary-sm">Explore Treks</a>
+            </div>`;
+        }
+      }
+
+      // --- Section B: Milestone Badges ---
+      const milestoneBadges = data.milestoneBadges || [];
+      const earnedMilestones = milestoneBadges.filter(b => b.unlocked);
+
+      if (DOM.milestoneBadgesCountBadge) {
+        DOM.milestoneBadgesCountBadge.textContent = `${earnedMilestones.length} / ${milestoneBadges.length} Earned`;
+      }
+
+      if (DOM.milestoneBadgesGrid) {
+        if (milestoneBadges.length > 0) {
+          DOM.milestoneBadgesGrid.innerHTML = milestoneBadges.map(b => renderBadgeCardHtml(b)).join('');
+        } else {
+          DOM.milestoneBadgesGrid.innerHTML = `
+            <div class="empty-state-card" style="grid-column: 1 / -1;">
+              <div class="empty-state-icon">🏆</div>
+              <div class="empty-state-title">No milestone badges available yet.</div>
+            </div>`;
+        }
+      }
+
+      // Hide fallback grid
+      if (DOM.badgesGrid) DOM.badgesGrid.style.display = 'none';
+
     } catch (err) {
       console.error('Error loading badges:', err);
     }
@@ -421,8 +476,8 @@
       const res = await fetch('/api/profile/activity?limit=30', { credentials: 'include' });
       const data = await res.json();
 
-      if (data.success && data.activities && data.activities.length > 0) {
-        DOM.fullActivityTimeline.innerHTML = data.activities.map(a => renderTimelineItemHtml(a)).join('');
+      if (data.success && data.activities) {
+        DOM.fullActivityTimeline.innerHTML = renderGroupedTimeline(data.activities);
       } else {
         DOM.fullActivityTimeline.innerHTML = `
           <div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center; padding: 30px;">
@@ -436,10 +491,12 @@
   }
 
   // 15. HTML Component Generators
+  const DEFAULT_TREK_IMG = 'trek_roopkund_1784286741949.png';
+
   function renderTrekCardHtml(t, isCompleted = false, actionType = 'completed') {
-    const imgUrl = t.image_url || 'hero_himalayas_1784286730612.png';
+    const imgUrl = t.image_url || DEFAULT_TREK_IMG;
     const elev = t.elevation_m ? `${t.elevation_m.toLocaleString()} m` : '—';
-    const dist = t.distance_km ? `${t.distance_km} km` : '—';
+    const dist = t.distance_km ? `${parseFloat(t.distance_km)} km` : '—';
 
     let actionBtnHtml = '';
     if (actionType === 'saved' || actionType === 'wishlist') {
@@ -453,7 +510,7 @@
     return `
       <div class="trek-card">
         <div class="trek-card-media">
-          <img src="${escapeHtml(imgUrl)}" class="trek-card-img" alt="${escapeHtml(t.name)}" onerror="this.src='hero_himalayas_1784286730612.png'" />
+          <img src="${escapeHtml(imgUrl)}" class="trek-card-img" alt="${escapeHtml(t.name)}" onerror="this.onerror=null;this.src='${DEFAULT_TREK_IMG}';" loading="lazy" />
           ${isCompleted ? `
             <div class="trek-badge-overlay">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -487,6 +544,29 @@
     `;
   }
 
+  // Renders individual trek-specific badge cards (earned or locked)
+  function renderTrekBadgeCardHtml(b) {
+    const lockedClass = b.unlocked ? '' : 'locked';
+    const formattedDate = b.earned_at ? new Date(b.earned_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '';
+    const trekDetails = [b.distance_km ? `${b.distance_km} km` : null, b.elevation_m ? `${b.elevation_m.toLocaleString()} m` : null, b.state_name || null].filter(Boolean).join(' · ');
+    
+    return `
+      <div class="badge-card ${lockedClass}">
+        <span class="badge-rarity-tag rarity-${b.rarity}">${b.rarity}</span>
+        <div class="badge-icon-wrap">
+          ${getBadgeSvgIcon(b.icon)}
+        </div>
+        <div class="badge-title">${escapeHtml(b.name)}</div>
+        <div class="badge-desc">${escapeHtml(b.description)}</div>
+        ${b.unlocked
+          ? `<div class="badge-status" style="color: var(--primary-forest); font-weight: 600;">✓ Earned · ${formattedDate}</div>`
+          : `<div class="badge-status">Complete ${escapeHtml(b.trek_name || 'this trek')} to unlock</div>`
+        }
+        ${trekDetails ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; opacity: 0.8;">${escapeHtml(trekDetails)}</div>` : ''}
+      </div>
+    `;
+  }
+
   function renderBadgeCardHtml(b) {
     const lockedClass = b.unlocked ? '' : 'locked';
     const formattedDate = b.earned_at ? new Date(b.earned_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '';
@@ -510,28 +590,58 @@
     `;
   }
 
-  function renderTimelineItemHtml(a) {
-    const timeAgo = formatTimeAgo(a.created_at);
+  function renderTimelineItemHtml(a, showDateGroup = false) {
+    const timeDisplay = a.formatted_time || formatTimeAgo(a.created_at);
+    const iconMap = {
+      'TREK_COMPLETED': '🥾',
+      'BADGE_EARNED': '🏅',
+      'TREK_SAVED': '🔖',
+      'WISHLIST_ADDED': '✨',
+      'REVIEW_CREATED': '💬',
+    };
+    const icon = iconMap[a.type] || '📍';
+    
     return `
       <div class="timeline-item">
-        <div class="timeline-dot"></div>
+        <div class="timeline-dot">${icon}</div>
         <div class="timeline-content">
           <div class="timeline-title">${escapeHtml(a.title)}</div>
-          <div class="timeline-time">${timeAgo}</div>
+          ${a.description ? `<div class="timeline-desc">${escapeHtml(a.description)}</div>` : ''}
+          <div class="timeline-time">${timeDisplay}</div>
         </div>
       </div>
     `;
   }
 
+  function renderGroupedTimeline(activities) {
+    if (!activities || activities.length === 0) {
+      return `<div style="font-size: 0.9rem; color: var(--text-secondary); text-align: center; padding: 30px;">No activity recorded yet.</div>`;
+    }
+    
+    let html = '';
+    let lastGroup = null;
+    
+    for (const a of activities) {
+      const group = a.date_group || 'RECENTLY';
+      if (group !== lastGroup) {
+        html += `<div class="timeline-date-group">${escapeHtml(group)}</div>`;
+        lastGroup = group;
+      }
+      html += renderTimelineItemHtml(a);
+    }
+    
+    return html;
+  }
+
   function renderReviewCardHtml(r) {
     const stars = '★'.repeat(Math.round(r.rating)) + '☆'.repeat(5 - Math.round(r.rating));
     const formattedDate = new Date(r.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const imgUrl = r.image_url || 'hero_himalayas_1784286730612.png';
+    const imgUrl = r.image_url || DEFAULT_TREK_IMG;
 
     return `
       <div class="review-card">
         <div class="review-trek-media">
-          <img src="${escapeHtml(imgUrl)}" class="review-trek-img" alt="${escapeHtml(r.trek_name)}" onerror="this.src='hero_himalayas_1784286730612.png'" />
+          <img src="${escapeHtml(imgUrl)}" class="review-trek-img" alt="${escapeHtml(r.trek_name)}" onerror="this.onerror=null;this.src='${DEFAULT_TREK_IMG}';" loading="lazy" />
         </div>
         <div class="review-body">
           <div class="review-header">

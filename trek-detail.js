@@ -167,59 +167,351 @@ function diffClass(diff) {
   return 'moderate';
 }
 
-/* ─── 7. USER ACTIONS ────────────────────────────────────── */
-function initUserActions(trek) {
-  const saveBtn     = document.getElementById('saveTrekBtn');
-  const completeBtn = document.getElementById('completeTrekBtn');
-  let saved     = false;
-  let completed = false;
+/* ─── 7. USER ACTIONS & COMPLETION WORKFLOW ──────────────── */
+async function initUserActions(trek) {
+  const saveBtn          = document.getElementById('saveTrekBtn');
+  const completeBtn      = document.getElementById('completeTrekBtn');
+  const saveBtnText      = document.getElementById('saveBtnText');
+  const completeBtnText  = document.getElementById('completeBtnText');
 
-  saveBtn?.addEventListener('click', () => {
-    saved = !saved;
-    saveBtn.classList.toggle('active', saved);
-    document.getElementById('saveBtnText').textContent = saved ? 'Saved ❤️' : 'Save Trek';
-  });
+  // Modals
+  const completeModal       = document.getElementById('completeTrekModal');
+  const btnCloseComplete    = document.getElementById('btnCloseCompleteModal');
+  const btnCancelComplete   = document.getElementById('btnCancelCompleteModal');
+  const formComplete        = document.getElementById('formCompleteTrek');
+  const completeDateInput   = document.getElementById('completeTrekDate');
+  const completeNotesInput  = document.getElementById('completeTrekNotes');
+  const btnConfirmComplete  = document.getElementById('btnConfirmCompleteTrek');
+  const modalTrekName       = document.getElementById('modalTrekName');
+  const modalStarRating     = document.getElementById('modalStarRating');
 
-  completeBtn?.addEventListener('click', () => {
-    completed = !completed;
-    completeBtn.classList.toggle('active', completed);
-    document.getElementById('completeBtnText').textContent = completed ? 'Completed ✓' : 'Mark Completed';
-  });
+  const uncompleteModal     = document.getElementById('uncompleteTrekModal');
+  const btnCloseUncomplete  = document.getElementById('btnCloseUncompleteModal');
+  const btnCancelUncomplete = document.getElementById('btnCancelUncompleteModal');
+  const btnConfirmUncomplete= document.getElementById('btnConfirmUncompleteTrek');
 
-  // Star rating selector
-  let selectedRating = 0;
-  const starSpans = document.querySelectorAll('#starRatingSelect span');
-  starSpans.forEach(span => {
-    span.addEventListener('click', () => {
-      selectedRating = parseInt(span.dataset.val);
-      starSpans.forEach((s, idx) => {
-        s.classList.toggle('selected', idx < selectedRating);
+  const celebrationModal    = document.getElementById('celebrationModal');
+  const btnCloseCelebration = document.getElementById('btnCloseCelebration');
+  const celebrationTrekName = document.getElementById('celebrationTrekName');
+  const celebrationStatsGrid= document.getElementById('celebrationStatsGrid');
+  const celebrationBadgeWrap= document.getElementById('celebrationBadgeWrap');
+
+  if (modalTrekName) modalTrekName.textContent = trek.name;
+  if (celebrationTrekName) celebrationTrekName.textContent = trek.name;
+
+  let isSaved = false;
+  let isCompleted = false;
+  let selectedModalRating = 0;
+
+  // Star rating selector in complete modal
+  function renderModalStars(rating) {
+    if (!modalStarRating) return;
+    const starSpans = modalStarRating.querySelectorAll('span');
+    starSpans.forEach((s, idx) => {
+      s.classList.toggle('selected', idx < rating);
+    });
+  }
+
+  if (modalStarRating) {
+    const starSpans = modalStarRating.querySelectorAll('span');
+    starSpans.forEach((span, index) => {
+      span.addEventListener('mouseenter', () => {
+        renderModalStars(index + 1);
       });
+      span.addEventListener('click', () => {
+        const val = parseInt(span.dataset.val, 10);
+        selectedModalRating = (selectedModalRating === val ? 0 : val);
+        renderModalStars(selectedModalRating);
+      });
+    });
+
+    modalStarRating.addEventListener('mouseleave', () => {
+      renderModalStars(selectedModalRating);
+    });
+  }
+
+  // Check persisted status from backend
+  async function checkUserStatus() {
+    try {
+      const res = await fetch(`/api/treks/slug/${encodeURIComponent(trek.slug)}/user-status`, {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          isSaved = !!data.saved;
+          isCompleted = !!data.completed;
+          if (data.personal_rating) {
+            selectedModalRating = Math.round(parseFloat(data.personal_rating)) || 0;
+            renderModalStars(selectedModalRating);
+          }
+          if (data.notes && completeNotesInput) {
+            completeNotesInput.value = data.notes;
+          }
+          if (data.completed_at && completeDateInput) {
+            completeDateInput.value = new Date(data.completed_at).toISOString().split('T')[0];
+          }
+          updateButtonStates();
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch user status for trek:', e.message);
+    }
+  }
+
+  function updateButtonStates() {
+    if (saveBtn) {
+      saveBtn.classList.toggle('active', isSaved);
+      if (saveBtnText) saveBtnText.textContent = isSaved ? 'Saved ❤️' : 'Save Trek';
+    }
+    if (completeBtn) {
+      completeBtn.classList.toggle('active', isCompleted);
+      if (completeBtnText) completeBtnText.textContent = isCompleted ? '✓ Completed' : 'Mark Completed';
+    }
+  }
+
+  await checkUserStatus();
+
+  // 1. SAVE TREK HANDLER
+  saveBtn?.addEventListener('click', async () => {
+    const user = window.TrekIndiaAuth ? window.TrekIndiaAuth.getUser() : null;
+    if (!user) {
+      window.location.href = `auth.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}&message=auth_required`;
+      return;
+    }
+
+    try {
+      saveBtn.disabled = true;
+      const res = await fetch(`/api/treks/slug/${encodeURIComponent(trek.slug)}/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ saved: !isSaved })
+      });
+      const data = await res.json();
+      if (data.success) {
+        isSaved = !!data.saved;
+        updateButtonStates();
+      }
+    } catch (err) {
+      console.error('Error saving trek:', err);
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  // 2. COMPLETE BUTTON CLICK
+  completeBtn?.addEventListener('click', () => {
+    const user = window.TrekIndiaAuth ? window.TrekIndiaAuth.getUser() : null;
+    if (!user) {
+      window.location.href = `auth.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}&message=auth_required`;
+      return;
+    }
+
+    if (isCompleted) {
+      // Open Uncomplete confirmation modal
+      if (uncompleteModal) uncompleteModal.classList.add('active');
+    } else {
+      // Open Complete confirmation modal
+      if (completeDateInput && !completeDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        completeDateInput.value = today;
+      }
+      renderModalStars(selectedModalRating);
+      if (completeModal) completeModal.classList.add('active');
+    }
+  });
+
+  // Modal Closers
+  btnCloseComplete?.addEventListener('click', () => completeModal.classList.remove('active'));
+  btnCancelComplete?.addEventListener('click', () => completeModal.classList.remove('active'));
+  btnCloseUncomplete?.addEventListener('click', () => uncompleteModal.classList.remove('active'));
+  btnCancelUncomplete?.addEventListener('click', () => uncompleteModal.classList.remove('active'));
+  btnCloseCelebration?.addEventListener('click', () => celebrationModal.classList.remove('active'));
+
+  // 3. SUBMIT COMPLETE FORM
+  formComplete?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const dateVal = completeDateInput ? completeDateInput.value : new Date().toISOString();
+    const notesVal = completeNotesInput ? completeNotesInput.value.trim() : '';
+
+    try {
+      btnConfirmComplete.disabled = true;
+      btnConfirmComplete.innerHTML = 'Completing...';
+
+      const res = await fetch(`/api/treks/slug/${encodeURIComponent(trek.slug)}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          completed_at: dateVal,
+          notes: notesVal,
+          rating: selectedModalRating || null
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Unable to mark trek as completed.');
+      }
+
+      // Success
+      isCompleted = true;
+      updateButtonStates();
+      completeModal.classList.remove('active');
+
+      // Populate & Show Celebration Modal with Authoritative Stats
+      if (celebrationStatsGrid) {
+        const st = data.stats || {};
+        celebrationStatsGrid.innerHTML = `
+          <div class="celebration-pill">🥾 ${st.totalDistanceKm !== undefined ? st.totalDistanceKm : (trek.distance_km || 0)} km logged</div>
+          <div class="celebration-pill">🏔️ ${st.treksCompleted || 1} treks completed</div>
+          <div class="celebration-pill">📍 ${st.statesExplored || 1} states explored</div>
+          <div class="celebration-pill">🕒 ${st.daysOnTrail || 1} days on trail</div>
+        `;
+      }
+
+      if (celebrationBadgeWrap && data.trekBadge) {
+        celebrationBadgeWrap.innerHTML = `
+          <div class="badge-reward-card">
+            <div class="badge-reward-icon">🏅</div>
+            <div style="text-align: left;">
+              <div class="badge-reward-name">${escapeHtml(data.trekBadge.name)}</div>
+              <div class="badge-reward-sub">${escapeHtml(data.trekBadge.description)} • <strong style="color:var(--detail-accent);">${data.trekBadge.rarity}</strong></div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (celebrationModal) celebrationModal.classList.add('active');
+
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Unable to mark trek as completed. Please try again.');
+    } finally {
+      if (btnConfirmComplete) {
+        btnConfirmComplete.disabled = false;
+        btnConfirmComplete.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Mark Trek as Completed
+        `;
+      }
+    }
+  });
+
+  // 4. SUBMIT UNCOMPLETE ACTION
+  btnConfirmUncomplete?.addEventListener('click', async () => {
+    try {
+      btnConfirmUncomplete.disabled = true;
+      btnConfirmUncomplete.textContent = 'Removing...';
+
+      const res = await fetch(`/api/treks/slug/${encodeURIComponent(trek.slug)}/uncomplete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'include'
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Unable to remove completion.');
+      }
+
+      isCompleted = false;
+      selectedModalRating = 0;
+      renderModalStars(0);
+      if (completeNotesInput) completeNotesInput.value = '';
+      updateButtonStates();
+      uncompleteModal.classList.remove('active');
+
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Error removing trek completion.');
+    } finally {
+      if (btnConfirmUncomplete) {
+        btnConfirmUncomplete.disabled = false;
+        btnConfirmUncomplete.textContent = 'Remove Completion';
+      }
+    }
+  });
+
+  // 5. REVIEW FORM
+  let reviewRating = 0;
+  const reviewContainer = document.getElementById('starRatingSelect');
+  const reviewStars = reviewContainer ? reviewContainer.querySelectorAll('span') : [];
+
+  function renderReviewStars(val) {
+    reviewStars.forEach((s, idx) => {
+      s.classList.toggle('selected', idx < val);
+    });
+  }
+
+  reviewStars.forEach((span, index) => {
+    span.addEventListener('mouseenter', () => {
+      renderReviewStars(index + 1);
+    });
+    span.addEventListener('click', () => {
+      const val = parseInt(span.dataset.val, 10);
+      reviewRating = (reviewRating === val ? 0 : val);
+      renderReviewStars(reviewRating);
     });
   });
 
-  // Submit review button
-  document.getElementById('submitReviewBtn')?.addEventListener('click', () => {
-    const text = document.getElementById('reviewText').value.trim();
-    if (!text && selectedRating === 0) {
-      alert('Please add a rating or comment before submitting.');
+  if (reviewContainer) {
+    reviewContainer.addEventListener('mouseleave', () => {
+      renderReviewStars(reviewRating);
+    });
+  }
+
+  document.getElementById('submitReviewBtn')?.addEventListener('click', async () => {
+    const user = window.TrekIndiaAuth ? window.TrekIndiaAuth.getUser() : null;
+    if (!user) {
+      window.location.href = `auth.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}&message=auth_required`;
       return;
     }
-    const reviewsList = document.getElementById('reviewsList');
-    const newRev      = document.createElement('div');
-    newRev.style.cssText = 'background:var(--detail-card-bg);border:1px solid var(--detail-border);border-radius:12px;padding:16px;margin-top:12px;';
-    newRev.innerHTML = `
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-        <span style="font-weight:600;color:var(--detail-text);">You (Verified Trekker)</span>
-        <span style="color:#F59E0B;">${'★'.repeat(selectedRating || 5)}</span>
-      </div>
-      <p style="font-size:14px;color:var(--detail-text-muted);line-height:1.6;">${text || 'Great trek experience!'}</p>
-    `;
-    reviewsList.prepend(newRev);
-    document.getElementById('reviewText').value = '';
-    alert('Thank you! Your review has been recorded.');
+
+    const text = document.getElementById('reviewText').value.trim();
+    if (!text || reviewRating === 0) {
+      alert('Please provide both a star rating and your review text.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/profile/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          trek_id: trek.trek_id,
+          rating: reviewRating,
+          review_text: text
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const reviewsList = document.getElementById('reviewsList');
+        const newRev = document.createElement('div');
+        newRev.style.cssText = 'background:var(--detail-card-bg);border:1px solid var(--detail-border);border-radius:12px;padding:16px;margin-top:12px;';
+        newRev.innerHTML = `
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-weight:600;color:var(--detail-text);">${escapeHtml(user.full_name || user.username)} (Verified Trekker)</span>
+            <span style="color:#F59E0B;">${'★'.repeat(reviewRating)}</span>
+          </div>
+          <p style="font-size:14px;color:var(--detail-text-muted);line-height:1.6;">${escapeHtml(text)}</p>
+        `;
+        reviewsList.prepend(newRev);
+        document.getElementById('reviewText').value = '';
+        reviewRating = 0;
+        renderReviewStars(0);
+        alert('Thank you! Your review has been recorded.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Failed to submit review.');
+    }
   });
 }
+
 
 /* ─── 8. TREKKING COMPANIES ──────────────────────────────── */
 
