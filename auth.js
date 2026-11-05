@@ -26,29 +26,29 @@ document.addEventListener('DOMContentLoaded', () => {
       subheading: 'Create an explorer account to unlock exclusive high-altitude trails, expedition planning & expert guides.'
     },
     'forgot-password': {
-      badge: 'ACCOUNT RECOVERY',
-      headline: 'Recover Your Key.',
-      subheading: 'Enter your registered email and we\'ll dispatch a secure password reset link to your inbox.'
+      badge: 'RECOVERY UNAVAILABLE',
+      headline: 'Recovery Unavailable.',
+      subheading: 'Password recovery is not configured for this application yet.'
     },
     'email-sent': {
-      badge: 'INBOX VERIFICATION',
-      headline: 'Check Your Inbox.',
-      subheading: 'A secure password reset link has been dispatched. Please check your inbox and spam folder.'
+      badge: 'NO EMAIL SENT',
+      headline: 'No Email Was Sent.',
+      subheading: 'Password recovery is not available yet. No reset link was sent.'
     },
     'reset-password': {
-      badge: 'SECURITY RESET',
-      headline: 'Set New Password.',
-      subheading: 'Choose a strong, unique password to safeguard your TrekIndia explorer profile.'
+      badge: 'RESET UNAVAILABLE',
+      headline: 'Reset Unavailable.',
+      subheading: 'Password reset is not configured. Your password has not been changed.'
     },
     'verify-email': {
-      badge: 'IDENTITY CONFIRMATION',
-      headline: 'Verify Your Email.',
-      subheading: 'Enter the 6-digit verification code sent to your email address to complete registration.'
+      badge: 'VERIFICATION UNAVAILABLE',
+      headline: 'Verification Unavailable.',
+      subheading: 'Email verification is not configured. No verification code can be checked.'
     },
     'success': {
-      badge: 'JOURNEY READY',
-      headline: 'Password Updated!',
-      subheading: 'Your credentials have been updated successfully. Your next Himalayan adventure awaits.'
+      badge: 'ACTION NOT COMPLETED',
+      headline: 'Action Not Completed.',
+      subheading: 'This action is not available yet. No account changes were made.'
     }
   };
 
@@ -356,9 +356,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 
     resendBtn.addEventListener('click', () => {
-      otpTimerSeconds = 59;
-      resendBtn.disabled = true;
-      alert('Verification code resent to your email!');
+      const verifyView = document.getElementById('view-verify-email');
+      if (verifyView) {
+        showFormError(verifyView, 'Email verification is not available yet. No code was sent.');
+      }
+    });
+  }
+
+  const resendLinkBtn = document.getElementById('btn-resend-link');
+  if (resendLinkBtn) {
+    resendLinkBtn.addEventListener('click', () => {
+      const emailSentView = document.getElementById('view-email-sent');
+      if (emailSentView) {
+        showFormError(emailSentView, 'Password recovery is not available yet. No email was sent.');
+      }
     });
   }
 
@@ -387,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!errorBox) {
       errorBox = document.createElement('div');
       errorBox.className = 'auth-error-banner';
+      errorBox.setAttribute('role', 'alert');
       errorBox.style.cssText = 'background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; margin-bottom: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(10px);';
       form.insertBefore(errorBox, form.firstChild);
     }
@@ -517,41 +529,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Simulated handlers for non-auth forms (Forgot Password / Password Reset)
+  // Do not report recovery or reset as successful until the backend supports it.
   ['form-forgot', 'form-reset'].forEach((formId) => {
     const form = document.getElementById(formId);
     if (!form) return;
-    const nextViewMap = { 'form-forgot': 'email-sent', 'form-reset': 'success' };
+    const unavailableMessage = formId === 'form-forgot'
+      ? 'Password recovery is not available yet. No email was sent.'
+      : 'Password reset is not available yet. No password was changed.';
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const submitBtn = form.querySelector('.btn-cta-primary');
-      if (submitBtn) {
-        submitBtn.classList.add('is-loading');
-        submitBtn.disabled = true;
-
-        setTimeout(() => {
-          submitBtn.classList.remove('is-loading');
-          submitBtn.disabled = false;
-          if (nextViewMap[formId]) {
-            navigateToView(nextViewMap[formId]);
-          }
-        }, 1000);
-      }
+      showFormError(form, unavailableMessage);
     });
   });
 
-  // Verify OTP button simulation
+  // Keep the unimplemented verification screen from accepting arbitrary codes.
   const verifyBtn = document.getElementById('btn-verify-otp');
   if (verifyBtn) {
     verifyBtn.addEventListener('click', () => {
-      verifyBtn.classList.add('is-loading');
-      verifyBtn.disabled = true;
-      setTimeout(() => {
-        verifyBtn.classList.remove('is-loading');
-        verifyBtn.disabled = false;
-        navigateToView('success');
-      }, 1000);
+      const verifyView = document.getElementById('view-verify-email');
+      if (verifyView) {
+        showFormError(verifyView, 'Email verification is not available yet. The code was not verified.');
+      }
     });
   }
 

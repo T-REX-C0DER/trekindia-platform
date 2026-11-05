@@ -1437,35 +1437,33 @@ async function ensureSeedTrekkersInDb() {
  * Helper: Ensure starter conversations exist for a user in DB
  */
 async function ensureUserStarterConversations(userId) {
-  try {
-    await ensureSeedTrekkersInDb();
+  await ensureSeedTrekkersInDb();
 
-    // Check if user has any conversations
-    const existing = await query(
-      `SELECT cp.conversation_id FROM conversation_participants cp WHERE cp.user_id = $1 LIMIT 1`,
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock($1::bigint)', [userId]);
+
+    const existing = await client.query(
+      `SELECT conversation_id FROM conversation_participants WHERE user_id = $1 LIMIT 1`,
       [userId]
     );
 
     if (existing.rows.length === 0) {
-      // Seed default conversation with Rahul Sharma (user_id: 101)
-      const convRes = await query(
+      const convRes = await client.query(
         `INSERT INTO conversations (is_group, last_message_text, last_message_at)
          VALUES (FALSE, 'That route looks intense! Let''s do it.', CURRENT_TIMESTAMP)
          RETURNING conversation_id`
       );
-
       const convId = convRes.rows[0].conversation_id;
 
-      // Add user and Rahul Sharma
-      await query(
+      await client.query(
         `INSERT INTO conversation_participants (conversation_id, user_id, status)
-         VALUES ($1, $2, 'accepted'), ($1, 101, 'accepted')
-         ON CONFLICT DO NOTHING`,
+         VALUES ($1, $2, 'accepted'), ($1, 101, 'accepted')`,
         [convId, userId]
       );
 
-      // Add starter messages
-      await query(
+      await client.query(
         `INSERT INTO messages (conversation_id, sender_id, message_type, content, trek_data, status, created_at)
          VALUES
          ($1, 101, 'text', 'Hey! Thinking about doing the Sandakphu trek next month. Have you seen this route?', NULL, 'read', CURRENT_TIMESTAMP - INTERVAL '15 minutes'),
@@ -1487,8 +1485,17 @@ async function ensureUserStarterConversations(userId) {
         ]
       );
     }
+
+    await client.query('COMMIT');
   } catch (err) {
-    console.warn('[Community Service] Seed conversation notice:', err.message);
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('[Community Service] Starter conversation rollback failed:', rollbackError.message);
+    }
+    throw err;
+  } finally {
+    client.release();
   }
 }
 
@@ -1600,7 +1607,7 @@ export async function getConversations(currentUser) {
     });
   } catch (err) {
     console.error('[Community Service] getConversations error:', err);
-    return [];
+    throw err;
   }
 }
 
@@ -1615,7 +1622,7 @@ export async function getConversation(conversationId, currentUser) {
   try {
     // 1. Check conversation exists and user is participant
     const partRes = await query(
-      `SELECT cp.status, cp.last_read_at
+      `SELECT cp.status, cp.last_read_at, cp.hidden_at
        FROM conversation_participants cp
        WHERE cp.conversation_id = $1 AND cp.user_id = $2`,
       [convId, userId]
@@ -1628,6 +1635,12 @@ export async function getConversation(conversationId, currentUser) {
         return getConversation(directConv.conversation_id, currentUser);
       }
 
+      const err = new Error('Conversation not found or unauthorized');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    if (partRes.rows[0].hidden_at) {
       const err = new Error('Conversation not found or unauthorized');
       err.statusCode = 404;
       throw err;
@@ -1690,13 +1703,13 @@ export async function getConversation(conversationId, currentUser) {
         `UPDATE messages SET status = 'read', read_at = CURRENT_TIMESTAMP
          WHERE conversation_id = $1 AND sender_id != $2 AND status != 'read'`,
         [convId, userId]
-      ).catch(() => {});
+      );
 
       await query(
         `UPDATE conversation_participants SET last_read_at = CURRENT_TIMESTAMP
-         WHERE conversation_id = $1 AND user_id = $2`,
+         WHERE conversation_id = $1 AND user_id = $2 AND hidden_at IS NULL`,
         [convId, userId]
-      ).catch(() => {});
+      );
 
       // Publish message.read event to Kafka (or direct fallback)
       const readEvent = createMessageReadEvent({
@@ -1824,8 +1837,10 @@ export async function sendMessage(conversationId, { user, content, message_type 
   if (client_message_id) {
     const dupRes = await query(
       `SELECT message_id, conversation_id, sender_id, message_type, content, trek_data, attachment_url, status, created_at
-       FROM messages WHERE client_message_id = $1 LIMIT 1`,
-      [client_message_id]
+       FROM messages
+       WHERE client_message_id = $1 AND conversation_id = $2 AND sender_id = $3
+       LIMIT 1`,
+      [client_message_id, convId, userId]
     );
     if (dupRes.rows.length > 0) {
       return {
@@ -1921,19 +1936,34 @@ export async function sendMessage(conversationId, { user, content, message_type 
 export async function markConversationRead(conversationId, currentUser) {
   const convId = parseInt(conversationId, 10);
   const userId = currentUser?.user_id;
-  if (!userId) return { success: false };
+  if (!userId) {
+    const err = new Error('Authentication required');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const participant = await query(
+    `SELECT 1 FROM conversation_participants
+     WHERE conversation_id = $1 AND user_id = $2 AND hidden_at IS NULL`,
+    [convId, userId]
+  );
+  if (participant.rows.length === 0) {
+    const err = new Error('Conversation not found or unauthorized');
+    err.statusCode = 404;
+    throw err;
+  }
 
   await query(
     `UPDATE messages SET status = 'read', read_at = CURRENT_TIMESTAMP
      WHERE conversation_id = $1 AND sender_id != $2 AND status != 'read'`,
     [convId, userId]
-  ).catch(() => {});
+  );
 
   await query(
     `UPDATE conversation_participants SET last_read_at = CURRENT_TIMESTAMP
-     WHERE conversation_id = $1 AND user_id = $2`,
+     WHERE conversation_id = $1 AND user_id = $2 AND hidden_at IS NULL`,
     [convId, userId]
-  ).catch(() => {});
+  );
 
   const readEvent = createMessageReadEvent({
     conversation_id: convId,
@@ -2045,18 +2075,29 @@ export async function handleMessageRequest(conversationId, action, currentUser) 
   const convId = parseInt(conversationId, 10);
   const userId = currentUser?.user_id;
 
-  if (action === 'accept') {
-    await query(
-      `UPDATE conversation_participants SET status = 'accepted'
-       WHERE conversation_id = $1 AND user_id = $2`,
-      [convId, userId]
-    );
-  } else if (action === 'decline') {
-    await query(
-      `UPDATE conversation_participants SET status = 'declined'
-       WHERE conversation_id = $1 AND user_id = $2`,
-      [convId, userId]
-    );
+  if (!userId) {
+    const err = new Error('Authentication required');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  if (action !== 'accept' && action !== 'decline') {
+    const err = new Error('Action must be accept or decline.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const result = await query(
+    `UPDATE conversation_participants SET status = $1
+     WHERE conversation_id = $2 AND user_id = $3
+       AND status = 'pending' AND hidden_at IS NULL
+     RETURNING id`,
+    [action === 'accept' ? 'accepted' : 'declined', convId, userId]
+  );
+  if (result.rows.length === 0) {
+    const err = new Error('Message request not found or already handled.');
+    err.statusCode = 404;
+    throw err;
   }
 
   return { success: true, conversation_id: convId };
@@ -2069,21 +2110,18 @@ export async function getUnreadMessagesCount(currentUser) {
   const userId = currentUser?.user_id;
   if (!userId) return { count: 0 };
 
-  try {
-    const res = await query(
-      `SELECT COUNT(m.message_id) AS unread_count
-       FROM messages m
-       JOIN conversation_participants cp ON m.conversation_id = cp.conversation_id
-       WHERE cp.user_id = $1
-         AND m.sender_id != $1
-         AND m.created_at > cp.last_read_at
-         AND m.is_deleted = FALSE`,
-      [userId]
-    );
-    return { count: parseInt(res.rows[0]?.unread_count || 0, 10) };
-  } catch (err) {
-    return { count: 0 };
-  }
+  const res = await query(
+    `SELECT COUNT(m.message_id) AS unread_count
+     FROM messages m
+     JOIN conversation_participants cp ON m.conversation_id = cp.conversation_id
+     WHERE cp.user_id = $1
+       AND cp.hidden_at IS NULL
+       AND m.sender_id != $1
+       AND m.created_at > cp.last_read_at
+       AND m.is_deleted = FALSE`,
+    [userId]
+  );
+  return { count: parseInt(res.rows[0]?.unread_count || 0, 10) };
 }
 
 /**
@@ -2292,4 +2330,3 @@ async function dispatchDirectMessageFallback(kafkaEvent) {
     console.warn('[Direct Fallback] Dispatch notice:', err.message);
   }
 }
-

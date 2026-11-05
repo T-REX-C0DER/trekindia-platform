@@ -1798,6 +1798,9 @@ body.messages-page {
 }
 
 @media (max-width: 480px) {
+  .msg-top-header { padding-left: 8px; padding-right: 8px; }
+  .msg-header-center { padding-left: 6px; }
+  .msg-active-trek-badge { display: none; }
   .msg-content-wrap { max-width: 86%; }
   .msg-composer-container { padding: 8px 12px 12px; }
 }

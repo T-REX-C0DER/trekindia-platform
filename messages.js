@@ -438,7 +438,7 @@
     try {
       const res = await fetch('/api/community/messages/conversations', { credentials: 'include' });
       const data = await res.json();
-      if (data.success && data.conversations) {
+      if (res.ok && data.success && data.conversations) {
         state.conversations = data.conversations;
         renderConversationsList();
         updateUnreadBadgeCount();
@@ -451,9 +451,22 @@
         } else if (data.conversations.length === 0) {
           showEmptyChatView();
         }
+      } else {
+        throw new Error(data.message || `Request failed (${res.status})`);
       }
     } catch (err) {
       console.error('[Messaging] Failed to load conversations:', err);
+      if (state.conversations.length === 0) {
+        const container = document.getElementById('conversationsList');
+        if (container) {
+          container.innerHTML = `
+            <div class="msg-conv-empty" role="alert">
+              <strong>Unable to load conversations</strong>
+              <p>Check your connection and try again.</p>
+            </div>
+          `;
+        }
+      }
     }
   }
 
@@ -911,6 +924,7 @@
   async function sendChatMessage(customPayload = null) {
     if (!state.activeConversationId) return;
 
+    const conversationId = state.activeConversationId;
     let payload = customPayload;
     const clientMessageId = `cmsg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
@@ -979,32 +993,47 @@
     }
 
     try {
-      const res = await fetch(`/api/community/messages/conversations/${state.activeConversationId}/messages`, {
+      const res = await fetch(`/api/community/messages/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
-      if (data.success && data.message) {
-        const msgEl = document.querySelector(`[data-client-msg-id="${clientMessageId}"]`);
-        if (msgEl) {
-          msgEl.setAttribute('data-msg-id', data.message.message_id);
-          const timeEl = msgEl.querySelector('.msg-time');
-          const statusIcon = msgEl.querySelector('.msg-status');
-          if (timeEl && data.message.created_at) timeEl.textContent = data.message.created_at;
-          if (statusIcon) {
-            statusIcon.className = 'msg-status sent';
-            statusIcon.innerHTML = getStatusIconHtml('sent');
-          }
-          // Update delete button with real message id
-          const deleteBtn = msgEl.querySelector('.msg-action-btn.delete-btn');
-          if (deleteBtn) deleteBtn.setAttribute('data-msg-id', data.message.message_id);
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success || !data.message) {
+        document.querySelector(`[data-client-msg-id="${clientMessageId}"]`)?.remove();
+        if (payload.message_type === 'text' && state.activeConversationId === conversationId) {
+          const textInput = document.getElementById('chatTextInput');
+          if (textInput) textInput.value = `${payload.content || ''}${textInput.value}`;
         }
+        showToast(res.status >= 500
+          ? 'Message could not be saved. Please try again.'
+          : data?.message || 'Unable to deliver message. Please try again.');
+        return;
+      }
+
+      const msgEl = document.querySelector(`[data-client-msg-id="${clientMessageId}"]`);
+      if (msgEl) {
+        msgEl.setAttribute('data-msg-id', data.message.message_id);
+        const timeEl = msgEl.querySelector('.msg-time');
+        const statusIcon = msgEl.querySelector('.msg-status');
+        if (timeEl && data.message.created_at) timeEl.textContent = data.message.created_at;
+        if (statusIcon) {
+          statusIcon.className = 'msg-status sent';
+          statusIcon.innerHTML = getStatusIconHtml('sent');
+        }
+        // Update delete button with real message id
+        const deleteBtn = msgEl.querySelector('.msg-action-btn.delete-btn');
+        if (deleteBtn) deleteBtn.setAttribute('data-msg-id', data.message.message_id);
       }
     } catch (err) {
       console.error('[Messaging] Send failed:', err);
+      document.querySelector(`[data-client-msg-id="${clientMessageId}"]`)?.remove();
+      if (payload.message_type === 'text' && state.activeConversationId === conversationId) {
+        const textInput = document.getElementById('chatTextInput');
+        if (textInput) textInput.value = `${payload.content || ''}${textInput.value}`;
+      }
       showToast('Unable to deliver message. Check connection.');
     } finally {
       updateSendButtonState();

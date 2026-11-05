@@ -23,7 +23,8 @@ class WebSocketManager {
     this.wss = new WebSocketServer({
       server,
       path: '/ws/messages',
-      clientTracking: true
+      clientTracking: true,
+      maxPayload: 16 * 1024
     });
 
     this.wss.on('connection', (ws, req) => this.handleConnection(ws, req));
@@ -136,13 +137,23 @@ class WebSocketManager {
           break;
 
         case 'user.typing':
-          // Relay typing event to conversation participants
-          if (data.conversation_id) {
+          // Only accepted, visible conversation members may emit typing events.
+          if (typeof data.conversation_id === 'number' &&
+              Number.isSafeInteger(data.conversation_id) && data.conversation_id > 0) {
+            const conversationId = Number(data.conversation_id);
+            const participant = await query(
+              `SELECT 1 FROM conversation_participants
+               WHERE conversation_id = $1 AND user_id = $2
+                 AND status = 'accepted' AND hidden_at IS NULL`,
+              [conversationId, ws.userId]
+            );
+            if (participant.rows.length === 0) break;
+
             this.broadcastToConversationParticipants(
-              data.conversation_id,
+              conversationId,
               {
                 type: 'user.typing',
-                conversation_id: data.conversation_id,
+                conversation_id: conversationId,
                 user_id: ws.userId,
                 is_typing: data.is_typing !== false
               },
