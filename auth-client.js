@@ -91,8 +91,8 @@
     menu = document.createElement('div');
     menu.id = 'user-account-dropdown';
     menu.style.cssText = `
-      position: absolute;
-      top: 60px;
+      position: fixed;
+      top: 68px;
       right: 20px;
       width: 230px;
       background: var(--card-bg, #ffffff);

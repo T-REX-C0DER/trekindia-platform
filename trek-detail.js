@@ -31,24 +31,14 @@ function applyBrandLogos() {
   });
 }
 
-/* ─── 3. THEME TOGGLE ────────────────────────────────────────
-   Uses the same localStorage key as the homepage so theme
-   state is shared across all pages.
+/* ─── 3. (THEME TOGGLE REMOVED) ─────────────────────────────
+   Dark mode is now controlled only from the user's Profile Settings.
+   Theme state is still read from localStorage on load (see Section 1).
    ─────────────────────────────────────────────────────────── */
-function initThemeToggle() {
-  const btn = document.getElementById('themeToggleBtn');
-  if (!btn) return;
-
-  btn.addEventListener('click', () => {
-    const isDark = document.body.classList.toggle('dark');
-    localStorage.setItem('trekindia-theme', isDark ? 'dark' : 'light');
-  });
-}
 
 /* ─── 4. MAIN INIT ───────────────────────────────────────────  */
 document.addEventListener('DOMContentLoaded', async () => {
   applyBrandLogos();
-  initThemeToggle();
 
   const urlParams = new URLSearchParams(window.location.search);
   const slug = urlParams.get('slug') || 'kedarkantha';

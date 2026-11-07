@@ -9,7 +9,6 @@
 const navbar = document.getElementById('navbar');
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const mobileMenu = document.getElementById('mobileMenu');
-const themeToggleBtn = document.getElementById('themeToggleBtn');
 
 window.addEventListener('scroll', () => {
   const scrolled = window.scrollY;
@@ -18,6 +17,7 @@ window.addEventListener('scroll', () => {
   navbar.style.transform = shouldShrink ? 'translateY(0)' : 'translateY(0)';
 }, { passive: true });
 
+// Apply dark mode from localStorage on every page load
 const savedTheme = localStorage.getItem('trekindia-theme');
 if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
   document.body.classList.add('dark');
@@ -49,12 +49,6 @@ if (document.readyState === 'loading') {
 } else {
   BrandLogoSystem.init();
 }
-
-themeToggleBtn?.addEventListener('click', () => {
-  document.body.classList.toggle('dark');
-  const isDark = document.body.classList.contains('dark');
-  localStorage.setItem('trekindia-theme', isDark ? 'dark' : 'light');
-});
 
 mobileMenuBtn.addEventListener('click', () => {
   const isOpen = mobileMenu.classList.toggle('open');

@@ -171,22 +171,14 @@
 
   // ─── 2. THEME & BRAND INITIALIZATION ────────────────────────────────────────
   function initTheme() {
-    const savedTheme = localStorage.getItem('trekindia-theme') || 'dark';
-    if (savedTheme === 'dark') {
+    const savedTheme = localStorage.getItem('trekindia-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
       document.body.classList.add('dark');
     } else {
       document.body.classList.remove('dark');
     }
-
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    if (themeToggleBtn) {
-      themeToggleBtn.addEventListener('click', () => {
-        document.body.classList.toggle('dark');
-        const isDark = document.body.classList.contains('dark');
-        localStorage.setItem('trekindia-theme', isDark ? 'dark' : 'light');
-        syncBrandLogos();
-      });
-    }
+    syncBrandLogos();
   }
 
   function initBrandLogos() {

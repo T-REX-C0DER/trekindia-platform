@@ -10,8 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const views = document.querySelectorAll('.auth-view');
   const tabsNav = document.getElementById('auth-tabs-nav');
   const tabButtons = document.querySelectorAll('.auth-tab-btn');
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
-  const themeIcon = document.getElementById('theme-icon');
 
   // Dynamic headlines per view
   const heroContentMap = {
@@ -153,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ─── 2. DARK / LIGHT THEME TOGGLE ──────────────────────────────────────
+  // ─── 2. BRAND LOGO & THEME APPLICATION ──────────────────────────────────────
   const BrandLogoSystem = {
     lightAssetSrc: 'whitebg_logo_processed.png',
     darkAssetSrc: 'darkbg_logo_processed.png',
@@ -176,30 +174,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   BrandLogoSystem.init();
 
-  const savedTheme = localStorage.getItem('trekindia_theme') || 'light';
-  setTheme(savedTheme);
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      setTheme(nextTheme);
-    });
-  }
+  // Apply saved theme (read-only on auth page; toggle only available via Profile Settings)
+  const savedTheme = localStorage.getItem('trekindia-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDarkOnLoad = savedTheme === 'dark' || (!savedTheme && prefersDark);
+  setTheme(isDarkOnLoad ? 'dark' : 'light');
 
   function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     document.body.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('trekindia_theme', theme);
-    
-    if (themeIcon) {
-      if (theme === 'dark') {
-        themeIcon.setAttribute('data-lucide', 'sun');
-      } else {
-        themeIcon.setAttribute('data-lucide', 'moon');
-      }
-      if (window.lucide) lucide.createIcons();
-    }
+    localStorage.setItem('trekindia-theme', theme);
   }
 
   // ─── 3. PASSWORD VISIBILITY TOGGLE ────────────────────────────────────

@@ -139,6 +139,7 @@
   async function init() {
     setupEventListeners();
     handleHashNavigation();
+    initDarkModeToggle();
 
     // Verify session
     try {
@@ -908,6 +909,25 @@
   function populateSettingsForm(user) {
     DOM.settingEmail.value = user.email || '';
     DOM.settingUsername.value = user.username || '';
+  }
+
+  // 20. Dark Mode Toggle (Profile Settings)
+  function initDarkModeToggle() {
+    const darkToggle = document.getElementById('toggleDarkMode');
+    if (!darkToggle) return;
+
+    // Set initial state from localStorage
+    const savedTheme = localStorage.getItem('trekindia-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+    darkToggle.checked = isDark;
+    if (isDark) document.body.classList.add('dark');
+
+    darkToggle.addEventListener('change', () => {
+      const enabled = darkToggle.checked;
+      document.body.classList.toggle('dark', enabled);
+      localStorage.setItem('trekindia-theme', enabled ? 'dark' : 'light');
+    });
   }
 
   // Global helper to remove saved/wishlist trek
