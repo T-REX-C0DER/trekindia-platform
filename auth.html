@@ -1,10 +1,35 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TrekIndia — Flagship Authentication Experience</title>
   <meta name="description" content="Sign in or create your explorer account for TrekIndia — India's premier outdoor exploration and trekking platform." />
+  <!-- Apply dark mode BEFORE first paint to prevent flash of light mode -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('trekindia-theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = saved === 'dark' || (!saved && prefersDark);
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var applyBodyDark = function() {
+          if (document.body) {
+            document.body.classList.toggle('dark', isDark);
+            document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          }
+        };
+        if (document.body) applyBodyDark();
+        else document.addEventListener('DOMContentLoaded', applyBodyDark);
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- Google Fonts: Inter & Manrope -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />

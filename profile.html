@@ -10,6 +10,34 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="profile.css" />
+  <link rel="stylesheet" href="ai-ecosystem.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Apply dark mode BEFORE first paint to prevent flash of light mode -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('trekindia-theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = saved === 'dark' || (!saved && prefersDark);
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+        var applyBodyDark = function() {
+          if (document.body) {
+            document.body.classList.toggle('dark', isDark);
+            document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          }
+        };
+        if (document.body) applyBodyDark();
+        else document.addEventListener('DOMContentLoaded', applyBodyDark);
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 
@@ -51,6 +79,7 @@
   <div class="mobile-profile-nav" id="mobileProfileNav">
     <div class="mobile-nav-inner">
       <a href="#overview" class="mobile-nav-link active" data-view="overview">Overview</a>
+      <a href="#adventure-map" class="mobile-nav-link" data-view="adventure-map">Adventure Map</a>
       <a href="#treks" class="mobile-nav-link" data-view="treks">My Treks</a>
       <a href="#saved" class="mobile-nav-link" data-view="saved">Saved</a>
       <a href="#wishlist" class="mobile-nav-link" data-view="wishlist">Wishlist</a>
@@ -84,6 +113,10 @@
           <a href="#overview" class="sidebar-link active" data-view="overview">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             Overview
+          </a>
+          <a href="#adventure-map" class="sidebar-link" data-view="adventure-map">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+            Adventure Map
           </a>
           <a href="#treks" class="sidebar-link" data-view="treks">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M8 3l4 8 5-5 4 15H3L8 3z"></path></svg>
@@ -221,6 +254,61 @@
                 <!-- Rendered via JS -->
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 1B. AI ADVENTURE MEMORY MAP ================= -->
+      <section id="view-adventure-map" class="view-section">
+        <div class="my-treks-hero" style="background: linear-gradient(135deg, rgba(40,93,42,0.95), rgba(20,50,22,0.95));">
+          <div class="my-treks-hero-content">
+            <h2>🗺️ My Adventure Memory Map</h2>
+            <p>Interactive geographic chronicle of every summit reached, trail completed, and memories captured.</p>
+          </div>
+        </div>
+
+        <!-- Adventure Map Stats Bar -->
+        <div class="stats-grid" style="margin-top:20px;">
+          <div class="stat-card">
+            <div class="stat-value" id="advStatCompleted">0</div>
+            <div class="stat-label">Mapped Trails</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value"><span id="advStatDistance">0</span><span class="stat-unit">km</span></div>
+            <div class="stat-label">Verified Distance</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value"><span id="advStatSummit">0</span><span class="stat-unit">m</span></div>
+            <div class="stat-label">Highest Summit</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="advStatStates">0</div>
+            <div class="stat-label">States Conquered</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="advStatMemories">0</div>
+            <div class="stat-label">Memories Logged</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 12px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 class="section-title" style="margin:0; font-size:1.3rem;">Geographic Trail Map</h3>
+            <span style="font-size:0.85rem; color:var(--text-secondary);">Click any summit pin to view trail notes, photos, and date completed</span>
+          </div>
+          <button type="button" class="btn-primary-sm" id="btnOpenAddMemoryModal">
+            + Record Trail Memory
+          </button>
+        </div>
+
+        <!-- Interactive Map Container -->
+        <div id="adventureMapContainer" style="height: 500px; width: 100%; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; background: #e5e7eb;"></div>
+
+        <!-- Adventure Memories Feed -->
+        <div style="margin-top:30px;">
+          <h3 class="section-title" style="font-size:1.25rem; margin-bottom:16px;">Trail Memories &amp; Visual Journal</h3>
+          <div id="adventureMemoriesGrid" class="trek-cards-grid">
+            <div style="color:var(--text-secondary); padding:20px; text-align:center; grid-column:1/-1;">Loading your adventure history...</div>
           </div>
         </div>
       </section>
@@ -398,6 +486,57 @@
     </main>
   </div>
 
+  <!-- ADD TRAIL MEMORY MODAL -->
+  <div class="modal-overlay" id="addMemoryModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">🏔️ Record Trail Memory</h3>
+        <button class="modal-close-btn" id="btnCloseMemoryModal">&times;</button>
+      </div>
+      <form id="formAddMemory">
+        <div class="form-group">
+          <label class="form-label">Trek Destination</label>
+          <select class="form-input" id="memoryTrekSelect" required>
+            <option value="">Select a trek...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Memory Title</label>
+          <input type="text" class="form-input" id="memoryTitleInput" placeholder="e.g. Watching sunrise from the summit ridge" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Photo URL (Optional)</label>
+          <input type="url" class="form-input" id="memoryPhotoUrlInput" placeholder="https://... or select trail photo" />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Recorded Altitude (meters)</label>
+            <input type="number" class="form-input" id="memoryAltitudeInput" placeholder="e.g. 3810" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Completion Date</label>
+            <input type="date" class="form-input" id="memoryDateInput" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Personal Trail Notes & Reflections</label>
+          <textarea class="form-textarea" id="memoryNotesInput" rows="3" placeholder="Weather conditions, trail highlights, companions, physical feeling..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Visibility</label>
+          <select class="form-input" id="memoryVisibilitySelect">
+            <option value="public">Public (Visible on community profile)</option>
+            <option value="private">Private (Only visible to you)</option>
+          </select>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+          <button type="button" class="btn-secondary-sm" id="btnCancelMemoryModal">Cancel</button>
+          <button type="submit" class="btn-primary-sm" id="btnSaveMemory">Save to Adventure Map</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- EDIT PROFILE MODAL -->
   <div class="modal-overlay" id="editProfileModal">
     <div class="modal-card">
@@ -532,6 +671,8 @@
 
   <!-- Scripts -->
   <script src="auth-client.js"></script>
+  <script src="offline-storage.js"></script>
+  <script src="ai-ecosystem.js"></script>
   <script src="profile.js"></script>
 </body>
 </html>

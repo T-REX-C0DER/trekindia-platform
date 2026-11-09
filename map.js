@@ -29,21 +29,31 @@
       url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
       maxZoom: 19,
+      maxNativeZoom: 19,
+      subdomains: null,
     },
     topo: {
       url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-      attribution: '© <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (CC-BY-SA)',
-      maxZoom: 17,
+      attribution: '© <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (CC-BY-SA) | © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+      maxZoom: 19,
+      maxNativeZoom: 17,
+      subdomains: 'abc',
     },
     dark: {
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-      attribution: '© <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a>, HERE, Garmin',
-      maxZoom: 16,
+      // 100% free, zero API key required – CartoDB Dark Matter
+      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+      maxZoom: 19,
+      maxNativeZoom: 19,
+      subdomains: 'abcd',
     },
     satellite: {
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      attribution: '© <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a>, Maxar, Earthstar Geographics',
-      maxZoom: 18,
+      // 100% free, zero API key required – Satellite Hybrid with terrain & labels
+      url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+      attribution: '© Google Imagery',
+      maxZoom: 20,
+      maxNativeZoom: 20,
+      subdomains: null,
     },
   };
 
@@ -88,7 +98,7 @@
         center: [22.5, 80.0],
         zoom: 5,
         minZoom: 4,
-        maxZoom: 18,
+        maxZoom: 19,
         zoomControl: false,
         scrollWheelZoom: true,
         touchZoom: true,
@@ -105,6 +115,18 @@
         metric: true,
       }).addTo(this.map);
 
+      // Auto-toggle trek labels when zoomed in (zoom >= 8)
+      const updateZoomLabels = () => {
+        const z = this.map.getZoom();
+        if (z >= 8) {
+          container.classList.add('zoom-show-labels');
+        } else {
+          container.classList.remove('zoom-show-labels');
+        }
+      };
+      this.map.on('zoomend', updateZoomLabels);
+      updateZoomLabels();
+
       // Set default tile layer
       this.setTileLayer('standard');
 
@@ -116,12 +138,22 @@
         this.map.removeLayer(this.currentLayer);
       }
       const cfg = TILE_LAYERS[style] || TILE_LAYERS.standard;
-      this.currentLayer = L.tileLayer(cfg.url, {
+      const options = {
         attribution: cfg.attribution,
-        maxZoom: cfg.maxZoom,
-        subdomains: style === 'topo' ? 'abc' : 'abcd',
-      }).addTo(this.map);
+        maxZoom: cfg.maxZoom || 19,
+      };
+      if (cfg.maxNativeZoom) options.maxNativeZoom = cfg.maxNativeZoom;
+      // Only set subdomains when the tile URL actually uses {s}
+      if (cfg.subdomains) options.subdomains = cfg.subdomains;
+      this.currentLayer = L.tileLayer(cfg.url, options).addTo(this.map);
       this.currentStyle = style;
+
+      // Update container class for CSS-driven label theming
+      const container = document.getElementById('trekMap');
+      if (container) {
+        container.classList.remove('map-style-standard', 'map-style-topo', 'map-style-dark', 'map-style-satellite');
+        container.classList.add(`map-style-${style}`);
+      }
     }
 
     flyTo(lat, lng, zoom = 8) {
@@ -215,7 +247,8 @@
 
     createSVGMarkerIcon(trek) {
       const color = DIFFICULTY_COLORS[trek.difficulty] || '#556b2f';
-      const diffClass = trek.difficulty.toLowerCase().replace(/\s+/g, '-');
+      const diffClass = (trek.difficulty || 'moderate').toLowerCase().replace(/\s+/g, '-');
+      const safeName = (trek.name || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       const svg = `
         <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg" class="trek-marker-svg">
           <defs>
@@ -234,11 +267,18 @@
         </svg>`;
 
       return L.divIcon({
-        html: `<div class="trek-marker-icon trek-marker-${diffClass}" data-slug="${trek.slug}">${svg}</div>`,
+        html: `
+          <div class="trek-marker-icon trek-marker-${diffClass}" data-slug="${trek.slug}">
+            ${svg}
+            <div class="trek-pin-label">
+              <span class="trek-pin-label-dot" style="background:${color};"></span>
+              <span class="trek-pin-label-text">${safeName}</span>
+            </div>
+          </div>`,
         iconSize: [36, 44],
         iconAnchor: [18, 44],
         popupAnchor: [0, -46],
-        className: '',
+        className: 'trek-marker-wrapper',
       });
     }
 

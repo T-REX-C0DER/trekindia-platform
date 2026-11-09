@@ -128,8 +128,9 @@ function renderTrekDetails(trek) {
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap © CARTO',
-      maxZoom: 18,
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19,
     }).addTo(map);
 
     const icon = L.divIcon({
@@ -146,6 +147,30 @@ function renderTrekDetails(trek) {
 
   // User Actions
   initUserActions(trek);
+
+  // Initialize TrekIndia AI Ecosystem Components
+  if (window.TrekIndiaAI) {
+    const trekIdentifier = trek.slug || trek.trek_id;
+    window.TrekIndiaAI.initAltitudeGuardian('detailAltitudeGuardianContainer', trekIdentifier);
+    window.TrekIndiaAI.initCostIntelligence('detailCostIntelligenceContainer', trekIdentifier);
+    window.TrekIndiaAI.initNutritionPlanner('detailNutritionPlannerContainer', trekIdentifier);
+    window.TrekIndiaAI.initTrekVision('detailTrekVisionContainer');
+    window.TrekIndiaAI.initOfflineCompanion('detailOfflineContainer', trekIdentifier);
+    window.TrekIndiaAI.initEmergencySos('detailEmergencySosContainer', trek.trek_id);
+  }
+
+  // Header quick offline guide button handler
+  const headerOfflineBtn = document.getElementById('headerOfflineBtn');
+  if (headerOfflineBtn) {
+    headerOfflineBtn.addEventListener('click', () => {
+      const offlineSec = document.getElementById('detailOfflineContainer');
+      if (offlineSec) {
+        offlineSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const btn = offlineSec.querySelector('#btnDownloadOffline');
+        if (btn) btn.click();
+      }
+    });
+  }
 }
 
 /* ─── 6. DIFFICULTY CLASS ────────────────────────────────── */

@@ -1197,5 +1197,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ─── TREKINDIA AI ECOSYSTEM INITIALIZATION ────────────────
+  if (window.TrekIndiaAI) {
+    window.TrekIndiaAI.initPhotoDiscovery('photoDiscoveryContainer');
+    window.TrekIndiaAI.initTrekVision('homeTrekVisionContainer');
+  }
+
 });
 

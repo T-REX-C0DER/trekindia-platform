@@ -1,0 +1,506 @@
+/* ==========================================================================
+   TREKINDIA — UNIFIED AI ECOSYSTEM STYLES (ai-ecosystem.css)
+   Seamlessly integrates with TrekIndia design tokens, dark/light themes & cards
+   ========================================================================== */
+
+/* ─── 1. SHARED AI COMPONENT TOKENS ─────────────────────────────────────── */
+:root {
+  --ai-accent: #2d6a4f;
+  --ai-accent-hover: #1b4332;
+  --ai-badge-bg: rgba(45, 106, 79, 0.12);
+  --ai-border: rgba(45, 106, 79, 0.25);
+  --ai-glow: rgba(45, 106, 79, 0.2);
+  --ai-warning: #d97706;
+  --ai-danger: #dc2626;
+  --ai-danger-bg: rgba(220, 38, 38, 0.1);
+  --ai-success: #16a34a;
+}
+
+body.dark {
+  --ai-accent: #52b788;
+  --ai-accent-hover: #74c69d;
+  --ai-badge-bg: rgba(82, 183, 136, 0.18);
+  --ai-border: rgba(82, 183, 136, 0.35);
+  --ai-glow: rgba(82, 183, 136, 0.25);
+  --ai-danger-bg: rgba(220, 38, 38, 0.22);
+}
+
+/* ─── 2. SECTION & CARD WRAPPERS ─────────────────────────────────────────── */
+.ai-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border, rgba(0,0,0,0.08));
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.dark .ai-card {
+  background: #17231a;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.ai-card:hover {
+  border-color: var(--ai-border);
+}
+
+.ai-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--ai-badge-bg);
+  color: var(--ai-accent);
+  border: 1px solid var(--ai-border);
+}
+
+.ai-badge.danger {
+  background: var(--ai-danger-bg);
+  color: var(--ai-danger);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.ai-badge.warning {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--ai-warning);
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+.ai-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.dark .ai-title {
+  color: #f3f4f6;
+}
+
+.ai-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-secondary, #6b7280);
+  margin-top: 4px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+/* ─── 3. FILE & CAMERA UPLOAD ZONE ───────────────────────────────────────── */
+.ai-upload-dropzone {
+  border: 2px dashed var(--border, #d1d5db);
+  border-radius: 12px;
+  padding: 28px 20px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.015);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+body.dark .ai-upload-dropzone {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ai-upload-dropzone:hover, .ai-upload-dropzone.dragover {
+  border-color: var(--ai-accent);
+  background: var(--ai-badge-bg);
+}
+
+.ai-upload-icon {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.ai-preview-box {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 280px;
+  margin-top: 14px;
+  display: none;
+  background: #000;
+}
+
+.ai-preview-box img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.ai-remove-preview-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+.ai-remove-preview-btn:hover {
+  background: var(--ai-danger);
+}
+
+/* ─── 4. BUTTONS & INPUTS ────────────────────────────────────────────────── */
+.ai-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--ai-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.ai-btn-primary:hover {
+  background: var(--ai-accent-hover);
+}
+
+.ai-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-btn-secondary:hover {
+  background: var(--ai-badge-bg);
+  border-color: var(--ai-accent);
+}
+
+.ai-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  animation: pulseHazard 2s infinite ease-in-out;
+}
+
+@keyframes pulseHazard {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+}
+
+/* ─── 5. ALTITUDE GUARDIAN METER & SAFETY ───────────────────────────────── */
+.altitude-risk-bar {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 10px;
+  margin: 12px 0 8px;
+  background: rgba(0,0,0,0.06);
+}
+
+.alt-seg {
+  flex: 1;
+  transition: opacity 0.3s;
+  opacity: 0.3;
+}
+
+.alt-seg.active {
+  opacity: 1;
+}
+
+.alt-seg.low { background: #22c55e; }
+.alt-seg.high { background: #eab308; }
+.alt-seg.very-high { background: #f97316; }
+.alt-seg.extreme { background: #ef4444; }
+
+.symptom-tag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.symptom-chip {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  background: rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+
+body.dark .symptom-chip {
+  background: rgba(255,255,255,0.06);
+}
+
+.symptom-chip.selected {
+  background: var(--ai-danger-bg);
+  border-color: var(--ai-danger);
+  color: var(--ai-danger);
+  font-weight: 600;
+}
+
+/* ─── 6. COST INTELLIGENCE BREAKDOWN ─────────────────────────────────────── */
+.tier-switcher {
+  display: flex;
+  background: rgba(0,0,0,0.05);
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  gap: 4px;
+}
+
+body.dark .tier-switcher {
+  background: rgba(255,255,255,0.06);
+}
+
+.tier-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.tier-btn.active {
+  background: var(--card-bg, #ffffff);
+  color: var(--ai-accent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+body.dark .tier-btn.active {
+  background: #233427;
+  color: var(--ai-accent);
+}
+
+.cost-breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.cost-breakdown-table th, .cost-breakdown-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.cost-breakdown-table th {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cost-breakdown-table tr.total-row td {
+  font-weight: 800;
+  font-size: 1.05rem;
+  border-top: 2px solid var(--ai-accent);
+  border-bottom: none;
+  color: var(--text-primary);
+}
+
+/* ─── 7. PHOTO DISCOVERY MATCH CARDS ─────────────────────────────────────── */
+.photo-match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.photo-match-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+body.dark .photo-match-card {
+  background: #17231a;
+}
+
+.photo-match-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.1);
+  border-color: var(--ai-border);
+}
+
+.photo-match-img-wrap {
+  position: relative;
+  height: 150px;
+  background: #2b3a2e;
+}
+
+.photo-match-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-match-score-pill {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #52b788;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(82, 183, 136, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.photo-match-body {
+  padding: 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ─── 8. NUTRITION PLANNER TIMELINE ──────────────────────────────────────── */
+.nutrition-day-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  background: rgba(0, 0, 0, 0.015);
+}
+
+body.dark .nutrition-day-card {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nutrition-meal-row {
+  display: flex;
+  gap: 12px;
+  font-size: 0.85rem;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.meal-label {
+  min-width: 80px;
+  font-weight: 700;
+  color: var(--ai-accent);
+}
+
+/* ─── 9. EMERGENCY SOS MODAL & STATUS ────────────────────────────────────── */
+.sos-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.sos-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc2626;
+  box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  animation: pulseDot 1.4s infinite;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+.sos-phone-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.05);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+
+body.dark .sos-phone-pill {
+  background: rgba(255,255,255,0.06);
+}
+
+.sos-phone-pill:hover {
+  background: var(--ai-danger-bg);
+  border-color: var(--ai-danger);
+  color: var(--ai-danger);
+}
+

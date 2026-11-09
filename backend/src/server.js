@@ -13,6 +13,9 @@ import stateRoutes     from './routes/stateRoutes.js';
 import districtRoutes  from './routes/districtRoutes.js';
 import gearRoutes      from './routes/gearRoutes.js';
 import communityRoutes from './routes/communityRoutes.js';
+import aiRoutes        from './routes/aiRoutes.js';
+import sosRoutes       from './routes/sosRoutes.js';
+import offlineRoutes   from './routes/offlineRoutes.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 import { runMigrations }  from './config/initDb.js';
 
@@ -101,6 +104,7 @@ app.get('/api/health', (req, res) => {
 // Protected Test Route & User Search
 import { requireAuth, authMiddleware } from './middleware/authMiddleware.js';
 import * as communityController from './controllers/communityController.js';
+import * as profileController from './controllers/profileController.js';
 
 app.get('/api/users/me', requireAuth, (req, res) => {
   return res.status(200).json({
@@ -109,6 +113,7 @@ app.get('/api/users/me', requireAuth, (req, res) => {
   });
 });
 
+app.get('/api/users/me/adventure-map', requireAuth, profileController.getAdventureMap);
 app.get('/api/users/search', authMiddleware, communityController.searchUsers);
 
 // Authentication V1 Routes
@@ -131,6 +136,19 @@ app.use('/api/gear', gearRoutes);
 
 // Community API Routes
 app.use('/api/community', communityRoutes);
+
+// AI Ecosystem Routes
+app.use('/api/ai', aiRoutes);
+
+// Internal Visual Ingestion Route
+import * as aiController from './controllers/aiController.js';
+app.post('/api/internal/visual/posts/:postId/process', aiController.processPostVisuals);
+
+// Emergency SOS Routes
+app.use('/api/sos', sosRoutes);
+
+// Offline Companion Routes
+app.use('/api/offline', offlineRoutes);
 
 // Centralized Error Handling Middleware
 app.use(errorMiddleware);

@@ -66,6 +66,7 @@
       // Setup click handler for logout popup / profile menu
       profileBtn.onclick = function (e) {
         e.preventDefault();
+        e.stopPropagation();
         showUserAccountMenu(profileBtn, user);
       };
     } else {
@@ -88,20 +89,37 @@
       return;
     }
 
+    const isDark = document.body.classList.contains('dark') ||
+                   document.documentElement.classList.contains('dark') ||
+                   localStorage.getItem('trekindia-theme') === 'dark';
+
+    const rect = anchorEl ? anchorEl.getBoundingClientRect() : { bottom: 68, right: window.innerWidth - 20 };
+    const rightOffset = Math.max(window.innerWidth - rect.right, 16);
+    const topOffset = Math.max(rect.bottom + 8, 64);
+
+    const bg = isDark ? '#141d15' : '#ffffff';
+    const border = isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(0, 0, 0, 0.1)';
+    const textColor = isDark ? '#E8F0E9' : '#17231A';
+    const subTextColor = isDark ? '#8FA89B' : '#6B766F';
+    const hoverBg = isDark ? '#1e2b1f' : '#F5F8F6';
+    const divider = isDark ? 'rgba(255, 255, 255, 0.10)' : '#E1E7E2';
+    const shadow = isDark ? '0 16px 40px rgba(0,0,0,0.55)' : '0 12px 32px rgba(0,0,0,0.15)';
+
     menu = document.createElement('div');
     menu.id = 'user-account-dropdown';
     menu.style.cssText = `
       position: fixed;
-      top: 68px;
-      right: 20px;
-      width: 230px;
-      background: var(--card-bg, #ffffff);
-      border: 1px solid var(--border, rgba(0,0,0,0.1));
-      box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+      top: ${topOffset}px;
+      right: ${rightOffset}px;
+      width: 240px;
+      background: ${bg};
+      color: ${textColor};
+      border: 1px solid ${border};
+      box-shadow: ${shadow};
       border-radius: 14px;
       padding: 12px;
-      z-index: 9999;
-      font-family: 'Inter', sans-serif;
+      z-index: 99999;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       animation: fadeInDown 0.2s ease-out;
     `;
 
@@ -112,31 +130,31 @@
         </div>`;
 
     menu.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid #E1E7E2;">
+      <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid ${divider};">
         ${avatarHtml}
         <div style="min-width: 0;">
-          <div style="font-weight: 700; font-size: 0.9rem; color: #17231A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(user.full_name || user.username)}</div>
-          <div style="font-size: 0.75rem; color: #6B766F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${escapeHtml(user.username)}</div>
+          <div style="font-weight: 700; font-size: 0.9rem; color: ${textColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(user.full_name || user.username)}</div>
+          <div style="font-size: 0.75rem; color: ${subTextColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${escapeHtml(user.username)}</div>
         </div>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid #E1E7E2;">
-        <a href="/profile#overview" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+      <div style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid ${divider};">
+        <a href="/profile#overview" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: ${textColor}; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#285D2A" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           Profile Dashboard
         </a>
-        <a href="/profile#treks" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+        <a href="/profile#treks" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: ${textColor}; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#285D2A" stroke-width="2"><path d="M8 3l4 8 5-5 4 15H3L8 3z"></path></svg>
           My Treks
         </a>
-        <a href="/profile#saved" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+        <a href="/profile#saved" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: ${textColor}; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#285D2A" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
           Saved Treks
         </a>
-        <a href="/profile#badges" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+        <a href="/profile#badges" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: ${textColor}; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C8A65A" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
           Badges & Achievements
         </a>
-        <a href="/profile#settings" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #17231A; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#F5F8F6'" onmouseout="this.style.background='transparent'">
+        <a href="/profile#settings" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: ${textColor}; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B766F" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           Settings
         </a>

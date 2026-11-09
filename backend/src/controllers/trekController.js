@@ -5,6 +5,7 @@
 
 import * as trekService from '../services/trekService.js';
 import * as profileService from '../services/profileService.js';
+import * as memoryMapService from '../services/memoryMapService.js';
 import { query } from '../config/database.js';
 
 /**
@@ -245,6 +246,52 @@ export async function toggleSaveTrek(req, res, next) {
       saved: updated.saved,
       message: updated.saved ? 'Trek saved.' : 'Trek removed from saved.'
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/treks/:id/memories or /api/treks/slug/:slug/memories
+ */
+export async function addTrekMemory(req, res, next) {
+  try {
+    const identifier = req.params.slug || req.params.id;
+    const trekId = await resolveTrekId(identifier);
+    if (!trekId) {
+      return res.status(404).json({ success: false, message: 'Trek not found.' });
+    }
+    const memory = await memoryMapService.addTrekMemory(req.user.user_id, trekId, req.body);
+    return res.status(201).json({ success: true, memory, message: 'Trek memory recorded successfully.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/treks/:id/memories or /api/treks/slug/:slug/memories
+ */
+export async function getTrekMemories(req, res, next) {
+  try {
+    const identifier = req.params.slug || req.params.id;
+    const trekId = await resolveTrekId(identifier);
+    if (!trekId) {
+      return res.status(404).json({ success: false, message: 'Trek not found.' });
+    }
+    const memories = await memoryMapService.getTrekMemories(trekId, req.user?.user_id);
+    return res.status(200).json({ success: true, count: memories.length, memories });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * DELETE /api/treks/:id/memories/:memoryId
+ */
+export async function deleteTrekMemory(req, res, next) {
+  try {
+    await memoryMapService.deleteTrekMemory(req.user.user_id, req.params.memoryId);
+    return res.status(200).json({ success: true, message: 'Trek memory deleted.' });
   } catch (err) {
     next(err);
   }

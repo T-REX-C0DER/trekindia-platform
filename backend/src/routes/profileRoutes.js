@@ -9,6 +9,7 @@ router.use(requireAuth);
 
 router.get('/', profileController.getProfile);
 router.put('/', profileController.updateProfile);
+router.get('/adventure-map', profileController.getAdventureMap);
 
 router.get('/treks', profileController.getTreks);
 router.get('/treks/:trekId/status', profileController.getTrekUserStatus);

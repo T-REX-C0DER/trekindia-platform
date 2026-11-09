@@ -10,7 +10,10 @@ export async function runMigrations() {
   try {
     const migrationsDir = path.resolve(__dirname, '../migrations');
     if (fs.existsSync(migrationsDir)) {
-      const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+      // Only run forward migration files (exclude rollback_* files)
+      const files = fs.readdirSync(migrationsDir)
+        .filter(f => f.endsWith('.sql') && !f.startsWith('rollback_'))
+        .sort();
       for (const file of files) {
         const filePath = path.join(migrationsDir, file);
         const sql = fs.readFileSync(filePath, 'utf8');

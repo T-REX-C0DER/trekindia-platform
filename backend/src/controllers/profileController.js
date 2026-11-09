@@ -1,4 +1,5 @@
 import * as profileService from '../services/profileService.js';
+import * as memoryMapService from '../services/memoryMapService.js';
 import { clearAuthCookie } from '../utils/cookies.js';
 
 export async function getProfile(req, res, next) {
@@ -179,6 +180,18 @@ export async function saveChecklist(req, res, next) {
     const { items } = req.body;
     const checklist = await profileService.saveUserChecklist(req.user.user_id, items);
     return res.status(200).json({ success: true, message: 'Checklist saved successfully.', ...checklist });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/profile/adventure-map or /api/users/me/adventure-map
+ */
+export async function getAdventureMap(req, res, next) {
+  try {
+    const data = await memoryMapService.getUserAdventureMap(req.user.user_id);
+    return res.status(200).json(data);
   } catch (error) {
     next(error);
   }

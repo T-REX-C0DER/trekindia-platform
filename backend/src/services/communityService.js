@@ -805,6 +805,45 @@ export async function createPost({ user, post_type = 'experience', caption, trek
     formatted_time: 'Just now'
   };
 
+  try {
+    const formattedImages = Array.isArray(images) && images.length > 0 ? images : ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&q=85'];
+    const formattedHashtags = Array.isArray(hashtags) ? hashtags : (typeof hashtags === 'string' ? hashtags.split(/[\s,]+/).filter(Boolean).map(h => h.replace(/^#/, '')) : []);
+
+    const dbRes = await query(
+      `INSERT INTO community_posts (
+         user_id, post_type, caption, trek_id, location, difficulty, distance_km, elevation_m, duration_days, hashtags, images
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING post_id, created_at`,
+      [
+        user.user_id,
+        post_type,
+        caption || '',
+        trek_id ? parseInt(trek_id, 10) : null,
+        location || 'India',
+        difficulty || 'Moderate',
+        distance_km ? parseFloat(distance_km) : null,
+        elevation_m ? parseInt(elevation_m, 10) : null,
+        duration_days ? parseInt(duration_days, 10) : null,
+        formattedHashtags,
+        JSON.stringify(formattedImages)
+      ]
+    );
+
+    if (dbRes.rows.length > 0) {
+      newPost.post_id = parseInt(dbRes.rows[0].post_id, 10);
+      newPost.created_at = dbRes.rows[0].created_at;
+
+      // Trigger automatic asynchronous visual learning for eligible images
+      import('./visualIntelligenceService.js').then(v => {
+        v.ingestPostForVisualLearning(newPost.post_id).catch(err => {
+          console.warn(`[VisualEngine] Async learning failed for post ${newPost.post_id}:`, err.message);
+        });
+      }).catch(() => {});
+    }
+  } catch (dbErr) {
+    console.warn('[CommunityService] DB insert fallback to memory:', dbErr.message);
+  }
+
   postsStore.unshift(newPost);
   return newPost;
 }
@@ -856,13 +895,18 @@ export async function toggleSavePost(postId, user) {
  */
 export async function deletePost(postId, userId) {
   const index = postsStore.findIndex(p => p.post_id === parseInt(postId, 10));
-  if (index === -1) {
-    const err = new Error('Post not found');
-    err.statusCode = 404;
-    throw err;
+  if (index !== -1) {
+    postsStore.splice(index, 1);
   }
 
-  postsStore.splice(index, 1);
+  try {
+    const id = parseInt(postId, 10);
+    await query('UPDATE trek_image_embeddings SET is_active = FALSE WHERE post_id = $1', [id]);
+    await query('DELETE FROM community_posts WHERE post_id = $1', [id]);
+  } catch (dbErr) {
+    console.warn('[CommunityService] DB delete error:', dbErr.message);
+  }
+
   return { success: true, message: 'Post deleted successfully.' };
 }
 

@@ -19,16 +19,24 @@ router.get('/search',                       trekController.searchTreks);
 // Slug-based user actions & lookup (must be before /:id)
 router.get('/slug/:slug/user-status',       requireAuth, trekController.getTrekUserStatus);
 router.post('/slug/:slug/complete',         requireAuth, trekController.completeTrek);
+router.post('/slug/:slug/completions',      requireAuth, trekController.completeTrek);
 router.post('/slug/:slug/uncomplete',       requireAuth, trekController.uncompleteTrek);
 router.post('/slug/:slug/save',             requireAuth, trekController.toggleSaveTrek);
+router.get('/slug/:slug/memories',          trekController.getTrekMemories);
+router.post('/slug/:slug/memories',         requireAuth, trekController.addTrekMemory);
+router.delete('/slug/:slug/memories/:memoryId', requireAuth, trekController.deleteTrekMemory);
 router.get('/slug/:slug/companies',         trekController.getTrekCompanies);
 router.get('/slug/:slug',                   trekController.getTrekBySlug);
 
 // ID-based user actions
 router.get('/:id/user-status',              requireAuth, trekController.getTrekUserStatus);
 router.post('/:id/complete',                requireAuth, trekController.completeTrek);
+router.post('/:id/completions',             requireAuth, trekController.completeTrek);
 router.post('/:id/uncomplete',              requireAuth, trekController.uncompleteTrek);
 router.post('/:id/save',                    requireAuth, trekController.toggleSaveTrek);
+router.get('/:id/memories',                 trekController.getTrekMemories);
+router.post('/:id/memories',                requireAuth, trekController.addTrekMemory);
+router.delete('/:id/memories/:memoryId',    requireAuth, trekController.deleteTrekMemory);
 
 // Trek companies by numeric ID
 router.get('/:id/companies',                trekController.getTrekCompanies);

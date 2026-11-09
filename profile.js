@@ -243,6 +243,9 @@
       case 'overview':
         await Promise.all([loadHighlights(), loadOverviewActivity()]);
         break;
+      case 'adventure-map':
+        await loadAdventureMap();
+        break;
       case 'treks':
         await loadMyTreks();
         break;
@@ -875,6 +878,187 @@
 
     // Window Hash Change
     window.addEventListener('hashchange', handleHashNavigation);
+
+    // Adventure Memory Modal Listeners
+    const btnOpenAddMemory = document.getElementById('btnOpenAddMemoryModal');
+    const addMemoryModal = document.getElementById('addMemoryModal');
+    const btnCloseMemoryModal = document.getElementById('btnCloseMemoryModal');
+    const btnCancelMemoryModal = document.getElementById('btnCancelMemoryModal');
+    const formAddMemory = document.getElementById('formAddMemory');
+
+    if (btnOpenAddMemory && addMemoryModal) {
+      btnOpenAddMemory.addEventListener('click', () => {
+        addMemoryModal.classList.add('active');
+      });
+      btnCloseMemoryModal?.addEventListener('click', () => addMemoryModal.classList.remove('active'));
+      btnCancelMemoryModal?.addEventListener('click', () => addMemoryModal.classList.remove('active'));
+      
+      formAddMemory?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const trekId = document.getElementById('memoryTrekSelect').value;
+        const title = document.getElementById('memoryTitleInput').value;
+        const photo_url = document.getElementById('memoryPhotoUrlInput').value;
+        const altitude_m = document.getElementById('memoryAltitudeInput').value;
+        const completed_at = document.getElementById('memoryDateInput').value;
+        const notes = document.getElementById('memoryNotesInput').value;
+        const visibility = document.getElementById('memoryVisibilitySelect').value;
+
+        if (!trekId) {
+          alert('Please select a trek destination.');
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/treks/${trekId}/memories`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ title, photo_url, altitude_m, completed_at, notes, visibility })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast('Trail memory saved successfully!');
+            addMemoryModal.classList.remove('active');
+            formAddMemory.reset();
+            loadAdventureMap();
+          } else {
+            showToast(data.message || 'Could not save memory.');
+          }
+        } catch (err) {
+          showToast('Error saving trail memory.');
+        }
+      });
+    }
+  }
+
+  // 16B. AI Adventure Memory Map
+  let adventureLeafletMap = null;
+  let adventureMarkersLayer = null;
+
+  async function loadAdventureMap() {
+    const advCompleted = document.getElementById('advStatCompleted');
+    const advDistance = document.getElementById('advStatDistance');
+    const advSummit = document.getElementById('advStatSummit');
+    const advStates = document.getElementById('advStatStates');
+    const advMemories = document.getElementById('advStatMemories');
+    const memoriesGrid = document.getElementById('adventureMemoriesGrid');
+    const trekSelect = document.getElementById('memoryTrekSelect');
+
+    try {
+      const res = await fetch('/api/users/me/adventure-map', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+
+      const s = data.statistics;
+      if (advCompleted) advCompleted.textContent = s.treks_completed;
+      if (advDistance) advDistance.textContent = s.total_distance_km;
+      if (advSummit) advSummit.textContent = s.highest_summit_m.toLocaleString();
+      if (advStates) advStates.textContent = s.states_explored;
+      if (advMemories) advMemories.textContent = s.memories_recorded;
+
+      // Populate trek selector in memory modal
+      if (trekSelect) {
+        trekSelect.innerHTML = `<option value="">Select a trek...</option>` +
+          data.completed_treks.map(t => `<option value="${t.trek_id}">${escapeHtml(t.trek_name)} (${escapeHtml(t.state_name || 'India')})</option>`).join('');
+      }
+
+      // Initialize or update Leaflet Map
+      const mapContainer = document.getElementById('adventureMapContainer');
+      if (mapContainer && window.L) {
+        if (!adventureLeafletMap) {
+          adventureLeafletMap = L.map('adventureMapContainer', {
+            center: [22.5, 80.0],
+            zoom: 5,
+            minZoom: 4,
+            maxZoom: 16
+          });
+
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors © CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+          }).addTo(adventureLeafletMap);
+
+          adventureMarkersLayer = L.featureGroup().addTo(adventureLeafletMap);
+        }
+
+        adventureMarkersLayer.clearLayers();
+
+        const customSummitIcon = L.divIcon({
+          className: 'custom-adv-pin',
+          html: `<div style="background:#285D2A; color:#ffffff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #ffffff; box-shadow:0 3px 8px rgba(0,0,0,0.3); font-size:14px;">⛰️</div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 28]
+        });
+
+        data.geojson.features.forEach(f => {
+          const [lng, lat] = f.geometry.coordinates;
+          const p = f.properties;
+          const marker = L.marker([lat, lng], { icon: customSummitIcon });
+
+          const popupContent = `
+            <div style="font-family:'Inter',sans-serif; min-width:200px; padding:4px;">
+              <div style="font-weight:700; font-size:1rem; color:#17231a;">${escapeHtml(p.name)}</div>
+              <div style="font-size:0.8rem; color:#6b766f; margin-bottom:6px;">📍 ${escapeHtml(p.district ? p.district + ', ' : '')}${escapeHtml(p.state || 'India')}</div>
+              <div style="font-size:0.82rem; margin-bottom:6px;">
+                <strong>Summit:</strong> ${p.summit_m}m • <strong>Distance:</strong> ${p.distance_km}km
+              </div>
+              ${p.completed_at ? `<div style="font-size:0.75rem; color:#285D2A; font-weight:600;">✓ Completed: ${new Date(p.completed_at).toLocaleDateString()}</div>` : ''}
+              ${p.notes ? `<div style="font-size:0.8rem; font-style:italic; margin-top:6px; color:#374151;">"${escapeHtml(p.notes)}"</div>` : ''}
+            </div>
+          `;
+
+          marker.bindPopup(popupContent);
+          adventureMarkersLayer.addLayer(marker);
+        });
+
+        setTimeout(() => {
+          adventureLeafletMap.invalidateSize();
+          if (data.geojson.features.length > 0) {
+            adventureLeafletMap.fitBounds(adventureMarkersLayer.getBounds(), { padding: [50, 50], maxZoom: 10 });
+          }
+        }, 150);
+      }
+
+      // Render memories feed
+      if (memoriesGrid) {
+        const allMemories = [];
+        data.completed_treks.forEach(t => {
+          (t.memories || []).forEach(m => allMemories.push({ ...m, trek_name: t.trek_name, state_name: t.state_name }));
+        });
+
+        if (allMemories.length === 0) {
+          memoriesGrid.innerHTML = `
+            <div style="grid-column:1/-1; padding:30px; text-align:center; color:var(--text-secondary); background:rgba(0,0,0,0.02); border-radius:12px;">
+              No photo memories logged yet. Click <strong>'+ Record Trail Memory'</strong> above to journal your summits!
+            </div>
+          `;
+        } else {
+          memoriesGrid.innerHTML = allMemories.map(m => `
+            <div class="trek-card" style="display:flex; flex-direction:column;">
+              ${m.photo_url ? `
+                <div style="height:160px; overflow:hidden; border-radius:10px 10px 0 0; background:#285D2A;">
+                  <img src="${escapeHtml(m.photo_url)}" alt="${escapeHtml(m.title)}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display='none'" />
+                </div>
+              ` : ''}
+              <div style="padding:14px; flex:1;">
+                <div style="font-size:0.75rem; font-weight:700; color:var(--primary-forest); text-transform:uppercase;">${escapeHtml(m.trek_name)}</div>
+                <div style="font-weight:700; font-size:1.05rem; margin:4px 0;">${escapeHtml(m.title)}</div>
+                ${m.altitude_m ? `<div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:6px;">⛰️ ${m.altitude_m}m Summit</div>` : ''}
+                ${m.notes ? `<div style="font-size:0.85rem; color:var(--text-primary); line-height:1.4; margin-bottom:8px;">${escapeHtml(m.notes)}</div>` : ''}
+                ${m.ai_summary ? `<div style="font-size:0.8rem; color:var(--primary-forest); font-style:italic;">"${escapeHtml(m.ai_summary)}"</div>` : ''}
+                <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:10px; border-top:1px solid var(--border-color); padding-top:6px;">
+                  Logged on ${new Date(m.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+    } catch (err) {
+      console.error('Error loading adventure map:', err);
+    }
   }
 
   // 17. Handle Hash Navigation
@@ -921,11 +1105,19 @@
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
     darkToggle.checked = isDark;
-    if (isDark) document.body.classList.add('dark');
+
+    // Apply to both body and html element for consistent dark mode
+    document.body.classList.toggle('dark', isDark);
+    document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
 
     darkToggle.addEventListener('change', () => {
       const enabled = darkToggle.checked;
       document.body.classList.toggle('dark', enabled);
+      document.documentElement.classList.toggle('dark', enabled);
+      document.documentElement.setAttribute('data-theme', enabled ? 'dark' : 'light');
+      document.body.setAttribute('data-theme', enabled ? 'dark' : 'light');
       localStorage.setItem('trekindia-theme', enabled ? 'dark' : 'light');
     });
   }

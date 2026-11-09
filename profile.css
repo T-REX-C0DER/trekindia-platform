@@ -29,6 +29,299 @@
   --max-content-width: 1320px;
 }
 
+/* ==========================================================================
+   DARK MODE — Full Profile Dashboard Dark Theme
+   Applied when body.dark is set (from localStorage via profile.js / style.css)
+   ========================================================================== */
+body.dark,
+html.dark body,
+html.dark,
+html[data-theme="dark"] body {
+  /* Core backgrounds */
+  --bg-main: #0D1410;
+  --surface-card: #131a14;
+  --soft-green: #1a2e1c;
+
+  /* Text */
+  --text-primary: #E8F0E9;
+  --text-secondary: #8FA89B;
+  --muted-sage: #6B8070;
+  --deep-forest: #A8D5AC;
+
+  /* Borders */
+  --border-color: rgba(255, 255, 255, 0.09);
+
+  /* Shadows */
+  --shadow-subtle: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.45);
+  --shadow-hover: 0 10px 30px rgba(0, 0, 0, 0.55);
+  --shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+html.dark body,
+html[data-theme="dark"] body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark .profile-hero-card {
+  background: linear-gradient(135deg, #131a14, #0f1810);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .btn-secondary-sm {
+  background: #1e2d20;
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark .btn-secondary-sm:hover {
+  background: #263829;
+}
+
+body.dark .sort-select {
+  background: #1e2d20;
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark .sort-select option {
+  background: #1e2d20;
+  color: var(--text-primary);
+}
+
+body.dark .filter-pill {
+  background: #1e2d20;
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+body.dark .filter-pill:hover {
+  border-color: #3a9e3f;
+  color: #6dd672;
+}
+
+body.dark .mobile-profile-nav {
+  background: #0f1810;
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+body.dark .mobile-nav-link {
+  background: #1a2e1c;
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #6dd672;
+}
+
+body.dark .sidebar-link:hover svg {
+  stroke: #6dd672;
+}
+
+body.dark .sidebar-user-name {
+  color: var(--text-primary);
+}
+
+body.dark .hero-name {
+  color: var(--text-primary);
+}
+
+body.dark .stat-value {
+  color: var(--text-primary);
+}
+
+body.dark .section-title {
+  color: var(--text-primary);
+}
+
+body.dark .settings-card-title {
+  color: var(--text-primary);
+}
+
+body.dark .modal-title {
+  color: var(--text-primary);
+}
+
+body.dark .review-trek-name {
+  color: var(--text-primary);
+}
+
+body.dark .badge-title {
+  color: var(--text-primary);
+}
+
+body.dark .journey-value {
+  color: var(--text-primary);
+}
+
+body.dark .trek-title {
+  color: var(--text-primary);
+}
+
+body.dark .trek-stat-val {
+  color: var(--text-primary);
+}
+
+body.dark .timeline-title {
+  color: var(--text-primary);
+}
+
+body.dark .badges-header h2 {
+  color: var(--text-primary);
+}
+
+body.dark .form-input,
+body.dark .form-textarea,
+body.dark .form-select {
+  background: #1a2e1c;
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark .form-input:focus,
+body.dark .form-textarea:focus,
+body.dark .form-select:focus {
+  background: #223525;
+  border-color: #3a9e3f;
+}
+
+body.dark .form-select option {
+  background: #1a2e1c;
+  color: var(--text-primary);
+}
+
+body.dark .pref-tag-btn {
+  background: #1a2e1c;
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+body.dark .avatar-selector-wrap {
+  background: #0f1810;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .avatar-preview-box {
+  background: #1a2e1c;
+}
+
+body.dark .avatar-cat-btn {
+  background: #1a2e1c;
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .avatar-preset-card {
+  background: #1a2e1c;
+}
+
+body.dark .danger-zone-card {
+  background: #2d1515;
+  border-color: rgba(229, 62, 62, 0.35);
+}
+
+body.dark .danger-zone-title {
+  color: #FC8181;
+}
+
+body.dark .rarity-Common {
+  background: #1e2d20;
+  color: #9EBD9E;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .rarity-Uncommon {
+  background: #1a3020;
+  color: #68d472;
+  border-color: rgba(104, 212, 114, 0.3);
+}
+
+body.dark .rarity-Rare {
+  background: #0e1f3a;
+  color: #60A5FA;
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+body.dark .rarity-Epic {
+  background: #2a1040;
+  color: #C084FC;
+  border-color: rgba(192, 132, 252, 0.3);
+}
+
+body.dark .rarity-Legendary {
+  background: #2a2000;
+  color: #FDE68A;
+  border-color: rgba(253, 230, 138, 0.35);
+  box-shadow: 0 0 10px rgba(253, 230, 138, 0.2);
+}
+
+body.dark .badge-progress-bar {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .skeleton {
+  background: linear-gradient(90deg, #1a2e1c 25%, #223525 50%, #1a2e1c 75%);
+  background-size: 200% 100%;
+}
+
+body.dark .trek-card-media {
+  background: linear-gradient(135deg, #1a2e1c 0%, #223525 100%);
+}
+
+body.dark .review-trek-media {
+  background: #1a2e1c;
+}
+
+body.dark .timeline-group-header {
+  background: rgba(104, 212, 114, 0.1);
+  color: #68d472;
+}
+
+body.dark::before {
+  opacity: 0.015;
+}
+
+body.dark .modal-overlay {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+body.dark #toast-container .toast {
+  background: #1e3d20;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+body.dark .profile-shell {
+  background: transparent;
+}
+
+body.dark .settings-card.danger-zone-card {
+  background: #2a1010;
+  border-color: rgba(252, 129, 129, 0.25);
+}
+
+body.dark #adventureMapContainer {
+  background: #0f1810 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.dark .leaflet-popup-content-wrapper,
+body.dark .leaflet-popup-tip {
+  background: #131a14 !important;
+  color: #E8F0E9 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.dark .leaflet-popup-content {
+  color: #E8F0E9 !important;
+}
+
+body.dark .leaflet-popup-content div {
+  color: #E8F0E9 !important;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
