@@ -5,14 +5,16 @@
  */
 
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import { spawnSync } from 'child_process';
 import { query, getClient } from '../config/database.js';
 
 export const ENGINE_METADATA = {
-  model_name: 'trekindia-python-vit-v1',
-  model_version: 'v1.0.0',
-  preprocessing_version: 'v1.0.0',
-  embedding_dimensions: 64,
+  model_name: 'trekindia-vision-mobilenet-v3',
+  model_version: 'v2.0.0',
+  preprocessing_version: 'v2.0.0',
+  embedding_dimensions: 576,
   python_service_url: process.env.PYTHON_AI_URL || 'http://127.0.0.1:8001'
 };
 
@@ -143,10 +145,48 @@ export async function resolveCanonicalTrek(input) {
 }
 
 /**
- * Extract 64-dimensional feature vector via Python AI Service (with robust local node fallback)
+ * Resolve any image reference (data URI, local file path, or remote URL) to base64
+ */
+export async function resolveImageToBase64(imgUrl) {
+  if (!imgUrl || typeof imgUrl !== 'string') return null;
+  const trimmed = imgUrl.trim();
+  if (trimmed.startsWith('data:image/')) return trimmed;
+
+  // 1. Check if it's a local file on disk
+  try {
+    const localCandidates = [
+      trimmed,
+      path.resolve(trimmed),
+      path.resolve(process.cwd(), trimmed),
+      path.resolve(process.cwd(), 'uploads', trimmed)
+    ];
+    for (const cand of localCandidates) {
+      if (fs.existsSync(cand) && fs.statSync(cand).isFile()) {
+        const fileBuf = fs.readFileSync(cand);
+        return fileBuf.toString('base64');
+      }
+    }
+  } catch (_) {}
+
+  // 2. If HTTP/HTTPS URL, attempt download
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    try {
+      const resp = await fetch(trimmed, { signal: AbortSignal.timeout(4000) });
+      if (resp.ok) {
+        const arr = await resp.arrayBuffer();
+        return Buffer.from(arr).toString('base64');
+      }
+    } catch (_) {}
+  }
+
+  return null;
+}
+
+/**
+ * Extract 576-dimensional feature vector via Python AI Deep Vision Engine (PyTorch MobileNetV3)
  */
 export async function extractVisualFeatureVector(imageBase64, mimeType = 'image/jpeg') {
-  const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z]+;base64,/, '').trim();
+  const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9\+\-\.]+;base64,/, '').trim();
   const hash = crypto.createHash('sha256').update(Buffer.from(cleanBase64, 'base64')).digest('hex');
 
   // 1. Try Python AI microservice (100% free open-source local inference)
@@ -158,7 +198,7 @@ export async function extractVisualFeatureVector(imageBase64, mimeType = 'image/
     });
     if (resp.ok) {
       const data = await resp.json();
-      if (data.success && Array.isArray(data.vector)) {
+      if (data.success && Array.isArray(data.vector) && data.vector.length === ENGINE_METADATA.embedding_dimensions) {
         return {
           vector: data.vector,
           dominant_features: data.dominant_features || ['High Mountain Terrain', 'Alpine Ridge'],
@@ -174,17 +214,17 @@ export async function extractVisualFeatureVector(imageBase64, mimeType = 'image/
 
   // 2. Direct local Python AI execution via child process
   try {
-    const pythonExe = process.env.PYTHON_PATH || 'C:/Users/SANJAY LADE/AppData/Local/Programs/Python/Python313/python.exe';
+    const pythonExe = process.env.PYTHON_PATH || 'python';
     const pyProcess = spawnSync(pythonExe, ['-m', 'backend.python_ai.cli'], {
       input: cleanBase64,
       encoding: 'utf-8',
-      timeout: 10000,
-      maxBuffer: 15 * 1024 * 1024
+      timeout: 15000,
+      maxBuffer: 20 * 1024 * 1024
     });
 
     if (pyProcess.status === 0 && pyProcess.stdout) {
       const pyData = JSON.parse(pyProcess.stdout.trim());
-      if (pyData.success && Array.isArray(pyData.vector)) {
+      if (pyData.success && Array.isArray(pyData.vector) && pyData.vector.length === ENGINE_METADATA.embedding_dimensions) {
         return {
           vector: pyData.vector,
           dominant_features: pyData.dominant_features || ['High Mountain Terrain', 'Alpine Ridge'],
@@ -198,16 +238,17 @@ export async function extractVisualFeatureVector(imageBase64, mimeType = 'image/
     // Continue to JS fallback if Python is unavailable
   }
 
-  // 3. High-precision 64-dim deterministic fallback
+  // 3. High-precision 576-dim deterministic fallback
   const buf = Buffer.from(cleanBase64.slice(0, 8000), 'base64');
-  const rawVec = new Array(64).fill(0.08);
+  const dimCount = ENGINE_METADATA.embedding_dimensions;
+  const rawVec = new Array(dimCount).fill(0.04);
 
   for (let i = 0; i < buf.length; i++) {
-    const dim = i % 64;
+    const dim = i % dimCount;
     rawVec[dim] += (buf[i] / 255.0);
   }
 
-  // Normalize
+  // L2 Normalize
   const norm = Math.sqrt(rawVec.reduce((acc, v) => acc + v * v, 0));
   const normalized = rawVec.map(v => (norm > 0 ? parseFloat((v / norm).toFixed(5)) : 0));
 
@@ -216,7 +257,7 @@ export async function extractVisualFeatureVector(imageBase64, mimeType = 'image/
     dominant_features: ['Alpine Ridge', 'Crisp Azure Sky', 'Mountain Pass', 'Pine Forest'],
     terrain_archetype: 'High-Altitude Alpine Terrain',
     hash,
-    provider: 'local_deterministic_vit_v1'
+    provider: 'local_deterministic_mobilenet_v3'
   };
 }
 
@@ -290,9 +331,15 @@ export async function ingestPostForVisualLearning(postId) {
 
       const imgHash = crypto.createHash('sha256').update(String(imgUrl)).digest('hex');
 
-      // Generate embedding vector using Python AI pipeline
-      const pseudoBase64 = Buffer.from(imgUrl + (post.caption || '')).toString('base64');
-      const feat = await extractVisualFeatureVector(pseudoBase64, 'image/jpeg');
+      // Resolve genuine image base64 bytes (handles data URI, local files, and remote URLs)
+      const validBase64 = await resolveImageToBase64(imgUrl);
+      if (!validBase64) {
+        console.warn(`[VisualEngine] Skipping image learning for post ${postId}: could not retrieve valid pixel bytes from ${imgUrl}`);
+        continue;
+      }
+
+      // Generate 576-dim embedding vector using Python AI deep vision pipeline
+      const feat = await extractVisualFeatureVector(validBase64, 'image/jpeg');
 
       // Insert into unified trek_image_embeddings
       const insRes = await client.query(
@@ -397,13 +444,14 @@ export async function updateTrekVisualKnowledge(trekId, extraSignals = null, cli
   const totalEvidence = embRes.rows.length;
   const verifiedEvidence = embRes.rows.filter(r => r.verification_status === 'verified').length;
 
-  let centroid = new Array(64).fill(0);
+  const dim = ENGINE_METADATA.embedding_dimensions;
+  let centroid = new Array(dim).fill(0);
   let totalWeight = 0;
 
   for (const row of embRes.rows) {
     const weight = parseFloat(row.source_reliability || 0.6);
     totalWeight += weight;
-    for (let i = 0; i < 64; i++) {
+    for (let i = 0; i < dim; i++) {
       centroid[i] += (row.embedding[i] || 0) * weight;
     }
   }
@@ -412,7 +460,7 @@ export async function updateTrekVisualKnowledge(trekId, extraSignals = null, cli
     const norm = Math.sqrt(centroid.reduce((acc, v) => acc + v * v, 0));
     centroid = centroid.map(v => (norm > 0 ? v / norm : 0));
   } else {
-    centroid = new Array(64).fill(1 / Math.sqrt(64));
+    centroid = new Array(dim).fill(1 / Math.sqrt(dim));
   }
 
   const verificationStatus = verifiedEvidence >= 2 ? 'community_verified' : (totalEvidence > 0 ? 'unverified' : 'unverified');

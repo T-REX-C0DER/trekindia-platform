@@ -14,7 +14,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from .config import MODEL_NAME, MODEL_VERSION, EMBEDDING_DIM
-from .image_processor import clean_base64, extract_visual_features
+from .vision_engine import VisionEngine
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = int(os.getenv("DB_PORT", "5432"))
@@ -72,10 +72,11 @@ def process_pending_jobs(batch_size=10):
                 if not img_url: continue
                 img_hash = hashlib.sha256(str(img_url).encode()).hexdigest()
                 
-                # Download or synthesize image features
+                # Download or retrieve image features
                 raw_bytes = None
+                engine = VisionEngine.get_instance()
                 if img_url.startswith("data:image"):
-                    raw_bytes, _ = clean_base64(img_url)
+                    raw_bytes, _ = engine.clean_base64(img_url)
                 elif img_url.startswith("http"):
                     try:
                         resp = requests.get(img_url, timeout=5)
@@ -85,17 +86,9 @@ def process_pending_jobs(batch_size=10):
                         pass
                 
                 if not raw_bytes:
-                    # Deterministic synthesis from hash
-                    pseudo_b64 = base64.b64encode((img_url + (post.get("caption") or "")).encode()).decode()
-                    # Pad to valid image byte shape
-                    from PIL import Image
-                    import io
-                    pseudo_img = Image.new("RGB", (64, 64), color=(140, 180, 160))
-                    buf = io.BytesIO()
-                    pseudo_img.save(buf, format="JPEG")
-                    raw_bytes = buf.getvalue()
+                    continue
                     
-                feats = extract_visual_features(raw_bytes)
+                feats = engine.extract_features(raw_bytes)
                 
                 # Insert embedding
                 cur.execute("""

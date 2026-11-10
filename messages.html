@@ -95,7 +95,7 @@
       </a>
 
       <a href="auth.html" class="msg-user-avatar-wrap" id="msgNavUserAvatarLink" title="My Profile">
-        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" alt="User Profile" class="msg-user-avatar-img" id="msgNavUserAvatar" />
+        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=trekindia&backgroundColor=2d6a4f" alt="User Profile" class="msg-user-avatar-img" id="msgNavUserAvatar" />
       </a>
     </div>
   </header>
@@ -158,19 +158,19 @@
         </button>
 
         <div class="msg-chat-head-avatar-wrap">
-          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" alt="Avatar" class="msg-chat-head-avatar" id="chatHeadAvatar" />
+          <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=trekindia&backgroundColor=2d6a4f" alt="Avatar" class="msg-chat-head-avatar" id="chatHeadAvatar" />
           <span class="msg-chat-head-status-dot" id="chatHeadOnlineDot"></span>
         </div>
 
         <div class="msg-chat-head-info">
           <div class="msg-chat-head-top">
-            <h2 class="msg-chat-head-title" id="chatHeadName">Rahul Sharma</h2>
-            <div class="msg-active-trek-badge" id="chatHeadActiveTrek">
+            <h2 class="msg-chat-head-title" id="chatHeadName">Select a conversation</h2>
+            <div class="msg-active-trek-badge" id="chatHeadActiveTrek" style="display: none;">
               <span class="badge-trek-icon">🏔️</span>
-              <span id="chatHeadActiveTrekText">Active Trek · Sandakphu Phalut Peak</span>
+              <span id="chatHeadActiveTrekText">TrekIndia Explorer</span>
             </div>
           </div>
-          <div class="msg-chat-head-sub" id="chatHeadStatus">● Active now</div>
+          <div class="msg-chat-head-sub" id="chatHeadStatus">Offline</div>
         </div>
 
         <div class="msg-chat-head-actions">
@@ -344,7 +344,8 @@
   <!-- Toast Notification -->
   <div class="msg-toast" id="msgToast" role="status" aria-live="polite"></div>
 
-  <!-- Messaging Engine Logic -->
+  <!-- Auth Client & Messaging Engine Logic -->
+  <script src="auth-client.js"></script>
   <script src="messages.js"></script>
 </body>
 

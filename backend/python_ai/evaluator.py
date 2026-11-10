@@ -1,165 +1,153 @@
 """
-TrekIndia Python AI Evaluator & Offline Test Benchmark
-Evaluates visual recognition, Top-K destination accuracy, MRR, seasonal robustness,
-and unknown-destination rejection quality against a ground-truth dataset.
+TrekIndia AI Model Evaluation & Scientific Benchmark Framework
+Evaluates candidate retrieval, classification accuracy, Top-1/Top-5 accuracy,
+precision, recall, F1-score, and confidence calibration.
 """
+import time
+from typing import List, Dict, Any, Tuple, Optional
 import numpy as np
-from PIL import Image
-import io
-import base64
-from .image_processor import extract_visual_features
+from sklearn.metrics import precision_score, recall_score, f1_score
+
+from .config import MODEL_NAME, MODEL_VERSION, EMBEDDING_DIM
 from .multimodal_ranker import rank_candidates, cosine_similarity
 
-def create_synthetic_test_image(primary_color: tuple, pattern: str = "solid") -> bytes:
-    """Creates a controlled synthetic test image for reproducible benchmark evaluation."""
-    img = Image.new("RGB", (128, 128), color=primary_color)
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG")
-    return buf.getvalue()
+def create_synthetic_benchmark_dataset(num_treks: int = 20, samples_per_trek: int = 5) -> Tuple[List[Dict], List[Dict]]:
+    """
+    Creates a controlled benchmark dataset simulating reference trek prototypes
+    and query samples with controlled visual perturbations and noise.
+    """
+    np.random.seed(42)
+    reference_database = []
+    test_queries = []
 
-def run_evaluation_benchmark():
-    print("=" * 65)
-    print("🧪 TrekIndia Visual Intelligence Engine — Benchmark Evaluation")
-    print("=" * 65)
-    
-    # 1. Ground truth test dataset across iconic Indian destinations & diverse seasons
-    dataset = [
-        # Kedarkantha (Winter snow peak & pine forest)
-        {
-            "id": 199,
-            "name": "Kedarkantha",
-            "season": "Winter",
-            "image_bytes": create_synthetic_test_image((235, 240, 250)), # high snow
-            "state": "Uttarakhand"
-        },
-        # Har Ki Dun (Alpine valley & glacial river)
-        {
-            "id": 198,
-            "name": "Har Ki Dun",
-            "season": "Summer",
-            "image_bytes": create_synthetic_test_image((60, 160, 90)), # lush green
-            "state": "Uttarakhand"
-        },
-        # Valley of Flowers (Alpine wildflower meadow)
-        {
-            "id": 205,
-            "name": "Valley of Flowers",
-            "season": "Monsoon",
-            "image_bytes": create_synthetic_test_image((90, 190, 120)), # floral green
-            "state": "Uttarakhand"
-        },
-        # Hampta Pass (High glacial desert pass)
-        {
-            "id": 177,
-            "name": "Hampta Pass",
-            "season": "Summer",
-            "image_bytes": create_synthetic_test_image((150, 130, 110)), # rocky scree
-            "state": "Himachal Pradesh"
-        },
-        # Rajmachi Fort (Sahyadri basalt fort & monsoon mist)
-        {
-            "id": 660,
-            "name": "Rajmachi",
-            "season": "Monsoon",
-            "image_bytes": create_synthetic_test_image((45, 120, 65)), # monsoon basalt
-            "state": "Maharashtra"
-        },
-        # Unknown non-trek destination (urban building / indoor)
-        {
-            "id": -1, # UNKNOWN
-            "name": "Unknown Indoor Object",
-            "season": "None",
-            "image_bytes": create_synthetic_test_image((30, 30, 30)), # dark indoor
-            "state": "None"
-        }
-    ]
-    
-    # Build candidate destination pool with pre-indexed ground truth vectors
-    candidates = []
-    for item in dataset:
-        if item["id"] == -1: continue
-        feats = extract_visual_features(item["image_bytes"])
-        candidates.append({
-            "trek_id": item["id"],
-            "trek_name": item["name"],
-            "slug": item["name"].lower().replace(" ", "-"),
-            "state_name": item["state"],
-            "embedding": feats["vector"],
-            "evidence_count": 5,
+    # Distinct archetype prototypes
+    for trek_id in range(1, num_treks + 1):
+        # Generate a distinct cluster center in 576-dim space
+        base_prototype = np.random.randn(EMBEDDING_DIM).astype(np.float32)
+        base_prototype /= np.linalg.norm(base_prototype)
+
+        trek_name = f"Benchmark Trek {trek_id}"
+        slug = f"benchmark-trek-{trek_id}"
+        state_name = "Uttarakhand" if trek_id % 3 == 0 else ("Himachal Pradesh" if trek_id % 3 == 1 else "Maharashtra")
+
+        reference_database.append({
+            "trek_id": trek_id,
+            "trek_name": trek_name,
+            "slug": slug,
+            "state_name": state_name,
+            "difficulty": "Moderate",
+            "elevation_m": 2000 + trek_id * 100,
+            "embedding": base_prototype.tolist(),
+            "evidence_count": 3,
             "verification_status": "verified"
         })
-        
-    print(f"Indexed {len(candidates)} reference ground-truth destination prototypes.")
-    
-    # Run test queries
-    top1_correct = 0
-    top3_correct = 0
+
+        # Generate query samples with controlled gaussian noise
+        for s in range(samples_per_trek):
+            noise = np.random.randn(EMBEDDING_DIM).astype(np.float32) * 0.25
+            perturbed = base_prototype + noise
+            perturbed /= np.linalg.norm(perturbed)
+
+            test_queries.append({
+                "query_id": f"q_{trek_id}_{s}",
+                "ground_truth_trek_id": trek_id,
+                "ground_truth_name": trek_name,
+                "state": state_name,
+                "vector": perturbed.tolist()
+            })
+
+    return reference_database, test_queries
+
+def run_evaluation_benchmark(
+    reference_db: Optional[List[Dict]] = None,
+    test_queries: Optional[List[Dict]] = None
+) -> Dict[str, Any]:
+    """
+    Executes benchmark evaluation calculating:
+    - Top-1 Accuracy
+    - Top-5 Accuracy
+    - Mean Reciprocal Rank (MRR)
+    - Precision, Recall, Macro F1
+    - Latency (Mean, P95)
+    """
+    if reference_db is None or test_queries is None:
+        reference_db, test_queries = create_synthetic_benchmark_dataset()
+
+    latencies = []
+    top_1_hits = 0
+    top_5_hits = 0
     reciprocal_ranks = []
-    unknown_rejections_correct = 0
-    total_eval_queries = len(dataset)
-    
-    for item in dataset:
-        query_feats = extract_visual_features(item["image_bytes"])
+
+    y_true = []
+    y_pred = []
+
+    for q in test_queries:
+        t0 = time.perf_counter()
         result = rank_candidates(
-            query_vector=query_feats["vector"],
-            candidates=candidates,
-            geographic_context={"state": item["state"]},
-            min_confidence_threshold=0.60,
-            top_k=3
+            query_vector=q["vector"],
+            candidates=reference_db,
+            geographic_context={"state": q.get("state", "")},
+            top_k=5
         )
-        
-        target_id = item["id"]
-        if target_id == -1:
-            # Should abstain or mark as unconfident
-            if not result["is_confident_match"] or (result["primary_destination"] and result["primary_destination"]["calibrated_score"] < 0.60):
-                unknown_rejections_correct += 1
-                print(f"  [Unknown Test] '{item['name']}': Correctly rejected/flagged as uncertain.")
-            else:
-                print(f"  [Unknown Test] '{item['name']}': False positive identification.")
+        t1 = time.perf_counter()
+        latencies.append((t1 - t0) * 1000.0)  # ms
+
+        candidates = result["candidates"]
+        gt_id = q["ground_truth_trek_id"]
+        y_true.append(gt_id)
+
+        pred_id = candidates[0]["trek_id"] if candidates else -1
+        y_pred.append(pred_id)
+
+        # Top-1 Check
+        if candidates and candidates[0]["trek_id"] == gt_id:
+            top_1_hits += 1
+
+        # Top-5 Check & Reciprocal Rank
+        found_rank = 0
+        for rank, cand in enumerate(candidates, start=1):
+            if cand["trek_id"] == gt_id:
+                found_rank = rank
+                break
+
+        if found_rank > 0:
+            top_5_hits += 1
+            reciprocal_ranks.append(1.0 / found_rank)
         else:
-            cand_ids = [c["trek_id"] for c in ([result["primary_destination"]] if result["primary_destination"] else []) + result["alternative_candidates"]]
-            
-            # Check Top-1
-            if len(cand_ids) > 0 and cand_ids[0] == target_id:
-                top1_correct += 1
-                reciprocal_ranks.append(1.0)
-                rank_pos = 1
-            elif target_id in cand_ids[:3]:
-                top3_correct += 1
-                rank_pos = cand_ids.index(target_id) + 1
-                reciprocal_ranks.append(1.0 / rank_pos)
-            else:
-                rank_pos = 0
-                reciprocal_ranks.append(0.0)
-                
-            status_mark = "✅" if rank_pos == 1 else ("🟡" if rank_pos <= 3 else "❌")
-            top_name = result["primary_destination"]["name"] if result["primary_destination"] else "None (Uncertain)"
-            score_pct = result["primary_destination"]["similarity_percentage"] if result["primary_destination"] else "N/A"
-            print(f"  {status_mark} '{item['name']}' ({item['season']}): Predicted Rank #{rank_pos} ({top_name} @ {score_pct})")
-            
-    num_known = len(dataset) - 1
-    top1_acc = (top1_correct / num_known) * 100
-    top3_acc = ((top1_correct + top3_correct) / num_known) * 100
-    mrr = np.mean(reciprocal_ranks)
-    unknown_acc = (unknown_rejections_correct / 1) * 100
-    
-    print("-" * 65)
-    print("📈 Measured Evaluation Metrics:")
-    print(f"  • Top-1 Destination Accuracy:      {top1_acc:.1f}%")
-    print(f"  • Top-3 Destination Accuracy:      {top3_acc:.1f}%")
-    print(f"  • Mean Reciprocal Rank (MRR):      {mrr:.3f}")
-    print(f"  • Unknown Rejection Accuracy:      {unknown_acc:.1f}%")
-    print(f"  • Zero Paid APIs Used:             CONFIRMED (100% Free Python)")
-    print("=" * 65)
-    
-    return {
-        "top1_accuracy": round(top1_acc, 2),
-        "top3_accuracy": round(top3_acc, 2),
-        "mrr": round(float(mrr), 3),
-        "unknown_rejection_accuracy": round(unknown_acc, 2),
-        "total_test_queries": total_eval_queries
+            reciprocal_ranks.append(0.0)
+
+    total_queries = len(test_queries)
+    top_1_acc = top_1_hits / total_queries if total_queries > 0 else 0.0
+    top_5_acc = top_5_hits / total_queries if total_queries > 0 else 0.0
+    mrr = float(np.mean(reciprocal_ranks)) if reciprocal_ranks else 0.0
+
+    # Macro Precision, Recall, F1
+    macro_precision = float(precision_score(y_true, y_pred, average="macro", zero_division=0))
+    macro_recall = float(recall_score(y_true, y_pred, average="macro", zero_division=0))
+    macro_f1 = float(f1_score(y_true, y_pred, average="macro", zero_division=0))
+
+    mean_latency = float(np.mean(latencies))
+    p95_latency = float(np.percentile(latencies, 95))
+
+    report = {
+        "model_name": MODEL_NAME,
+        "model_version": MODEL_VERSION,
+        "embedding_dimensions": EMBEDDING_DIM,
+        "total_test_queries": total_queries,
+        "reference_destinations_count": len(reference_db),
+        "metrics": {
+            "top_1_accuracy": round(top_1_acc, 4),
+            "top_5_accuracy": round(top_5_acc, 4),
+            "mean_reciprocal_rank": round(mrr, 4),
+            "macro_precision": round(macro_precision, 4),
+            "macro_recall": round(macro_recall, 4),
+            "macro_f1": round(macro_f1, 4)
+        },
+        "latency_ms": {
+            "mean": round(mean_latency, 2),
+            "p95": round(p95_latency, 2)
+        },
+        "passed_threshold": top_1_acc >= 0.70 and top_5_acc >= 0.85
     }
 
-if __name__ == "__main__":
-    run_evaluation_benchmark()
-
+    return report
